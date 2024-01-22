@@ -4,13 +4,13 @@ import React, { useEffect, useState } from "react";
 import useTokenList from "../hooks/useTokenList";
 import { clientToSigner } from "../utils/ethers";
 import { BigNumber, ethers } from "ethers";
-import { createWalletClient, custom } from "viem";
 import { polygon } from "viem/chains";
 import { usePublicClient, useWalletClient } from "wagmi";
 import { USDC } from "~~/baluni/config";
-import { rebalancePortfolio } from "~~/baluni/uniswap/rebalance";
+import { calculateRebalanceStats, rebalancePortfolio } from "~~/baluni/uniswap/rebalance";
 import { DexWallet } from "~~/baluni/utils/dexWallet";
 import { PrettyConsole } from "~~/baluni/utils/prettyConsole";
+import { notification } from "~~/utils/scaffold-eth";
 
 const prettyConsole = new PrettyConsole();
 
@@ -19,20 +19,7 @@ const TokenSelector = () => {
   const [tokenSelections, setTokenSelections] = useState([]);
   const { data: signer } = useWalletClient();
   const provider = usePublicClient();
-  const [logs, setLogs] = useState([]);
-
-  useEffect(() => {
-    const handleNewLog = log => {
-      setLogs(prevLogs => [...prevLogs, log]);
-    };
-
-    prettyConsole.subscribe(handleNewLog);
-
-    return () => {
-      prettyConsole.unsubscribe(handleNewLog);
-      prettyConsole.clearHistory();
-    };
-  }, [logs]);
+  const [rebalanceStats, setRebalanceStats] = useState([]);
 
   const addTokenSelection = () => {
     setTokenSelections([...tokenSelections, { token: "", percentage: "" }]);
@@ -51,6 +38,7 @@ const TokenSelector = () => {
   };
 
   const handleRebalance = async () => {
+    const loading_n = notification.loading("Calculate Rebalance");
     const signerEthers = clientToSigner(signer);
     console.log(signerEthers);
     const dexWallet: DexWallet = {
@@ -72,49 +60,103 @@ const TokenSelector = () => {
 
     const tokenPercentages = tokenSelections.reduce((acc, selection) => {
       if (selection.token && selection.percentage) {
-        acc[selection.token] = parseFloat(selection.percentage);
+        acc[selection.token] = parseFloat(selection.percentage * 100);
       }
       return acc;
     }, {});
 
-    await rebalancePortfolio(dexWallet, tokens, tokenPercentages, USDC);
+    try {
+      const stats = (await calculateRebalanceStats(dexWallet, tokens, tokenPercentages, USDC)) as any;
+      console.log("Rebalance Stats:", stats);
 
-    // Logica per il rebalance
-    console.log("Rebalancing with selections:", tokenSelections);
-    // Qui dovresti interagire con il tuo smart contract
+      notification.remove(loading_n);
+      notification.success("Data Fetch 🎉");
+      setRebalanceStats(stats);
+      prettyConsole.log("Rebalance stats calculated:", stats);
+    } catch (error) {
+      prettyConsole.error("Error calculating rebalance stats:", error);
+    }
   };
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error loading tokens</div>;
+  const renderRebalanceStats = () => {
+    if (!rebalanceStats || !Array.isArray(rebalanceStats.adjustments)) {
+      return <div className="text-lg text-center text-gray-500">No data to display</div>;
+    }
 
-  return (
-    <div>
-      {tokenSelections.map((selection, index) => (
-        <div key={index}>
-          <select value={selection.token} onChange={e => handleTokenChange(index, e.target.value)}>
-            {tokens.map(token => (
-              <option key={token.address} value={token.address}>
-                {token.name} ({token.symbol})
-              </option>
-            ))}
-          </select>
-          <input
-            type="number"
-            value={selection.percentage}
-            onChange={e => handlePercentageChange(index, e.target.value)}
-            placeholder="Percentage"
-          />
+    return (
+      <div className="mt-4 p-4 border rounded-lg shadow-lg ">
+        <div className="text-xl font-semibold mb-4">
+          <strong>Total Portfolio Value (in USDT):</strong>{" "}
+          {Number(ethers.utils.formatEther(rebalanceStats.totalPortfolioValue)).toFixed(3)}
         </div>
-      ))}
-      <button onClick={addTokenSelection}>Add Token</button>
-      <button onClick={handleRebalance}>Rebalance</button>
-      <div>
-        {logs.map((log, index) => (
-          <div key={index}>
-            <strong>{log.type}:</strong> {JSON.stringify(log.message)}
+        {rebalanceStats.adjustments.map((adj, index) => (
+          <div key={index} className="p-4 my-4 border-b last:border-b-0 bg-primary rounded-md">
+            <div className="flex items-center space-x-2">
+              <span className="text-lg font-bold">{getTokenSymbol(adj.token)}</span>
+              {adj.action === "Buy" ? (
+                <span className="text-green-500">🔼 Buy</span>
+              ) : (
+                <span className="text-red-500">🔽 Sell</span>
+              )}
+            </div>
+            <div className="mt-2">
+              <span className="text-md">
+                <strong>Difference:</strong> {adj.differencePercentage / 100}%
+              </span>
+              <span className="ml-4 text-md">
+                <strong>Value to Rebalance (USD):</strong>{" "}
+                {Number(ethers.utils.formatEther(adj.valueToRebalance)).toFixed(3)}
+              </span>
+            </div>
           </div>
         ))}
       </div>
+    );
+  };
+
+  function getTokenSymbol(tokenAddress: string) {
+    const token = tokens.find(token => token.address === tokenAddress);
+    return token ? token.symbol : "Unknown Token";
+  }
+
+  if (loading) return <div className="text-center">Loading...</div>;
+  if (error) return <div className="text-center text-red-500">Error loading tokens</div>;
+
+  return (
+    <div className="container mx-auto p-4">
+      <div className="flex flex-col items-center justify-center space-y-4 gap-2">
+        {tokenSelections.map((selection, index) => (
+          <div key={index} className="flex space-x-2">
+            <select
+              className="select select-bordered w-full max-w-xs"
+              value={selection.token}
+              onChange={e => handleTokenChange(index, e.target.value)}
+            >
+              {tokens.map(token => (
+                <option key={token.address} value={token.address}>
+                  {token.name} ({token.symbol})
+                </option>
+              ))}
+            </select>
+            <input
+              className="range range-primary my-auto"
+              type="range"
+              min="0"
+              max="100"
+              value={selection.percentage}
+              onChange={e => handlePercentageChange(index, e.target.value)}
+            />
+            <span className="w-12 text-center">{selection.percentage}%</span>
+          </div>
+        ))}
+        <button className="btn btn-primary" onClick={addTokenSelection}>
+          Add Token
+        </button>
+        <button className="btn btn-secondary" onClick={handleRebalance}>
+          Rebalance
+        </button>
+      </div>
+      {renderRebalanceStats()}
     </div>
   );
 };

@@ -1,27 +1,13 @@
-import {
-  LIMIT,
-  QUOTER,
-  ROUTER,
-  RSI_OVERBOUGHT,
-  RSI_OVERSOLD,
-  STOCKRSI_OVERBOUGHT,
-  STOCKRSI_OVERSOLD,
-  TECNICAL_ANALYSIS,
-  USDC,
-  WETH,
-  WNATIVE,
-} from "../config";
+import { LIMIT, QUOTER, ROUTER, USDC, WNATIVE } from "../config";
 import { approveToken } from "../utils/approveToken";
 import { callContractMethod } from "../utils/contractUtils";
 import { DexWallet } from "../utils/dexWallet";
 import { getAmountOut, getPoolFee } from "../utils/getPoolFee";
-import { getRSI } from "../utils/getRSI";
 import { getTokenBalance } from "../utils/getTokenBalance";
 import { getTokenMetadata } from "../utils/getTokenMetadata";
 import { getTokenValue } from "../utils/getTokenValue";
 import { waitForTx } from "../utils/networkUtils";
 import { loadPrettyConsole } from "../utils/prettyConsole";
-import { rechargeFees } from "../utils/rechargeFees";
 import erc20Abi from "./contracts/ERC20.json";
 import quoterAbi from "./contracts/Quoter.json";
 import swapRouterAbi from "./contracts/SwapRouter.json";
@@ -35,7 +21,7 @@ const pc = loadPrettyConsole();
 async function initializeSwap(dexWallet: DexWallet, pair: [string, string], reverse?: boolean) {
   const provider = new ethers.providers.JsonRpcProvider(dexWallet.walletProvier.chain.rpcUrls.default.http[0]);
   const signer = dexWallet.wallet;
-  const { wallet, walletAddress, providerGasPrice } = dexWallet;
+  const { walletAddress, providerGasPrice } = dexWallet;
   const tokenAAddress = reverse ? pair[1] : pair[0];
   const tokenBAddress = reverse ? pair[0] : pair[1];
   const tokenAContract = new Contract(tokenAAddress, erc20Abi, provider);
@@ -124,7 +110,7 @@ export async function swapCustom(
       quoterContract,
       gasPrice,
     );
-    let broadcasted = await waitForTx(dexWallet.wallet.provider, swapTxResponse.hash);
+    const broadcasted = await waitForTx(dexWallet.wallet.provider, swapTxResponse.hash);
 
     if (!broadcasted) throw new Error(`TX broadcast timeout for ${swapTxResponse.hash}`);
     pc.success(`Transaction Complete!`);
@@ -266,21 +252,9 @@ export async function rebalancePortfolio(
     pc.info(`🔴 Selling ${formatEther(amount)} worth of ${token}`);
 
     const tokenContract = new Contract(token, erc20Abi, provider);
-    const tokenSymbol = await tokenContract.symbol();
 
-    const [rsiResult, stochasticRSIResult] = await getRSI(tokenSymbol);
-
-    if (stochasticRSIResult.stochRSI > STOCKRSI_OVERBOUGHT && rsiResult.rsiVal > RSI_OVERBOUGHT && TECNICAL_ANALYSIS) {
-      // Call swapCustom or equivalent function to sell the token
-      // Assume that the swapCustom function takes in the token addresses, direction, and amount in token units
-      await swapCustom(dexWallet, [token, usdcAddress], false, amount); // true for reverse because we're selling
-      await new Promise(resolve => setTimeout(resolve, 10000));
-    } else if (!TECNICAL_ANALYSIS) {
-      await swapCustom(dexWallet, [token, usdcAddress], false, amount); // true for reverse because we're selling
-      await new Promise(resolve => setTimeout(resolve, 10000));
-    } else {
-      pc.warn("⚠️ Waiting for StochRSI overBought");
-    }
+    await swapCustom(dexWallet, [token, usdcAddress], false, amount); // true for reverse because we're selling
+    await new Promise(resolve => setTimeout(resolve, 10000));
   }
 
   // Buy Tokens
@@ -293,7 +267,6 @@ export async function rebalancePortfolio(
 
     const tokenContract = new Contract(token, erc20Abi, provider);
     const tokenSymbol = await tokenContract.symbol();
-    const [rsiResult, stochasticRSIResult] = await getRSI(tokenSymbol);
 
     // Call swapCustom or equivalent function to buy the token
     // Here we're assuming that swapCustom is flexible enough to handle both buying and selling
@@ -301,26 +274,78 @@ export async function rebalancePortfolio(
 
     usdBalance = _usdBalance.balance;
 
-    const isTechnicalAnalysisConditionMet =
-      stochasticRSIResult.stochRSI < STOCKRSI_OVERSOLD && rsiResult.rsiVal < RSI_OVERSOLD;
-
     // Check if either technical analysis condition is met or if technical analysis is disabled
-    if (isTechnicalAnalysisConditionMet || !TECNICAL_ANALYSIS) {
-      if (usdBalance.gte(amount)) {
-        await swapCustom(dexWallet, [token, usdcAddress], true, amount);
-        await new Promise(resolve => setTimeout(resolve, 5000));
-      } else if (usdBalance.lt(amount)) {
-        pc.log("Use all USDT to buy");
-        await swapCustom(dexWallet, [token, usdcAddress], true, usdBalance);
-      } else {
-        pc.error("✖️ Not enough USDT to buy, balance under 60% of required USD");
-      }
+    if (usdBalance.gte(amount)) {
+      await swapCustom(dexWallet, [token, usdcAddress], true, amount);
+      await new Promise(resolve => setTimeout(resolve, 5000));
     } else {
-      pc.warn("Waiting for StochRSI OverSold");
+      pc.error("✖️ Not enough USDT to buy, balance under 60% of required USD");
     }
   }
 
   pc.success("✔️ Rebalance completed.");
+}
+
+export async function calculateRebalanceStats(
+  dexWallet: DexWallet,
+  desiredTokens: string[],
+  desiredAllocations: { [token: string]: number },
+  usdcAddress: string,
+) {
+  pc.log("**************************************************************************");
+  pc.log("📊 Calculating Rebalance Statistics");
+
+  let totalPortfolioValue = BigNumber.from(0);
+  let tokenValues: { [token: string]: BigNumber } = {};
+
+  // Calculate the current value of each token in the portfolio
+  for (const token of desiredTokens) {
+    const tokenMetadata = await getTokenMetadata(token, dexWallet);
+    const _tokenbalance = await getTokenBalance(dexWallet, dexWallet.walletAddress, token);
+    const tokenBalance = _tokenbalance.balance;
+    const tokenValue = await getTokenValue(
+      tokenMetadata.symbol as string,
+      token,
+      tokenBalance,
+      tokenMetadata.decimals,
+      usdcAddress,
+    );
+    tokenValues[token] = tokenValue;
+    totalPortfolioValue = totalPortfolioValue.add(tokenValue);
+  }
+
+  pc.log("🏦 Total Portfolio Value (in USDT): ", formatEther(totalPortfolioValue));
+
+  // Calculate the current allocations
+  let currentAllocations: { [token: string]: number } = {};
+  Object.keys(tokenValues).forEach(token => {
+    currentAllocations[token] = tokenValues[token].mul(10000).div(totalPortfolioValue).toNumber(); // Store as percentage
+  });
+
+  let rebalanceStats = {
+    totalPortfolioValue: totalPortfolioValue,
+    currentAllocations: currentAllocations,
+    adjustments: [],
+  };
+
+  // Determine adjustments for rebalancing
+  for (const token of desiredTokens) {
+    const currentAllocation = currentAllocations[token];
+    const desiredAllocation = desiredAllocations[token];
+    const difference = desiredAllocation - currentAllocation;
+    const valueToRebalance = totalPortfolioValue.mul(BigNumber.from(Math.abs(difference))).div(10000); // USDT value to rebalance
+
+    if (Math.abs(difference) > LIMIT) {
+      rebalanceStats.adjustments.push({
+        token: token,
+        action: difference > 0 ? "Buy" : "Sell",
+        differencePercentage: difference,
+        valueToRebalance: valueToRebalance,
+      });
+    }
+  }
+
+  return rebalanceStats;
 }
 
 async function executeSwap(
