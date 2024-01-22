@@ -292,60 +292,64 @@ export async function calculateRebalanceStats(
   desiredAllocations: { [token: string]: number },
   usdcAddress: string,
 ) {
-  pc.log("**************************************************************************");
-  pc.log("📊 Calculating Rebalance Statistics");
+  try {
+    pc.log("**************************************************************************");
+    pc.log("📊 Calculating Rebalance Statistics");
 
-  let totalPortfolioValue = BigNumber.from(0);
-  let tokenValues: { [token: string]: BigNumber } = {};
+    let totalPortfolioValue = BigNumber.from(0);
+    let tokenValues: { [token: string]: BigNumber } = {};
 
-  // Calculate the current value of each token in the portfolio
-  for (const token of desiredTokens) {
-    const tokenMetadata = await getTokenMetadata(token, dexWallet);
-    const _tokenbalance = await getTokenBalance(dexWallet, dexWallet.walletAddress, token);
-    const tokenBalance = _tokenbalance.balance;
-    const tokenValue = await getTokenValue(
-      tokenMetadata.symbol as string,
-      token,
-      tokenBalance,
-      tokenMetadata.decimals,
-      usdcAddress,
-    );
-    tokenValues[token] = tokenValue;
-    totalPortfolioValue = totalPortfolioValue.add(tokenValue);
-  }
-
-  pc.log("🏦 Total Portfolio Value (in USDT): ", formatEther(totalPortfolioValue));
-
-  // Calculate the current allocations
-  let currentAllocations: { [token: string]: number } = {};
-  Object.keys(tokenValues).forEach(token => {
-    currentAllocations[token] = tokenValues[token].mul(10000).div(totalPortfolioValue).toNumber(); // Store as percentage
-  });
-
-  let rebalanceStats = {
-    totalPortfolioValue: totalPortfolioValue,
-    currentAllocations: currentAllocations,
-    adjustments: [],
-  };
-
-  // Determine adjustments for rebalancing
-  for (const token of desiredTokens) {
-    const currentAllocation = currentAllocations[token];
-    const desiredAllocation = desiredAllocations[token];
-    const difference = desiredAllocation - currentAllocation;
-    const valueToRebalance = totalPortfolioValue.mul(BigNumber.from(Math.abs(difference))).div(10000); // USDT value to rebalance
-
-    if (Math.abs(difference) > LIMIT) {
-      rebalanceStats.adjustments.push({
-        token: token,
-        action: difference > 0 ? "Buy" : "Sell",
-        differencePercentage: difference,
-        valueToRebalance: valueToRebalance,
-      });
+    // Calculate the current value of each token in the portfolio
+    for (const token of desiredTokens) {
+      const tokenMetadata = await getTokenMetadata(token, dexWallet);
+      const _tokenbalance = await getTokenBalance(dexWallet, dexWallet.walletAddress, token);
+      const tokenBalance = _tokenbalance.balance;
+      const tokenValue = await getTokenValue(
+        tokenMetadata.symbol as string,
+        token,
+        tokenBalance,
+        tokenMetadata.decimals,
+        usdcAddress,
+      );
+      tokenValues[token] = tokenValue;
+      totalPortfolioValue = totalPortfolioValue.add(tokenValue);
     }
-  }
 
-  return rebalanceStats;
+    pc.log("🏦 Total Portfolio Value (in USDT): ", formatEther(totalPortfolioValue));
+
+    // Calculate the current allocations
+    let currentAllocations: { [token: string]: number } = {};
+    Object.keys(tokenValues).forEach(token => {
+      currentAllocations[token] = tokenValues[token].mul(10000).div(totalPortfolioValue).toNumber(); // Store as percentage
+    });
+
+    let rebalanceStats = {
+      totalPortfolioValue: totalPortfolioValue,
+      currentAllocations: currentAllocations,
+      adjustments: [],
+    };
+
+    // Determine adjustments for rebalancing
+    for (const token of desiredTokens) {
+      const currentAllocation = currentAllocations[token];
+      const desiredAllocation = desiredAllocations[token];
+      const difference = desiredAllocation - currentAllocation;
+      const valueToRebalance = totalPortfolioValue.mul(BigNumber.from(Math.abs(difference))).div(10000); // USDT value to rebalance
+
+      if (Math.abs(difference) > LIMIT) {
+        rebalanceStats.adjustments.push({
+          token: token,
+          action: difference > 0 ? "Buy" : "Sell",
+          differencePercentage: difference,
+          valueToRebalance: valueToRebalance,
+        });
+      }
+    }
+
+    return rebalanceStats;
+  } catch (e) {
+    return [{ error: e }];
+  }
 }
 
 async function executeSwap(

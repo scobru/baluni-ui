@@ -68,7 +68,6 @@ const TokenSelector = () => {
     try {
       const stats = (await calculateRebalanceStats(dexWallet, tokens, tokenPercentages, USDC)) as any;
       console.log("Rebalance Stats:", stats);
-
       notification.remove(loading_n);
       notification.success("Data Fetch 🎉");
       setRebalanceStats(stats);
@@ -79,8 +78,12 @@ const TokenSelector = () => {
   };
 
   const renderRebalanceStats = () => {
+    // handle rebalance error
+    if (rebalanceStats.error)
+      return <div className="text-lg text-center text-red-500 my-5">{rebalanceStats.error}</div>;
+
     if (!rebalanceStats || !Array.isArray(rebalanceStats.adjustments)) {
-      return <div className="text-lg text-center text-gray-500">No data to display</div>;
+      return <div className="text-lg text-center text-gray-500 my-5">No data to display</div>;
     }
 
     return (

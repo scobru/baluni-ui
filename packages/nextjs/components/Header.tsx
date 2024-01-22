@@ -20,6 +20,10 @@ export const menuLinks: HeaderMenuLink[] = [
     href: "/",
   },
   {
+    label: "Start",
+    href: "/baluni",
+  },
+  {
     label: "Debug Contracts",
     href: "/debug",
     icon: <BugAntIcon className="h-4 w-4" />,
@@ -91,7 +95,7 @@ export const Header = () => {
         <Link href="/" passHref className="hidden lg:flex items-center gap-2 ml-4 mr-6 shrink-0">
           <div className="flex relative w-10 h-10 text-3xl">🎈</div>
           <div className="flex flex-col">
-            <span className="font-bold leading-tight text-2xl">Baluni 🦄</span>
+            <span className="font-bold leading-tight text-2xl">BALUNI 🦄</span>
             <span className="text-xs">Rebalance Tool for Uniswap</span>
           </div>
         </Link>
