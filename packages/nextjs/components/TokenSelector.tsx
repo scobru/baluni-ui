@@ -32,12 +32,32 @@ const TokenSelector = () => {
   };
 
   const handlePercentageChange = (index, value) => {
+    const newPercentage = Number(value);
+    if (isNaN(newPercentage) || newPercentage < 0 || newPercentage > 100) {
+      return; // Invalid input
+    }
+
+    const currentTotal = calculateTotalPercentage() - (tokenSelections[index].percentage || 0);
+    if (currentTotal + newPercentage > 100) {
+      notification.error("Total percentage cannot exceed 100%");
+      return; // Prevent the total from exceeding 100%
+    }
+
     const newSelections = [...tokenSelections];
-    newSelections[index].percentage = value;
+    newSelections[index].percentage = newPercentage;
     setTokenSelections(newSelections);
   };
 
+  const calculateTotalPercentage = () => {
+    return tokenSelections.reduce((total, selection) => total + Number(selection.percentage), 0);
+  };
+
   const handleRebalance = async () => {
+    const totalPercentage = calculateTotalPercentage();
+    if (totalPercentage !== 100) {
+      notification.error("Total percentage must be exactly 100%");
+      return; // Prevent rebalancing if the total percentage is not exactly 100%
+    }
     const loading_n = notification.loading("Calculate Rebalance");
     const signerEthers = clientToSigner(signer);
     console.log(signerEthers);
@@ -78,13 +98,8 @@ const TokenSelector = () => {
   };
 
   const renderRebalanceStats = () => {
-    // handle rebalance error
-    if (rebalanceStats.error)
-      return <div className="text-lg text-center text-red-500 my-5">{rebalanceStats.error}</div>;
-
-    if (!rebalanceStats || !Array.isArray(rebalanceStats.adjustments)) {
+    if (!Array.isArray(rebalanceStats.adjustments))
       return <div className="text-lg text-center text-gray-500 my-5">No data to display</div>;
-    }
 
     return (
       <div className="mt-4 p-4 border rounded-lg shadow-lg ">

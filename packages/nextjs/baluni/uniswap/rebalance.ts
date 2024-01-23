@@ -95,7 +95,6 @@ export async function swapCustom(
     await approveToken(tokenAContract, swapAmount, swapRouterAddress, gasPrice, dexWallet);
 
     const poolFee = await findPoolAndFee(quoterContract, tokenAAddress, WNATIVE, swapAmount);
-
     const poolFee2 = await findPoolAndFee(quoterContract, WNATIVE, USDC, swapAmount);
 
     const [swapTxResponse, minimumAmountB] = await executeMultiHopSwap(
@@ -348,7 +347,7 @@ export async function calculateRebalanceStats(
 
     return rebalanceStats;
   } catch (e) {
-    return [{ error: e }];
+    return { error: e };
   }
 }
 
