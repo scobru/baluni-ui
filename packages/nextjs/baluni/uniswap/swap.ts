@@ -2,11 +2,11 @@ import { BigNumber, Contract, ethers } from "ethers";
 import { DexWallet } from "../utils/dexWallet";
 import { callContractMethod } from "../utils/contractUtils";
 import { waitForTx } from "../utils/networkUtils";
-import erc20Abi from "./contracts/ERC20.json";
-import swapRouterAbi from "./contracts/SwapRouter.json";
+import erc20Abi from "../abis/ERC20.json";
+import swapRouterAbi from "../abis/SwapRouter.json";
 import { QUOTER, ROUTER, SLIPPAGE } from "../config";
 import { PrettyConsole } from "../utils/prettyConsole";
-import quoterAbi from "./contracts/Quoter.json";
+import quoterAbi from "../abis/Quoter.json";
 import { formatEther, parseEther } from "ethers/lib/utils";
 import { loadPrettyConsole } from "../utils/prettyConsole";
 
@@ -17,7 +17,14 @@ export async function swap(
   pair: [string, string],
   reverse?: boolean
 ) {
-  const { wallet, walletAddress, walletBalance, providerGasPrice } = dexWallet;
+  const {
+    wallet,
+    walletAddress,
+    walletBalance,
+    providerGasPrice,
+    walletProvider,
+  } = dexWallet;
+  const chainId = walletProvider.network.chainId;
 
   prettyConsole.log(walletAddress + ":", walletBalance.toBigInt());
 
@@ -44,7 +51,7 @@ export async function swap(
     tokenBBalance.toBigInt()
   );
 
-  const swapRouterAddress = ROUTER; // polygon
+  const swapRouterAddress = ROUTER[chainId]; // polygon
   const swapRouterContract = new Contract(
     swapRouterAddress,
     swapRouterAbi,
@@ -83,7 +90,7 @@ export async function swap(
   const swapDeadline = Math.floor(Date.now() / 1000 + 60 * 60);
   const slippageTolerance = SLIPPAGE;
 
-  const quoterContract = new Contract(QUOTER, quoterAbi, wallet);
+  const quoterContract = new Contract(QUOTER[chainId], quoterAbi, wallet);
   const expectedAmountB = await quoterContract.callStatic.quoteExactInputSingle(
     tokenAAddress,
     tokenBAddress,

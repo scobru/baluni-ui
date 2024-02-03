@@ -1,3 +1,5 @@
+const fs = require("fs");
+
 export class PrettyConsole {
   public closeByNewLine: boolean;
   public useIcons: boolean;
@@ -8,36 +10,6 @@ export class PrettyConsole {
   public successesTitle: string;
   public debugsTitle: string;
   public assertsTitle: string;
-
-  private subscribers = [];
-
-  public logHistory: Array<{ type: string; message: any[] }> = [];
-
-  getLogs() {
-    return this.logHistory;
-  }
-
-  private recordLog(type: string, ...messages: any[]) {
-    this.logHistory.push({ type, message: messages });
-  }
-
-  clearHistory() {
-    this.logHistory = [];
-  }
-
-  // ... (le altre funzioni rimangono invariate)
-
-  subscribe(callback) {
-    this.subscribers.push(callback);
-  }
-
-  unsubscribe(callback) {
-    this.subscribers = this.subscribers.filter(sub => sub !== callback);
-  }
-
-  private notifySubscribers(log) {
-    this.subscribers.forEach(callback => callback(log));
-  }
 
   constructor() {
     this.closeByNewLine = true;
@@ -51,7 +23,10 @@ export class PrettyConsole {
     this.assertsTitle = "ASSERT";
   }
 
-  private getColor(foregroundColor: string = "", backgroundColor: string = ""): string {
+  private getColor(
+    foregroundColor: string = "",
+    backgroundColor: string = ""
+  ): string {
     let fgc = "\x1b[37m";
     switch (foregroundColor.trim().toLowerCase()) {
       case "black":
@@ -113,7 +88,11 @@ export class PrettyConsole {
   private getColorReset(): string {
     return "\x1b[0m";
   }
-  print(foregroundColor: string = "white", backgroundColor: string = "black", ...strings: any) {
+  print(
+    foregroundColor: string = "white",
+    backgroundColor: string = "black",
+    ...strings: any
+  ) {
     const c = this.getColor(foregroundColor, backgroundColor);
     // turns objects into printable strings
     console.log(c, strings.join(""), this.getColorReset());
@@ -125,9 +104,6 @@ export class PrettyConsole {
     console.clear();
   }
   log(...strings: any): void {
-    this.recordLog("log", ...strings);
-    this.notifySubscribers({ type: "log", message: strings });
-
     const fg = "white";
     const bg = "";
     const icon = "\u25ce";
@@ -151,14 +127,11 @@ export class PrettyConsole {
         bg,
         strings.map((item: any) => {
           return `${this.useIcons ? `${icon} ` : ""}${item}`;
-        }),
+        })
       );
     }
   }
   warn(...strings: any): void {
-    this.recordLog("warn", ...strings);
-    this.notifySubscribers({ type: "warn", message: strings });
-
     const fg = "yellow";
     const bg = "";
     const icon = "\u26a0";
@@ -182,13 +155,11 @@ export class PrettyConsole {
         bg,
         strings.map((item: any) => {
           return `${this.useIcons ? `${icon} ` : ""}${item}`;
-        }),
+        })
       );
     }
   }
   error(...strings: any): void {
-    this.recordLog("error", ...strings);
-    this.notifySubscribers({ type: "error", message: strings });
     const fg = "red";
     const bg = "";
     const icon = "\u26D4";
@@ -212,13 +183,11 @@ export class PrettyConsole {
         bg,
         strings.map((item: any) => {
           return `${this.useIcons ? `${icon} ` : ""}${item}`;
-        }),
+        })
       );
     }
   }
   info(...strings: any): void {
-    this.recordLog("info", ...strings);
-    this.notifySubscribers({ type: "info", message: strings });
     const fg = "blue";
     const bg = "";
     const icon = "\u2139";
@@ -242,7 +211,7 @@ export class PrettyConsole {
         bg,
         strings.map((item: any) => {
           return `${this.useIcons ? `${icon} ` : ""}${item}`;
-        }),
+        })
       );
     }
   }
@@ -270,7 +239,7 @@ export class PrettyConsole {
         bg,
         strings.map((item: any) => {
           return `${this.useIcons ? `${icon} ` : ""}${item}`;
-        }),
+        })
       );
     }
   }
@@ -298,7 +267,7 @@ export class PrettyConsole {
         bg,
         strings.map((item: any) => {
           return `${this.useIcons ? `${icon} ` : ""}${item}`;
-        }),
+        })
       );
     }
   }
@@ -326,7 +295,7 @@ export class PrettyConsole {
         bg,
         strings.map((item: any) => {
           return `${this.useIcons ? `${icon} ` : ""}${item}`;
-        }),
+        })
       );
     }
   }

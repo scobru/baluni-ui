@@ -4,10 +4,11 @@ import React, { useEffect, useState } from "react";
 import useTokenList from "../hooks/useTokenList";
 import { clientToSigner } from "../utils/ethers";
 import { BigNumber, ethers } from "ethers";
+import { Client } from "viem";
 import { polygon } from "viem/chains";
 import { usePublicClient, useWalletClient } from "wagmi";
 import { USDC } from "~~/baluni/config";
-import { calculateRebalanceStats, rebalancePortfolio } from "~~/baluni/uniswap/rebalance";
+import { calculateRebalanceStats, rebalancePortfolio } from "~~/baluni/uniswap/rebalanceSimple";
 import { DexWallet } from "~~/baluni/utils/dexWallet";
 import { PrettyConsole } from "~~/baluni/utils/prettyConsole";
 import { notification } from "~~/utils/scaffold-eth";
@@ -39,7 +40,7 @@ const TokenSelector = () => {
 
     const currentTotal = calculateTotalPercentage() - (tokenSelections[index].percentage || 0);
     if (currentTotal + newPercentage > 100) {
-      notification.error("Total percentage cannot exceed 100%");
+      //notification.error("Total percentage cannot exceed 100%");
       return; // Prevent the total from exceeding 100%
     }
 
@@ -59,8 +60,8 @@ const TokenSelector = () => {
       return; // Prevent rebalancing if the total percentage is not exactly 100%
     }
     const loading_n = notification.loading("Calculate Rebalance");
-    const signerEthers = clientToSigner(signer);
-    console.log(signerEthers);
+    const signerEthers = clientToSigner(signer as WalletClient);
+
     const dexWallet: DexWallet = {
       wallet: signerEthers as unknown as ethers.Wallet,
       walletAddress: (await signer?.account.address) as string,
@@ -68,9 +69,8 @@ const TokenSelector = () => {
       walletBalance: (await provider.getBalance({
         address: signer?.account.address as string,
       })) as unknown as BigNumber,
-      walletProvier: signer as any,
+      walletProvider: signerEthers.provider,
     };
-    console.log("DexWallet", dexWallet);
 
     const tokens = [];
 
@@ -86,7 +86,13 @@ const TokenSelector = () => {
     }, {});
 
     try {
-      const stats = (await calculateRebalanceStats(dexWallet, tokens, tokenPercentages, USDC)) as any;
+      const stats = (await calculateRebalanceStats(
+        dexWallet,
+        tokens,
+        tokenPercentages,
+        USDC[provider.chain.id],
+        dexWallet.walletProvider,
+      )) as any;
       console.log("Rebalance Stats:", stats);
       notification.remove(loading_n);
       notification.success("Data Fetch 🎉");
@@ -110,6 +116,7 @@ const TokenSelector = () => {
         {rebalanceStats.adjustments.map((adj, index) => (
           <div key={index} className="p-4 my-4 border-b last:border-b-0 bg-primary rounded-md">
             <div className="flex items-center space-x-2">
+              <img src={getTokenIcon(adj.token)} alt={adj.token} className="w-6 h-6" /> {/* Aggiunto qui */}
               <span className="text-lg font-bold">{getTokenSymbol(adj.token)}</span>
               {adj.action === "Buy" ? (
                 <span className="text-green-500">🔼 Buy</span>
@@ -135,6 +142,11 @@ const TokenSelector = () => {
   function getTokenSymbol(tokenAddress: string) {
     const token = tokens.find(token => token.address === tokenAddress);
     return token ? token.symbol : "Unknown Token";
+  }
+
+  function getTokenIcon(tokenAddress: string) {
+    const token = tokens.find(token => token.address === tokenAddress);
+    return token ? token.logoURI : "Unknown Token";
   }
 
   if (loading) return <div className="text-center">Loading...</div>;

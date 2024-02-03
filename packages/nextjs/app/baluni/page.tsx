@@ -6,7 +6,7 @@ import { NextPage } from "next";
 const Baluni: NextPage = () => {
   return (
     <div>
-      <div className="text-center font-bold mx-auto my-10 text-6xl">Select a Token</div>
+      <div className="text-center font-bold mx-auto my-10 text-6xl">Select Tokens</div>
       <TokenSelector />
     </div>
   );
