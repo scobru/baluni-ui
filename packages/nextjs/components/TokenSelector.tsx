@@ -6,7 +6,6 @@ import { clientToSigner } from "../utils/ethers";
 //import { JsonRpcProvider } from "@ethersproject/providers";
 import { USDC } from "baluni/dist/config";
 import { calculateRebalanceStats, rebalancePortfolio } from "baluni/dist/uniswap/rebalanceSimple";
-import { DexWallet } from "baluni/dist/utils/dexWallet";
 import { PrettyConsole } from "baluni/dist/utils/prettyConsole";
 import { BigNumber, ethers } from "ethers";
 import { usePublicClient, useWalletClient } from "wagmi";
@@ -17,16 +16,25 @@ const prettyConsole = new PrettyConsole();
 
 type Token = {
   name: string;
+  symbol: string;
+  token: string;
+  address: string;
   percentage: number;
   balance: number;
+  logoURI: string;
 };
+
+interface RebalanceStats {
+  adjustments: any[];
+  totalPortfolioValue: BigNumber;
+}
 
 const TokenSelector = () => {
   const { loading, error, tokens } = useTokenList();
   const [tokenSelections, setTokenSelections] = useState<Token[]>([]);
   const { data: signer } = useWalletClient();
   const provider = usePublicClient();
-  const [rebalanceStats, setRebalanceStats] = useState([]);
+  const [rebalanceStats, setRebalanceStats] = useState<RebalanceStats>();
 
   const fetchTokenBalance = async (index: number, tokenAddress: string) => {
     if (!tokenAddress) {
@@ -57,7 +65,16 @@ const TokenSelector = () => {
   };
 
   const addTokenSelection = () => {
-    setTokenSelections([...tokenSelections]); // Set initial balance to avoid crashes
+    const newTokenSelection = {
+      token: "", // Default or empty value for token address
+      name: "", // Default or empty value for token name
+      percentage: 0, // Default value for percentage
+      balance: 0, // Default value for balance
+      symbol: "", // Default or empty value for token symbol
+      logoURI: "", // Default or empty value for token logo URI
+      address: "", // Default or empty value for token address
+    };
+    setTokenSelections([...tokenSelections, newTokenSelection]); // Add new selection to the array
   };
 
   const handleTokenChange = (index: number, value: string) => {
@@ -66,7 +83,7 @@ const TokenSelector = () => {
     setTokenSelections(newSelections);
   };
 
-  const handlePercentageChange = (index, value) => {
+  const handlePercentageChange = (index: number, value: string) => {
     const newPercentage = Number(value);
     if (isNaN(newPercentage) || newPercentage < 0 || newPercentage > 100) {
       return; // Invalid input
@@ -96,10 +113,10 @@ const TokenSelector = () => {
     const loading_n = notification.loading("Calculate Rebalance");
     const signerEthers = clientToSigner(signer as WalletClient);
 
-    const dexWallet: DexWallet = {
+    const dexWallet = {
       wallet: signerEthers as unknown as ethers.Wallet,
       walletAddress: signer?.account.address as string,
-      providerGasPrice: provider.getGasPrice() as BigNumber,
+      providerGasPrice: provider.getGasPrice() as unknown as BigNumber,
       walletBalance: (await provider.getBalance({
         address: signer?.account.address as string,
       })) as unknown as BigNumber,
@@ -112,9 +129,15 @@ const TokenSelector = () => {
       tokens.push(selection.token);
     }
 
-    const tokenPercentages = tokenSelections.reduce((acc, selection) => {
+    // Define a type for the accumulator object in your reduce function
+    type TokenPercentages = {
+      [key: string]: number;
+    };
+
+    const tokenPercentages = tokenSelections.reduce<TokenPercentages>((acc, selection) => {
       if (selection.token && selection.percentage) {
-        acc[selection.token] = parseFloat(selection.percentage * 100);
+        // Ensure that token is a string and percentage is a number, then assign
+        acc[selection.token] = parseFloat((selection.percentage * 100).toFixed(2)); // Use toFixed(2) if you want to keep only two decimal places
       }
       return acc;
     }, {});
@@ -143,13 +166,13 @@ const TokenSelector = () => {
       notification.error("Total percentage must be exactly 100%");
       return; // Prevent rebalancing if the total percentage is not exactly 100%
     }
-    const loading_n = notification.loading("Calculate Rebalance");
+    const loading_n = notification.loading("Execute Rebalance");
     const signerEthers = clientToSigner(signer as WalletClient);
 
-    const dexWallet: DexWallet = {
+    const dexWallet = {
       wallet: signerEthers as unknown as ethers.Wallet,
-      walletAddress: (await signer?.account.address) as string,
-      providerGasPrice: (await provider.getGasPrice()) as BigNumber,
+      walletAddress: signer?.account.address as string,
+      providerGasPrice: provider.getGasPrice() as unknown as BigNumber,
       walletBalance: (await provider.getBalance({
         address: signer?.account.address as string,
       })) as unknown as BigNumber,
@@ -162,12 +185,18 @@ const TokenSelector = () => {
       tokens.push(selection.token);
     }
 
-    const tokenPercentages = tokenSelections.reduce((acc, selection) => {
+    type TokenPercentages = {
+      [key: string]: number;
+    };
+
+    const tokenPercentages = tokenSelections.reduce<TokenPercentages>((acc, selection) => {
       if (selection.token && selection.percentage) {
-        acc[selection.token] = parseFloat(selection.percentage * 100);
+        // Ensure that token is a string and percentage is a number, then assign
+        acc[selection.token] = parseFloat((selection.percentage * 100).toFixed(2)); // Use toFixed(2) if you want to keep only two decimal places
       }
       return acc;
     }, {});
+
     try {
       const stats = (await rebalancePortfolio(
         dexWallet,
@@ -187,16 +216,18 @@ const TokenSelector = () => {
   };
 
   const renderRebalanceStats = () => {
-    if (!Array.isArray(rebalanceStats.adjustments))
+    if (!Array.isArray(rebalanceStats?.adjustments))
       return <div className="text-lg text-center text-gray-500 my-5">No data to display</div>;
     return (
       <div className="mt-4 p-4 rounded-lg shadow-lg ">
         <div className="text-xl font-semibold mb-4">
           <strong>Total Portfolio Value (in USD):</strong>{" "}
-          {Number(ethers.utils.formatEther(rebalanceStats.totalPortfolioValue)).toFixed(3)}
+          {rebalanceStats?.totalPortfolioValue
+            ? Number(ethers.utils.formatEther(rebalanceStats.totalPortfolioValue)).toFixed(3)
+            : "0"}{" "}
         </div>
-        {rebalanceStats.adjustments.map((adj, index) => (
-          <div key={index} className="p-4 my-4 border-b last:border-b-0 bg-primary rounded-md">
+        {rebalanceStats?.adjustments.map((adj, index) => (
+          <div key={index} className="p-4 my-4 border-b last:border-b-0 bg-base-300 rounded-md text-base-content">
             <div className="flex items-center space-x-2">
               <img src={getTokenIcon(adj.token)} alt={adj.token} className="w-6 h-6" /> {/* Aggiunto qui */}
               <span className="text-lg font-bold">{getTokenSymbol(adj.token)}</span>
@@ -222,12 +253,12 @@ const TokenSelector = () => {
   };
 
   function getTokenSymbol(tokenAddress: string) {
-    const token = tokens.find(token => token.address === tokenAddress);
+    const token = (tokens as Token[]).find(token => token.address === tokenAddress) as Token | undefined;
     return token ? token.symbol : "Unknown Token";
   }
 
   function getTokenIcon(tokenAddress: string) {
-    const token = tokens.find(token => token.address === tokenAddress);
+    const token = (tokens as Token[]).find(token => token.address === tokenAddress) as Token | undefined;
     return token ? token.logoURI : "Unknown Token";
   }
 
@@ -249,7 +280,7 @@ const TokenSelector = () => {
                       value={selection.token}
                       onChange={e => handleTokenChange(index, e.target.value)}
                     >
-                      {tokens.map(token => (
+                      {tokens.map((token: Token) => (
                         <option key={token.address} value={token.address}>
                           {token.name} ({token.symbol})
                         </option>
@@ -264,10 +295,7 @@ const TokenSelector = () => {
                       onChange={e => handlePercentageChange(index, e.target.value)}
                     />
                     <span>{selection.percentage}%</span>
-                    <button
-                      onClick={() => fetchTokenBalance(index, selection.token)}
-                      className="btn btn-primary btn-primary"
-                    >
+                    <button onClick={() => fetchTokenBalance(index, selection.token)} className="btn btn-primary ">
                       Fetch Balance
                     </button>
                   </div>
