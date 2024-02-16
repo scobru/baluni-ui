@@ -280,6 +280,7 @@ const TokenSelector = () => {
                       value={selection.token}
                       onChange={e => handleTokenChange(index, e.target.value)}
                     >
+                      <option value="">Select a token</option>
                       {tokens.map((token: Token) => (
                         <option key={token.address} value={token.address}>
                           {token.name} ({token.symbol})
