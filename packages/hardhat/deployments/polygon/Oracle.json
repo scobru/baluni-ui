@@ -1,0 +1,98 @@
+{
+  "address": "0xaC81354605019e00FfCfb36df3031419E62540B3",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_priceFeedAddress",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "getLatestPrice",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0x88a1811173220ae77181555688c26ef4813d7fec8865d8a5f2fe75401d6f9da9",
+  "receipt": {
+    "to": null,
+    "from": "0x84F07be28ecd5b29Df340be8b065A6113a8e893e",
+    "contractAddress": "0xaC81354605019e00FfCfb36df3031419E62540B3",
+    "transactionIndex": 59,
+    "gasUsed": "155506",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000008000000000000000000000000000000000000000000000000000000000800000000000000000000100020000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000008000000000000200000080000000000000000000000000000000000000000000000000000004000000000000000000001000000000000000000000000000000100000000000000000000000000000800000000000000000000000000000000000000020100000",
+    "blockHash": "0x4961157465be1d7333b0343b38f21d153089cf101b4256ebf6f4d559cf06bbb8",
+    "transactionHash": "0x88a1811173220ae77181555688c26ef4813d7fec8865d8a5f2fe75401d6f9da9",
+    "logs": [
+      {
+        "transactionIndex": 59,
+        "blockNumber": 53635235,
+        "transactionHash": "0x88a1811173220ae77181555688c26ef4813d7fec8865d8a5f2fe75401d6f9da9",
+        "address": "0x0000000000000000000000000000000000001010",
+        "topics": [
+          "0x4dfe1bbbcf077ddc3e01291eea2d5c70c2b422b415d95645b9adcfd678cb1d63",
+          "0x0000000000000000000000000000000000000000000000000000000000001010",
+          "0x00000000000000000000000084f07be28ecd5b29df340be8b065a6113a8e893e",
+          "0x000000000000000000000000794e44d1334a56fea7f4df12633b88820d0c5888"
+        ],
+        "data": "0x0000000000000000000000000000000000000000000000000011ae0749f6879a0000000000000000000000000000000000000000000000003e8b2510dd1ac3040000000000000000000000000000000000000000000002e3a79d738e90fa84cb0000000000000000000000000000000000000000000000003e79770993243b6a0000000000000000000000000000000000000000000002e3a7af2195daf10c65",
+        "logIndex": 165,
+        "blockHash": "0x4961157465be1d7333b0343b38f21d153089cf101b4256ebf6f4d559cf06bbb8"
+      }
+    ],
+    "blockNumber": 53635235,
+    "cumulativeGasUsed": "6671204",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [
+    "0xAB594600376Ec9fD91F8e885dADF0CE036862dE0"
+  ],
+  "numDeployments": 1,
+  "solcInputHash": "eff5dbff50c519ccd6f957d991d7acc2",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.17+commit.8df45f5f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_priceFeedAddress\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"getLatestPrice\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/Oracle.sol\":\"Oracle\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\ninterface AggregatorV3Interface {\\n  function decimals() external view returns (uint8);\\n\\n  function description() external view returns (string memory);\\n\\n  function version() external view returns (uint256);\\n\\n  function getRoundData(\\n    uint80 _roundId\\n  ) external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound);\\n\\n  function latestRoundData()\\n    external\\n    view\\n    returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound);\\n}\\n\",\"keccak256\":\"0xfe4e8bb4861bb3860ba890ab91a3b818ec66e5a8f544fb608cfcb73f433472cd\",\"license\":\"MIT\"},\"contracts/Oracle.sol\":{\"content\":\"import \\\"@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol\\\";\\r\\n\\r\\ncontract Oracle {\\r\\n\\tAggregatorV3Interface internal priceFeed;\\r\\n\\r\\n\\tconstructor(address _priceFeedAddress) {\\r\\n\\t\\tpriceFeed = AggregatorV3Interface(_priceFeedAddress);\\r\\n\\t}\\r\\n\\r\\n\\tfunction getLatestPrice() public view returns (uint256) {\\r\\n\\t\\t(, int256 price, , , ) = priceFeed.latestRoundData();\\r\\n\\t\\t// Assumiamo che il prezzo sia sempre positivo\\r\\n\\t\\treturn uint256(price); // Adatta questa moltiplicazione in base alla tua necessit\\u00e0\\r\\n\\t}\\r\\n}\\r\\n\",\"keccak256\":\"0x3d71c8afb17be59e107fc8f69d49dc6bffef1ad3570441adebc01f187337135b\"}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b506040516101fb3803806101fb83398101604081905261002f91610054565b600080546001600160a01b0319166001600160a01b0392909216919091179055610084565b60006020828403121561006657600080fd5b81516001600160a01b038116811461007d57600080fd5b9392505050565b610168806100936000396000f3fe608060405234801561001057600080fd5b506004361061002b5760003560e01c80638e15f47314610030575b600080fd5b61003861004a565b60405190815260200160405180910390f35b6000805460408051633fabe5a360e21b8152905183926001600160a01b03169163feaf968c9160048083019260a09291908290030181865afa158015610094573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906100b891906100e2565b509195945050505050565b805169ffffffffffffffffffff811681146100dd57600080fd5b919050565b600080600080600060a086880312156100fa57600080fd5b610103866100c3565b9450602086015193506040860151925060608601519150610126608087016100c3565b9050929550929590935056fea2646970667358221220fcf4ad63d567c5e3f5b9e4720a21721e871b678dee8bd0b2157909a17c9f810364736f6c63430008110033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b506004361061002b5760003560e01c80638e15f47314610030575b600080fd5b61003861004a565b60405190815260200160405180910390f35b6000805460408051633fabe5a360e21b8152905183926001600160a01b03169163feaf968c9160048083019260a09291908290030181865afa158015610094573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906100b891906100e2565b509195945050505050565b805169ffffffffffffffffffff811681146100dd57600080fd5b919050565b600080600080600060a086880312156100fa57600080fd5b610103866100c3565b9450602086015193506040860151925060608601519150610126608087016100c3565b9050929550929590935056fea2646970667358221220fcf4ad63d567c5e3f5b9e4720a21721e871b678dee8bd0b2157909a17c9f810364736f6c63430008110033",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 1779,
+        "contract": "contracts/Oracle.sol:Oracle",
+        "label": "priceFeed",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_contract(AggregatorV3Interface)45"
+      }
+    ],
+    "types": {
+      "t_contract(AggregatorV3Interface)45": {
+        "encoding": "inplace",
+        "label": "contract AggregatorV3Interface",
+        "numberOfBytes": "20"
+      }
+    }
+  }
+}

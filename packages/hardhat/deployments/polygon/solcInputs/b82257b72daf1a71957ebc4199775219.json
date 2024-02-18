@@ -1,0 +1,35 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contracts/BaluniPoolV1.sol": {
+      "content": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.0;\r\n\r\ncontract BaluniPoolV1 {\r\n\tenum Coin {\r\n\t\tBTC,\r\n\t\tMATIC,\r\n\t\tOP,\r\n\t\tETH\r\n\t}\r\n\r\n\tstruct Prediction {\r\n\t\taddress predictor;\r\n\t\tCoin token; // Modificato da string tokenSymbol a Coin token\r\n\t\tuint256 predictedPrice;\r\n\t\tuint256 timestamp;\r\n\t\tuint256 endTime;\r\n\t}\r\n\r\n\tPrediction[] public predictions;\r\n\tuint256 public registrationFee = 0.01 ether;\r\n\tuint256 public totalPredictions = 0;\r\n\tmapping(address => uint256) public distributionCounter; // Conta le predizioni per ogni utente\r\n\tmapping(address => uint256) public lastSubmissionTime;\r\n\tmapping(address => uint256) public lastWithdraw;\r\n\tmapping(address => uint256) public userSubmissionFees;\r\n\r\n\tevent PredictionRegistered(\r\n\t\taddress indexed predictor,\r\n\t\tCoin token,\r\n\t\tuint256 predictedPrice,\r\n\t\tuint256 endTime\r\n\t);\r\n\tevent RewardWithdrawn(address indexed predictor, uint256 amount);\r\n\r\n\tfunction getSubmissionFee() public view returns (uint256) {\r\n\t\treturn userSubmissionFees[msg.sender];\r\n\t}\r\n\r\n\tfunction submit(Coin _token, uint256 _predictedPrice) public payable {\r\n\t\trequire(msg.value >= 0.01 ether ,\"Invalid fee amount\");\r\n\t\trequire(msg.value >= userSubmissionFees[msg.sender], \"Invalid fee amount\");\r\n\r\n\t\tuserSubmissionFees[msg.sender] = msg.value;\r\n\t\tuserSubmissionFees[msg.sender] += 0.001 ether;\r\n\r\n\t\tpredictions.push(\r\n\t\t\tPrediction(\r\n\t\t\t\tmsg.sender,\r\n\t\t\t\t_token,\r\n\t\t\t\t_predictedPrice,\r\n\t\t\t\tblock.timestamp,\r\n\t\t\t\tblock.timestamp + 1 days\r\n\t\t\t)\r\n\t\t);\r\n\t\ttotalPredictions++;\r\n\t\tdistributionCounter[msg.sender]++;\r\n\t\tlastSubmissionTime[msg.sender] = block.timestamp;\r\n\r\n\t\temit PredictionRegistered(\r\n\t\t\tmsg.sender,\r\n\t\t\t_token,\r\n\t\t\t_predictedPrice,\r\n\t\t\tblock.timestamp + 1 days\r\n\t\t);\r\n\t}\r\n\r\n\tfunction exit() public {\r\n\t\trequire(\r\n\t\t\tblock.timestamp - lastWithdraw[msg.sender] >= 30 days,\r\n\t\t\t\"Wait for 30 days before next withdraw\"\r\n\t\t);\r\n\r\n\t\tuint256 reward = calculateReward(msg.sender);\r\n\r\n\r\n\t\trequire(reward > 0, \"No reward available\");\r\n\r\n\t\t// Aggiornamento dello stato prima della trasferimento per prevenire reentrancy\r\n\t\ttotalPredictions -= distributionCounter[msg.sender];\r\n\t\tdistributionCounter[msg.sender] = 0;\r\n\t\tlastSubmissionTime[msg.sender] = 0;\r\n\t\tlastWithdraw[msg.sender] = block.timestamp;\r\n\r\n\t\tuserSubmissionFees[msg.sender] = registrationFee;\r\n\r\n\t\t(bool sent, ) = msg.sender.call{ value: reward }(\"\");\r\n\t\trequire(sent, \"Failed to send Ether\");\r\n\r\n\t\temit RewardWithdrawn(msg.sender, reward);\r\n\t}\r\n\r\n\tfunction calculateReward(address user) public view returns (uint256) {\r\n\t\tuint256 userShare = (distributionCounter[user] * 1e18) /\r\n\t\t\ttotalPredictions;\r\n\t\treturn (address(this).balance * userShare) / 1e18 / 2;\r\n\t}\r\n\r\n\tfunction last10Predictions() public view returns (Prediction[] memory) {\r\n\t\tuint256 length = predictions.length;\r\n\t\tuint256 start = length > 10 ? length - 10 : 0;\r\n\t\tPrediction[] memory result = new Prediction[](length - start);\r\n\t\tfor (uint256 i = start; i < length; i++) {\r\n\t\t\tresult[i - start] = predictions[i];\r\n\t\t}\r\n\t\treturn result;\r\n\t}\r\n\r\n\tfunction getPrediction(\r\n\t\tuint256 index\r\n\t) public view returns (Prediction memory) {\r\n\t\trequire(index < predictions.length, \"Invalid index\");\r\n\t\treturn predictions[index];\r\n\t}\r\n\r\n\tfunction getPredictionFromTo(\r\n\t\tuint256 from,\r\n\t\tuint256 to\r\n\t) public view returns (Prediction[] memory) {\r\n\t\trequire(from < to, \"Invalid range\");\r\n\t\trequire(to <= predictions.length, \"Invalid range\");\r\n\t\tPrediction[] memory result = new Prediction[](to - from);\r\n\t\tfor (uint256 i = from; i < to; i++) {\r\n\t\t\tresult[i - from] = predictions[i];\r\n\t\t}\r\n\t\treturn result;\r\n\t}\r\n\r\n\tfunction getPredictionCount() public view returns (uint256) {\r\n\t\treturn predictions.length;\r\n\t}\r\n\r\n\tfunction getTotalPredictions() public view returns (uint256) {\r\n\t\treturn totalPredictions;\r\n\t}\r\n\r\n\t// Permetti al contratto di ricevere ETH\r\n\treceive() external payable {}\r\n}\r\n"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "evm.methodIdentifiers",
+          "metadata",
+          "devdoc",
+          "userdoc",
+          "storageLayout",
+          "evm.gasEstimates"
+        ],
+        "": [
+          "ast"
+        ]
+      }
+    },
+    "metadata": {
+      "useLiteralContent": true
+    }
+  }
+}

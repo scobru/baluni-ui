@@ -1,0 +1,787 @@
+{
+  "address": "0x41D1341541aB776A35f671309C7035c5B4BBBC63",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_oracleAddress",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "predictor",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "enum BaluniPoolV1.Coin",
+          "name": "token",
+          "type": "uint8"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "predictedPrice",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "actualPrice",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "endTime",
+          "type": "uint256"
+        }
+      ],
+      "name": "PredictionRegistered",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "predictor",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "RewardWithdrawn",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "name": "calculateReward",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "distributionCounter",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "exit",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "index",
+          "type": "uint256"
+        }
+      ],
+      "name": "getPrediction",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "predictor",
+              "type": "address"
+            },
+            {
+              "internalType": "enum BaluniPoolV1.Coin",
+              "name": "token",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint256",
+              "name": "predictedPrice",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "actualPrice",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "resolvedPrice",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "difference",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "timestamp",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "endTime",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bool",
+              "name": "resolved",
+              "type": "bool"
+            }
+          ],
+          "internalType": "struct BaluniPoolV1.Prediction",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getPredictionCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "from",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "to",
+          "type": "uint256"
+        }
+      ],
+      "name": "getPredictionFromTo",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "predictor",
+              "type": "address"
+            },
+            {
+              "internalType": "enum BaluniPoolV1.Coin",
+              "name": "token",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint256",
+              "name": "predictedPrice",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "actualPrice",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "resolvedPrice",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "difference",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "timestamp",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "endTime",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bool",
+              "name": "resolved",
+              "type": "bool"
+            }
+          ],
+          "internalType": "struct BaluniPoolV1.Prediction[]",
+          "name": "",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getSubmissionFee",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getTotalPredictions",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "hasAnyUnresolvedPastEndTime",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "hasUnresolvedPredictions",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "last10Predictions",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "predictor",
+              "type": "address"
+            },
+            {
+              "internalType": "enum BaluniPoolV1.Coin",
+              "name": "token",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint256",
+              "name": "predictedPrice",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "actualPrice",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "resolvedPrice",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "difference",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "timestamp",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "endTime",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bool",
+              "name": "resolved",
+              "type": "bool"
+            }
+          ],
+          "internalType": "struct BaluniPoolV1.Prediction[]",
+          "name": "",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "lastWithdraw",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "oracle",
+      "outputs": [
+        {
+          "internalType": "contract Oracle",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "predictions",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "predictor",
+          "type": "address"
+        },
+        {
+          "internalType": "enum BaluniPoolV1.Coin",
+          "name": "token",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint256",
+          "name": "predictedPrice",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "actualPrice",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "resolvedPrice",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "difference",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "endTime",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "resolved",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "registrationFee",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "resolve",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "enum BaluniPoolV1.Coin",
+          "name": "_token",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_predictedPrice",
+          "type": "uint256"
+        }
+      ],
+      "name": "submit",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalPredictions",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "userSubmissionFees",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "stateMutability": "payable",
+      "type": "receive"
+    }
+  ],
+  "transactionHash": "0xa4efa73ef6fa9b97753f75acbc655ad86917efbee6a63e62243ffa6f2de9823d",
+  "receipt": {
+    "to": null,
+    "from": "0x84F07be28ecd5b29Df340be8b065A6113a8e893e",
+    "contractAddress": "0x41D1341541aB776A35f671309C7035c5B4BBBC63",
+    "transactionIndex": 35,
+    "gasUsed": "1297589",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000008000000000000000000000000000000000000000000000000000000000800000000000000000000100000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000040008000000000000200000080000004000000000000000000000000000000000000000000000004000000000000000000001000000000000000000000000000000100000000000000000000000000000800000000000000000000000000000000000000000100000",
+    "blockHash": "0x430478db95b5d68c7fa042760c178f6b8e98da527055d701fe38a2cd14e075bb",
+    "transactionHash": "0xa4efa73ef6fa9b97753f75acbc655ad86917efbee6a63e62243ffa6f2de9823d",
+    "logs": [
+      {
+        "transactionIndex": 35,
+        "blockNumber": 53637204,
+        "transactionHash": "0xa4efa73ef6fa9b97753f75acbc655ad86917efbee6a63e62243ffa6f2de9823d",
+        "address": "0x0000000000000000000000000000000000001010",
+        "topics": [
+          "0x4dfe1bbbcf077ddc3e01291eea2d5c70c2b422b415d95645b9adcfd678cb1d63",
+          "0x0000000000000000000000000000000000000000000000000000000000001010",
+          "0x00000000000000000000000084f07be28ecd5b29df340be8b065a6113a8e893e",
+          "0x000000000000000000000000a8b52f02108aa5f4b675bdcc973760022d7c6020"
+        ],
+        "data": "0x00000000000000000000000000000000000000000000000000a9cd1eecfd58d400000000000000000000000000000000000000000000000039a2fe1cadc6aff80000000000000000000000000000000000000000000001acfce937e19ab4a55e00000000000000000000000000000000000000000000000038f930fdc0c957240000000000000000000000000000000000000000000001acfd93050087b1fe32",
+        "logIndex": 115,
+        "blockHash": "0x430478db95b5d68c7fa042760c178f6b8e98da527055d701fe38a2cd14e075bb"
+      }
+    ],
+    "blockNumber": 53637204,
+    "cumulativeGasUsed": "4946149",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [
+    "0xaC81354605019e00FfCfb36df3031419E62540B3"
+  ],
+  "numDeployments": 4,
+  "solcInputHash": "1d9c0fafeb99e3e18cf1cabfc12115dd",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.17+commit.8df45f5f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_oracleAddress\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"predictor\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"enum BaluniPoolV1.Coin\",\"name\":\"token\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"predictedPrice\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"actualPrice\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"endTime\",\"type\":\"uint256\"}],\"name\":\"PredictionRegistered\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"predictor\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"RewardWithdrawn\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"calculateReward\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"distributionCounter\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"exit\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"index\",\"type\":\"uint256\"}],\"name\":\"getPrediction\",\"outputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"predictor\",\"type\":\"address\"},{\"internalType\":\"enum BaluniPoolV1.Coin\",\"name\":\"token\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"predictedPrice\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"actualPrice\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"resolvedPrice\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"difference\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"endTime\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"resolved\",\"type\":\"bool\"}],\"internalType\":\"struct BaluniPoolV1.Prediction\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getPredictionCount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"from\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"to\",\"type\":\"uint256\"}],\"name\":\"getPredictionFromTo\",\"outputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"predictor\",\"type\":\"address\"},{\"internalType\":\"enum BaluniPoolV1.Coin\",\"name\":\"token\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"predictedPrice\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"actualPrice\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"resolvedPrice\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"difference\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"endTime\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"resolved\",\"type\":\"bool\"}],\"internalType\":\"struct BaluniPoolV1.Prediction[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getSubmissionFee\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getTotalPredictions\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"hasAnyUnresolvedPastEndTime\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"hasUnresolvedPredictions\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"last10Predictions\",\"outputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"predictor\",\"type\":\"address\"},{\"internalType\":\"enum BaluniPoolV1.Coin\",\"name\":\"token\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"predictedPrice\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"actualPrice\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"resolvedPrice\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"difference\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"endTime\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"resolved\",\"type\":\"bool\"}],\"internalType\":\"struct BaluniPoolV1.Prediction[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"lastWithdraw\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"oracle\",\"outputs\":[{\"internalType\":\"contract Oracle\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"predictions\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"predictor\",\"type\":\"address\"},{\"internalType\":\"enum BaluniPoolV1.Coin\",\"name\":\"token\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"predictedPrice\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"actualPrice\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"resolvedPrice\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"difference\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"endTime\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"resolved\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"registrationFee\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"resolve\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"enum BaluniPoolV1.Coin\",\"name\":\"_token\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"_predictedPrice\",\"type\":\"uint256\"}],\"name\":\"submit\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"totalPredictions\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"userSubmissionFees\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"stateMutability\":\"payable\",\"type\":\"receive\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/BaluniPoolPolygon_v1.sol\":\"BaluniPoolV1\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\ninterface AggregatorV3Interface {\\n  function decimals() external view returns (uint8);\\n\\n  function description() external view returns (string memory);\\n\\n  function version() external view returns (uint256);\\n\\n  function getRoundData(\\n    uint80 _roundId\\n  ) external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound);\\n\\n  function latestRoundData()\\n    external\\n    view\\n    returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound);\\n}\\n\",\"keccak256\":\"0xfe4e8bb4861bb3860ba890ab91a3b818ec66e5a8f544fb608cfcb73f433472cd\",\"license\":\"MIT\"},\"@openzeppelin/contracts/security/ReentrancyGuard.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v4.9.0) (security/ReentrancyGuard.sol)\\n\\npragma solidity ^0.8.0;\\n\\n/**\\n * @dev Contract module that helps prevent reentrant calls to a function.\\n *\\n * Inheriting from `ReentrancyGuard` will make the {nonReentrant} modifier\\n * available, which can be applied to functions to make sure there are no nested\\n * (reentrant) calls to them.\\n *\\n * Note that because there is a single `nonReentrant` guard, functions marked as\\n * `nonReentrant` may not call one another. This can be worked around by making\\n * those functions `private`, and then adding `external` `nonReentrant` entry\\n * points to them.\\n *\\n * TIP: If you would like to learn more about reentrancy and alternative ways\\n * to protect against it, check out our blog post\\n * https://blog.openzeppelin.com/reentrancy-after-istanbul/[Reentrancy After Istanbul].\\n */\\nabstract contract ReentrancyGuard {\\n    // Booleans are more expensive than uint256 or any type that takes up a full\\n    // word because each write operation emits an extra SLOAD to first read the\\n    // slot's contents, replace the bits taken up by the boolean, and then write\\n    // back. This is the compiler's defense against contract upgrades and\\n    // pointer aliasing, and it cannot be disabled.\\n\\n    // The values being non-zero value makes deployment a bit more expensive,\\n    // but in exchange the refund on every call to nonReentrant will be lower in\\n    // amount. Since refunds are capped to a percentage of the total\\n    // transaction's gas, it is best to keep them low in cases like this one, to\\n    // increase the likelihood of the full refund coming into effect.\\n    uint256 private constant _NOT_ENTERED = 1;\\n    uint256 private constant _ENTERED = 2;\\n\\n    uint256 private _status;\\n\\n    constructor() {\\n        _status = _NOT_ENTERED;\\n    }\\n\\n    /**\\n     * @dev Prevents a contract from calling itself, directly or indirectly.\\n     * Calling a `nonReentrant` function from another `nonReentrant`\\n     * function is not supported. It is possible to prevent this from happening\\n     * by making the `nonReentrant` function external, and making it call a\\n     * `private` function that does the actual work.\\n     */\\n    modifier nonReentrant() {\\n        _nonReentrantBefore();\\n        _;\\n        _nonReentrantAfter();\\n    }\\n\\n    function _nonReentrantBefore() private {\\n        // On the first call to nonReentrant, _status will be _NOT_ENTERED\\n        require(_status != _ENTERED, \\\"ReentrancyGuard: reentrant call\\\");\\n\\n        // Any calls to nonReentrant after this point will fail\\n        _status = _ENTERED;\\n    }\\n\\n    function _nonReentrantAfter() private {\\n        // By storing the original value once again, a refund is triggered (see\\n        // https://eips.ethereum.org/EIPS/eip-2200)\\n        _status = _NOT_ENTERED;\\n    }\\n\\n    /**\\n     * @dev Returns true if the reentrancy guard is currently set to \\\"entered\\\", which indicates there is a\\n     * `nonReentrant` function in the call stack.\\n     */\\n    function _reentrancyGuardEntered() internal view returns (bool) {\\n        return _status == _ENTERED;\\n    }\\n}\\n\",\"keccak256\":\"0xa535a5df777d44e945dd24aa43a11e44b024140fc340ad0dfe42acf4002aade1\",\"license\":\"MIT\"},\"@openzeppelin/contracts/utils/Address.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v4.9.0) (utils/Address.sol)\\n\\npragma solidity ^0.8.1;\\n\\n/**\\n * @dev Collection of functions related to the address type\\n */\\nlibrary Address {\\n    /**\\n     * @dev Returns true if `account` is a contract.\\n     *\\n     * [IMPORTANT]\\n     * ====\\n     * It is unsafe to assume that an address for which this function returns\\n     * false is an externally-owned account (EOA) and not a contract.\\n     *\\n     * Among others, `isContract` will return false for the following\\n     * types of addresses:\\n     *\\n     *  - an externally-owned account\\n     *  - a contract in construction\\n     *  - an address where a contract will be created\\n     *  - an address where a contract lived, but was destroyed\\n     *\\n     * Furthermore, `isContract` will also return true if the target contract within\\n     * the same transaction is already scheduled for destruction by `SELFDESTRUCT`,\\n     * which only has an effect at the end of a transaction.\\n     * ====\\n     *\\n     * [IMPORTANT]\\n     * ====\\n     * You shouldn't rely on `isContract` to protect against flash loan attacks!\\n     *\\n     * Preventing calls from contracts is highly discouraged. It breaks composability, breaks support for smart wallets\\n     * like Gnosis Safe, and does not provide security since it can be circumvented by calling from a contract\\n     * constructor.\\n     * ====\\n     */\\n    function isContract(address account) internal view returns (bool) {\\n        // This method relies on extcodesize/address.code.length, which returns 0\\n        // for contracts in construction, since the code is only stored at the end\\n        // of the constructor execution.\\n\\n        return account.code.length > 0;\\n    }\\n\\n    /**\\n     * @dev Replacement for Solidity's `transfer`: sends `amount` wei to\\n     * `recipient`, forwarding all available gas and reverting on errors.\\n     *\\n     * https://eips.ethereum.org/EIPS/eip-1884[EIP1884] increases the gas cost\\n     * of certain opcodes, possibly making contracts go over the 2300 gas limit\\n     * imposed by `transfer`, making them unable to receive funds via\\n     * `transfer`. {sendValue} removes this limitation.\\n     *\\n     * https://consensys.net/diligence/blog/2019/09/stop-using-soliditys-transfer-now/[Learn more].\\n     *\\n     * IMPORTANT: because control is transferred to `recipient`, care must be\\n     * taken to not create reentrancy vulnerabilities. Consider using\\n     * {ReentrancyGuard} or the\\n     * https://solidity.readthedocs.io/en/v0.8.0/security-considerations.html#use-the-checks-effects-interactions-pattern[checks-effects-interactions pattern].\\n     */\\n    function sendValue(address payable recipient, uint256 amount) internal {\\n        require(address(this).balance >= amount, \\\"Address: insufficient balance\\\");\\n\\n        (bool success, ) = recipient.call{value: amount}(\\\"\\\");\\n        require(success, \\\"Address: unable to send value, recipient may have reverted\\\");\\n    }\\n\\n    /**\\n     * @dev Performs a Solidity function call using a low level `call`. A\\n     * plain `call` is an unsafe replacement for a function call: use this\\n     * function instead.\\n     *\\n     * If `target` reverts with a revert reason, it is bubbled up by this\\n     * function (like regular Solidity function calls).\\n     *\\n     * Returns the raw returned data. To convert to the expected return value,\\n     * use https://solidity.readthedocs.io/en/latest/units-and-global-variables.html?highlight=abi.decode#abi-encoding-and-decoding-functions[`abi.decode`].\\n     *\\n     * Requirements:\\n     *\\n     * - `target` must be a contract.\\n     * - calling `target` with `data` must not revert.\\n     *\\n     * _Available since v3.1._\\n     */\\n    function functionCall(address target, bytes memory data) internal returns (bytes memory) {\\n        return functionCallWithValue(target, data, 0, \\\"Address: low-level call failed\\\");\\n    }\\n\\n    /**\\n     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`], but with\\n     * `errorMessage` as a fallback revert reason when `target` reverts.\\n     *\\n     * _Available since v3.1._\\n     */\\n    function functionCall(\\n        address target,\\n        bytes memory data,\\n        string memory errorMessage\\n    ) internal returns (bytes memory) {\\n        return functionCallWithValue(target, data, 0, errorMessage);\\n    }\\n\\n    /**\\n     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],\\n     * but also transferring `value` wei to `target`.\\n     *\\n     * Requirements:\\n     *\\n     * - the calling contract must have an ETH balance of at least `value`.\\n     * - the called Solidity function must be `payable`.\\n     *\\n     * _Available since v3.1._\\n     */\\n    function functionCallWithValue(address target, bytes memory data, uint256 value) internal returns (bytes memory) {\\n        return functionCallWithValue(target, data, value, \\\"Address: low-level call with value failed\\\");\\n    }\\n\\n    /**\\n     * @dev Same as {xref-Address-functionCallWithValue-address-bytes-uint256-}[`functionCallWithValue`], but\\n     * with `errorMessage` as a fallback revert reason when `target` reverts.\\n     *\\n     * _Available since v3.1._\\n     */\\n    function functionCallWithValue(\\n        address target,\\n        bytes memory data,\\n        uint256 value,\\n        string memory errorMessage\\n    ) internal returns (bytes memory) {\\n        require(address(this).balance >= value, \\\"Address: insufficient balance for call\\\");\\n        (bool success, bytes memory returndata) = target.call{value: value}(data);\\n        return verifyCallResultFromTarget(target, success, returndata, errorMessage);\\n    }\\n\\n    /**\\n     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],\\n     * but performing a static call.\\n     *\\n     * _Available since v3.3._\\n     */\\n    function functionStaticCall(address target, bytes memory data) internal view returns (bytes memory) {\\n        return functionStaticCall(target, data, \\\"Address: low-level static call failed\\\");\\n    }\\n\\n    /**\\n     * @dev Same as {xref-Address-functionCall-address-bytes-string-}[`functionCall`],\\n     * but performing a static call.\\n     *\\n     * _Available since v3.3._\\n     */\\n    function functionStaticCall(\\n        address target,\\n        bytes memory data,\\n        string memory errorMessage\\n    ) internal view returns (bytes memory) {\\n        (bool success, bytes memory returndata) = target.staticcall(data);\\n        return verifyCallResultFromTarget(target, success, returndata, errorMessage);\\n    }\\n\\n    /**\\n     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],\\n     * but performing a delegate call.\\n     *\\n     * _Available since v3.4._\\n     */\\n    function functionDelegateCall(address target, bytes memory data) internal returns (bytes memory) {\\n        return functionDelegateCall(target, data, \\\"Address: low-level delegate call failed\\\");\\n    }\\n\\n    /**\\n     * @dev Same as {xref-Address-functionCall-address-bytes-string-}[`functionCall`],\\n     * but performing a delegate call.\\n     *\\n     * _Available since v3.4._\\n     */\\n    function functionDelegateCall(\\n        address target,\\n        bytes memory data,\\n        string memory errorMessage\\n    ) internal returns (bytes memory) {\\n        (bool success, bytes memory returndata) = target.delegatecall(data);\\n        return verifyCallResultFromTarget(target, success, returndata, errorMessage);\\n    }\\n\\n    /**\\n     * @dev Tool to verify that a low level call to smart-contract was successful, and revert (either by bubbling\\n     * the revert reason or using the provided one) in case of unsuccessful call or if target was not a contract.\\n     *\\n     * _Available since v4.8._\\n     */\\n    function verifyCallResultFromTarget(\\n        address target,\\n        bool success,\\n        bytes memory returndata,\\n        string memory errorMessage\\n    ) internal view returns (bytes memory) {\\n        if (success) {\\n            if (returndata.length == 0) {\\n                // only check isContract if the call was successful and the return data is empty\\n                // otherwise we already know that it was a contract\\n                require(isContract(target), \\\"Address: call to non-contract\\\");\\n            }\\n            return returndata;\\n        } else {\\n            _revert(returndata, errorMessage);\\n        }\\n    }\\n\\n    /**\\n     * @dev Tool to verify that a low level call was successful, and revert if it wasn't, either by bubbling the\\n     * revert reason or using the provided one.\\n     *\\n     * _Available since v4.3._\\n     */\\n    function verifyCallResult(\\n        bool success,\\n        bytes memory returndata,\\n        string memory errorMessage\\n    ) internal pure returns (bytes memory) {\\n        if (success) {\\n            return returndata;\\n        } else {\\n            _revert(returndata, errorMessage);\\n        }\\n    }\\n\\n    function _revert(bytes memory returndata, string memory errorMessage) private pure {\\n        // Look for revert reason and bubble it up if present\\n        if (returndata.length > 0) {\\n            // The easiest way to bubble the revert reason is using memory via assembly\\n            /// @solidity memory-safe-assembly\\n            assembly {\\n                let returndata_size := mload(returndata)\\n                revert(add(32, returndata), returndata_size)\\n            }\\n        } else {\\n            revert(errorMessage);\\n        }\\n    }\\n}\\n\",\"keccak256\":\"0x006dd67219697fe68d7fbfdea512e7c4cb64a43565ed86171d67e844982da6fa\",\"license\":\"MIT\"},\"contracts/BaluniPoolPolygon_v1.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\r\\npragma solidity ^0.8.0;\\r\\nimport \\\"./Oracle.sol\\\";\\r\\nimport \\\"@openzeppelin/contracts/security/ReentrancyGuard.sol\\\";\\r\\nimport \\\"@openzeppelin/contracts/utils/Address.sol\\\";\\r\\n\\r\\ncontract BaluniPoolV1 is ReentrancyGuard {\\r\\n\\tOracle public oracle;\\r\\n\\r\\n\\tenum Coin {\\r\\n\\t\\tMATIC\\r\\n\\t}\\r\\n\\r\\n\\tstruct Prediction {\\r\\n\\t\\taddress predictor;\\r\\n\\t\\tCoin token;\\r\\n\\t\\tuint256 predictedPrice;\\r\\n\\t\\tuint256 actualPrice;\\r\\n\\t\\tuint256 resolvedPrice;\\r\\n\\t\\tuint256 difference;\\r\\n\\t\\tuint256 timestamp;\\r\\n\\t\\tuint256 endTime;\\r\\n\\t\\tbool resolved;\\r\\n\\t}\\r\\n\\r\\n\\tPrediction[] public predictions;\\r\\n\\r\\n\\tuint256 public registrationFee = 0.01 ether;\\r\\n\\tuint256 public totalPredictions = 0;\\r\\n\\r\\n\\tmapping(address => uint256) public distributionCounter;\\r\\n\\tmapping(address => uint256) public lastWithdraw;\\r\\n\\tmapping(address => uint256) public userSubmissionFees;\\r\\n\\r\\n\\tevent PredictionRegistered(\\r\\n\\t\\taddress indexed predictor,\\r\\n\\t\\tCoin token,\\r\\n\\t\\tuint256 predictedPrice,\\r\\n\\t\\tuint256 actualPrice,\\r\\n\\t\\tuint256 timestamp,\\r\\n\\t\\tuint256 endTime\\r\\n\\t);\\r\\n\\tevent RewardWithdrawn(address indexed predictor, uint256 amount);\\r\\n\\r\\n\\tconstructor(address _oracleAddress) ReentrancyGuard() {\\r\\n\\t\\toracle = Oracle(_oracleAddress);\\r\\n\\t}\\r\\n\\r\\n\\tfunction getSubmissionFee() public view returns (uint256) {\\r\\n\\t\\treturn userSubmissionFees[msg.sender];\\r\\n\\t}\\r\\n\\r\\n\\tfunction submit(Coin _token, uint256 _predictedPrice) public payable {\\r\\n\\t\\trequire(msg.value >= 0.01 ether, \\\"Invalid fee amount\\\");\\r\\n\\t\\trequire(\\r\\n\\t\\t\\tmsg.value >= userSubmissionFees[msg.sender],\\r\\n\\t\\t\\t\\\"Invalid fee amount\\\"\\r\\n\\t\\t);\\r\\n\\r\\n\\t\\tuserSubmissionFees[msg.sender] = msg.value;\\r\\n\\t\\tuserSubmissionFees[msg.sender] += 0.001 ether;\\r\\n\\r\\n\\t\\tuint256 price = oracle.getLatestPrice() * 1e10;\\r\\n\\r\\n\\t\\tpredictions.push(\\r\\n\\t\\t\\tPrediction(\\r\\n\\t\\t\\t\\tmsg.sender,\\r\\n\\t\\t\\t\\t_token,\\r\\n\\t\\t\\t\\t_predictedPrice,\\r\\n\\t\\t\\t\\tprice,\\r\\n\\t\\t\\t\\t0,\\r\\n\\t\\t\\t\\t0,\\r\\n\\t\\t\\t\\tblock.timestamp,\\r\\n\\t\\t\\t\\tblock.timestamp + 1 days,\\r\\n\\t\\t\\t\\tfalse\\r\\n\\t\\t\\t)\\r\\n\\t\\t);\\r\\n\\t\\ttotalPredictions++;\\r\\n\\t\\tdistributionCounter[msg.sender]++;\\r\\n\\r\\n\\t\\temit PredictionRegistered(\\r\\n\\t\\t\\tmsg.sender,\\r\\n\\t\\t\\t_token,\\r\\n\\t\\t\\t_predictedPrice,\\r\\n\\t\\t\\tprice,\\r\\n\\t\\t\\tblock.timestamp,\\r\\n\\t\\t\\tblock.timestamp + 1 days\\r\\n\\t\\t);\\r\\n\\t}\\r\\n\\r\\n\\tfunction exit() public {\\r\\n\\t\\trequire(\\r\\n\\t\\t\\tblock.timestamp - lastWithdraw[msg.sender] >= 30 days,\\r\\n\\t\\t\\t\\\"Wait for 30 days before next withdraw\\\"\\r\\n\\t\\t);\\r\\n\\r\\n\\t\\tuint256 reward = calculateReward(msg.sender);\\r\\n\\r\\n\\t\\trequire(reward > 0, \\\"No reward available\\\");\\r\\n\\r\\n\\t\\t// Aggiornamento dello stato prima della trasferimento per prevenire reentrancy\\r\\n\\t\\ttotalPredictions -= distributionCounter[msg.sender];\\r\\n\\t\\tdistributionCounter[msg.sender] = 0;\\r\\n\\t\\tlastWithdraw[msg.sender] = block.timestamp;\\r\\n\\r\\n\\t\\tuserSubmissionFees[msg.sender] = registrationFee;\\r\\n\\r\\n\\t\\tAddress.sendValue(payable(msg.sender), reward);\\r\\n\\r\\n\\t\\temit RewardWithdrawn(msg.sender, reward);\\r\\n\\t}\\r\\n\\r\\n\\tfunction calculateReward(address user) public view returns (uint256) {\\r\\n\\t\\tuint256 userShare = (distributionCounter[user] * 1e18) /\\r\\n\\t\\t\\ttotalPredictions;\\r\\n\\t\\treturn (address(this).balance * userShare) / 1e18 / 2;\\r\\n\\t}\\r\\n\\r\\n\\tfunction last10Predictions() public view returns (Prediction[] memory) {\\r\\n\\t\\tuint256 length = predictions.length;\\r\\n\\t\\tuint256 start = length > 10 ? length - 10 : 0;\\r\\n\\t\\tPrediction[] memory result = new Prediction[](length - start);\\r\\n\\t\\tfor (uint256 i = start; i < length; i++) {\\r\\n\\t\\t\\tresult[i - start] = predictions[i];\\r\\n\\t\\t}\\r\\n\\t\\treturn result;\\r\\n\\t}\\r\\n\\r\\n\\tfunction getPrediction(\\r\\n\\t\\tuint256 index\\r\\n\\t) public view returns (Prediction memory) {\\r\\n\\t\\trequire(index < predictions.length, \\\"Invalid index\\\");\\r\\n\\t\\treturn predictions[index];\\r\\n\\t}\\r\\n\\r\\n\\tfunction getPredictionFromTo(\\r\\n\\t\\tuint256 from,\\r\\n\\t\\tuint256 to\\r\\n\\t) public view returns (Prediction[] memory) {\\r\\n\\t\\trequire(from < to, \\\"Invalid range\\\");\\r\\n\\t\\trequire(to <= predictions.length, \\\"Invalid range\\\");\\r\\n\\t\\tPrediction[] memory result = new Prediction[](to - from);\\r\\n\\t\\tfor (uint256 i = from; i < to; i++) {\\r\\n\\t\\t\\tresult[i - from] = predictions[i];\\r\\n\\t\\t}\\r\\n\\t\\treturn result;\\r\\n\\t}\\r\\n\\r\\n\\tfunction getPredictionCount() public view returns (uint256) {\\r\\n\\t\\treturn predictions.length;\\r\\n\\t}\\r\\n\\r\\n\\tfunction getTotalPredictions() public view returns (uint256) {\\r\\n\\t\\treturn totalPredictions;\\r\\n\\t}\\r\\n\\r\\n\\tfunction hasAnyUnresolvedPastEndTime() public view returns (bool) {\\r\\n\\t\\tfor (uint256 i = 0; i < predictions.length; i++) {\\r\\n\\t\\t\\tif (\\r\\n\\t\\t\\t\\t!predictions[i].resolved &&\\r\\n\\t\\t\\t\\tblock.timestamp > predictions[i].endTime\\r\\n\\t\\t\\t) {\\r\\n\\t\\t\\t\\treturn true; // Restituisce true alla prima occorrenza di una previsione non risolta superata da endTime\\r\\n\\t\\t\\t}\\r\\n\\t\\t}\\r\\n\\t\\treturn false; // Se nessuna previsione non risolta ha superato endTime, restituisce false\\r\\n\\t}\\r\\n\\r\\n\\tfunction resolve() public {\\r\\n\\t\\tuint256 latestPrice = oracle.getLatestPrice() * 1e10;\\r\\n\\r\\n\\t\\tbool hasUnresolvedPredictions = false;\\r\\n\\r\\n\\t\\tfor (\\r\\n\\t\\t\\tuint256 i = 0;\\r\\n\\t\\t\\ti < predictions.length && !hasUnresolvedPredictions;\\r\\n\\t\\t\\ti++\\r\\n\\t\\t) {\\r\\n\\t\\t\\tif (predictions[i].resolved == false) {\\r\\n\\t\\t\\t\\thasUnresolvedPredictions = true;\\r\\n\\t\\t\\t}\\r\\n\\t\\t}\\r\\n\\r\\n\\t\\tif (!hasUnresolvedPredictions) return;\\r\\n\\r\\n\\t\\tfor (uint256 i = 0; i < predictions.length; i++) {\\r\\n\\t\\t\\tif (\\r\\n\\t\\t\\t\\t!predictions[i].resolved &&\\r\\n\\t\\t\\t\\tblock.timestamp >= predictions[i].endTime\\r\\n\\t\\t\\t) {\\r\\n\\t\\t\\t\\tuint256 predictedPrice = predictions[i].predictedPrice;\\r\\n\\t\\t\\t\\tuint256 priceDifference = predictedPrice > latestPrice\\r\\n\\t\\t\\t\\t\\t? predictedPrice - latestPrice\\r\\n\\t\\t\\t\\t\\t: latestPrice - predictedPrice;\\r\\n\\r\\n\\t\\t\\t\\tpredictions[i].difference = priceDifference;\\r\\n\\t\\t\\t\\tpredictions[i].resolved = true;\\r\\n\\t\\t\\t}\\r\\n\\t\\t}\\r\\n\\r\\n\\t\\ttotalPredictions++;\\r\\n\\t\\tdistributionCounter[msg.sender]++;\\r\\n\\t}\\r\\n\\r\\n\\tfunction hasUnresolvedPredictions() public view returns (bool) {\\r\\n\\t\\tfor (uint256 i = 0; i < predictions.length; i++) {\\r\\n\\t\\t\\tif (!predictions[i].resolved) {\\r\\n\\t\\t\\t\\treturn true;\\r\\n\\t\\t\\t}\\r\\n\\t\\t}\\r\\n\\t\\treturn false;\\r\\n\\t}\\r\\n\\r\\n\\t// Permetti al contratto di ricevere ETH\\r\\n\\treceive() external payable {}\\r\\n}\\r\\n\",\"keccak256\":\"0xdc31f82db5ca414c7b0f41622e4cce1f57d1fc0acdff9617827837920fc8dc2b\",\"license\":\"MIT\"},\"contracts/Oracle.sol\":{\"content\":\"import \\\"@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol\\\";\\r\\n\\r\\ncontract Oracle {\\r\\n\\tAggregatorV3Interface internal priceFeed;\\r\\n\\r\\n\\tconstructor(address _priceFeedAddress) {\\r\\n\\t\\tpriceFeed = AggregatorV3Interface(_priceFeedAddress);\\r\\n\\t}\\r\\n\\r\\n\\tfunction getLatestPrice() public view returns (uint256) {\\r\\n\\t\\t(, int256 price, , , ) = priceFeed.latestRoundData();\\r\\n\\t\\t// Assumiamo che il prezzo sia sempre positivo\\r\\n\\t\\treturn uint256(price); // Adatta questa moltiplicazione in base alla tua necessit\\u00e0\\r\\n\\t}\\r\\n}\\r\\n\",\"keccak256\":\"0x3d71c8afb17be59e107fc8f69d49dc6bffef1ad3570441adebc01f187337135b\"}},\"version\":1}",
+  "bytecode": "0x6080604052662386f26fc10000600355600060045534801561002057600080fd5b506040516115e03803806115e083398101604081905261003f91610069565b6001600081905580546001600160a01b0319166001600160a01b0392909216919091179055610099565b60006020828403121561007b57600080fd5b81516001600160a01b038116811461009257600080fd5b9392505050565b611538806100a86000396000f3fe6080604052600436106101175760003560e01c80635c580061116100a0578063d1c4e1b411610064578063d1c4e1b414610311578063d82e396214610326578063e9fad8ee14610346578063f9be85231461035b578063fe83bece1461037d57600080fd5b80635c58006114610254578063600bebf514610269578063624d7b7214610296578063779bd562146102c35780637dc0d1d0146102d957600080fd5b80632810e1d6116100e75780632810e1d6146101c3578063371d5d02146101da5780634abf93b7146101ff5780634ce93cc8146102145780635590cfa91461022757600080fd5b80624fbbb0146101235780630166809614610161578063037361e91461018057806314c44e09146101ad57600080fd5b3661011e57005b600080fd5b34801561012f57600080fd5b5061014361013e36600461120f565b6103aa565b60405161015899989796959493929190611260565b60405180910390f35b34801561016d57600080fd5b506002545b604051908152602001610158565b34801561018c57600080fd5b5061017261019b3660046112b7565b60056020526000908152604090205481565b3480156101b957600080fd5b5061017260035481565b3480156101cf57600080fd5b506101d8610417565b005b3480156101e657600080fd5b506101ef610669565b6040519015158152602001610158565b34801561020b57600080fd5b506101ef6106c7565b6101d86102223660046112e0565b61074e565b34801561023357600080fd5b50610247610242366004611310565b610a4f565b60405161015891906113a1565b34801561026057600080fd5b50600454610172565b34801561027557600080fd5b506101726102843660046112b7565b60076020526000908152604090205481565b3480156102a257600080fd5b506101726102b13660046112b7565b60066020526000908152604090205481565b3480156102cf57600080fd5b5061017260045481565b3480156102e557600080fd5b506001546102f9906001600160a01b031681565b6040516001600160a01b039091168152602001610158565b34801561031d57600080fd5b50610247610c3b565b34801561033257600080fd5b506101726103413660046112b7565b610dc6565b34801561035257600080fd5b506101d8610e34565b34801561036757600080fd5b5033600090815260076020526040902054610172565b34801561038957600080fd5b5061039d61039836600461120f565b610f97565b60405161015891906113f0565b600281815481106103ba57600080fd5b6000918252602090912060089091020180546001820154600283015460038401546004850154600586015460068701546007909701546001600160a01b038716985060ff600160a01b909704871697959694959394929391921689565b60015460408051638e15f47360e01b815290516000926001600160a01b031691638e15f4739160048083019260209291908290030181865afa158015610461573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061048591906113ff565b610494906402540be40061142e565b90506000805b600254811080156104a9575081155b156104f657600281815481106104c1576104c1611445565b6000918252602082206007600890920201015460ff16151590036104e457600191505b806104ee8161145b565b91505061049a565b5080610500575050565b60005b60025481101561062f576002818154811061052057610520611445565b600091825260209091206007600890920201015460ff1615801561056857506002818154811061055257610552611445565b9060005260206000209060080201600601544210155b1561061d5760006002828154811061058257610582611445565b906000526020600020906008020160010154905060008482116105ae576105a98286611474565b6105b8565b6105b88583611474565b905080600284815481106105ce576105ce611445565b9060005260206000209060080201600401819055506001600284815481106105f8576105f8611445565b60009182526020909120600890910201600701805460ff191691151591909117905550505b806106278161145b565b915050610503565b50600480549060006106408361145b565b90915550503360009081526005602052604081208054916106608361145b565b91905055505050565b6000805b6002548110156106bf576002818154811061068a5761068a611445565b600091825260209091206007600890920201015460ff166106ad57600191505090565b806106b78161145b565b91505061066d565b506000905090565b6000805b6002548110156106bf57600281815481106106e8576106e8611445565b600091825260209091206007600890920201015460ff1615801561072f57506002818154811061071a5761071a611445565b90600052602060002090600802016006015442115b1561073c57600191505090565b806107468161145b565b9150506106cb565b662386f26fc1000034101561079f5760405162461bcd60e51b8152602060048201526012602482015271125b9d985b1a590819995948185b5bdd5b9d60721b60448201526064015b60405180910390fd5b336000908152600760205260409020543410156107f35760405162461bcd60e51b8152602060048201526012602482015271125b9d985b1a590819995948185b5bdd5b9d60721b6044820152606401610796565b3360009081526007602052604081203480825566038d7ea4c68000929061081b908490611487565b909155505060015460408051638e15f47360e01b815290516000926001600160a01b031691638e15f4739160048083019260209291908290030181865afa15801561086a573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061088e91906113ff565b61089d906402540be40061142e565b90506002604051806101200160405280336001600160a01b031681526020018560008111156108ce576108ce611228565b8152602001848152602001838152602001600081526020016000815260200142815260200142620151806109029190611487565b8152600060209182018190528354600181018555938152819020825160089094020180546001600160a01b039094166001600160a01b031985168117825591830151929390929183916001600160a81b03191617600160a01b83801561096a5761096a611228565b021790555060408201516001820155606082015160028201556080820151600382015560a082015160048083019190915560c0830151600583015560e08301516006830155610100909201516007909101805460ff191691151591909117905580549060006109d88361145b565b90915550503360009081526005602052604081208054916109f88361145b565b909155503390507f046796fc72779cbabd1ea8b64c35f18f13d4d3d4693526deb779040b773c311b84848442610a318162015180611487565b604051610a4295949392919061149a565b60405180910390a2505050565b6060818310610a905760405162461bcd60e51b815260206004820152600d60248201526c496e76616c69642072616e676560981b6044820152606401610796565b600254821115610ad25760405162461bcd60e51b815260206004820152600d60248201526c496e76616c69642072616e676560981b6044820152606401610796565b6000610ade8484611474565b67ffffffffffffffff811115610af657610af66114ca565b604051908082528060200260200182016040528015610b2f57816020015b610b1c6111c0565b815260200190600190039081610b145790505b509050835b83811015610c315760028181548110610b4f57610b4f611445565b600091825260209182902060408051610120810190915260089092020180546001600160a01b0381168352919290919083019060ff600160a01b909104168015610b9b57610b9b611228565b8015610ba957610ba9611228565b815260018201546020820152600282015460408201526003820154606082015260048201546080820152600582015460a0820152600682015460c082015260079091015460ff16151560e09091015282610c038784611474565b81518110610c1357610c13611445565b60200260200101819052508080610c299061145b565b915050610b34565b5090505b92915050565b6002546060906000600a8211610c52576000610c5d565b610c5d600a83611474565b90506000610c6b8284611474565b67ffffffffffffffff811115610c8357610c836114ca565b604051908082528060200260200182016040528015610cbc57816020015b610ca96111c0565b815260200190600190039081610ca15790505b509050815b83811015610dbe5760028181548110610cdc57610cdc611445565b600091825260209182902060408051610120810190915260089092020180546001600160a01b0381168352919290919083019060ff600160a01b909104168015610d2857610d28611228565b8015610d3657610d36611228565b815260018201546020820152600282015460408201526003820154606082015260048201546080820152600582015460a0820152600682015460c082015260079091015460ff16151560e09091015282610d908584611474565b81518110610da057610da0611445565b60200260200101819052508080610db69061145b565b915050610cc1565b509392505050565b6004546001600160a01b03821660009081526005602052604081205490918291610df890670de0b6b3a764000061142e565b610e0291906114e0565b90506002670de0b6b3a7640000610e19834761142e565b610e2391906114e0565b610e2d91906114e0565b9392505050565b3360009081526006602052604090205462278d0090610e539042611474565b1015610eaf5760405162461bcd60e51b815260206004820152602560248201527f5761697420666f722033302064617973206265666f7265206e65787420776974604482015264686472617760d81b6064820152608401610796565b6000610eba33610dc6565b905060008111610f025760405162461bcd60e51b81526020600482015260136024820152724e6f2072657761726420617661696c61626c6560681b6044820152606401610796565b336000908152600560205260408120546004805491929091610f25908490611474565b909155505033600081815260056020908152604080832083905560068252808320429055600354600790925290912055610f5f90826110a2565b60405181815233907f1d3eee4ca001cff39eec6ec7615aacf2f2bd61791273830728ba00ccbd6e13379060200160405180910390a250565b610f9f6111c0565b6002548210610fe05760405162461bcd60e51b815260206004820152600d60248201526c092dcecc2d8d2c840d2dcc8caf609b1b6044820152606401610796565b60028281548110610ff357610ff3611445565b600091825260209182902060408051610120810190915260089092020180546001600160a01b0381168352919290919083019060ff600160a01b90910416801561103f5761103f611228565b801561104d5761104d611228565b815260018201546020820152600282015460408201526003820154606082015260048201546080820152600582015460a0820152600682015460c082015260079091015460ff16151560e09091015292915050565b804710156110f25760405162461bcd60e51b815260206004820152601d60248201527f416464726573733a20696e73756666696369656e742062616c616e63650000006044820152606401610796565b6000826001600160a01b03168260405160006040518083038185875af1925050503d806000811461113f576040519150601f19603f3d011682016040523d82523d6000602084013e611144565b606091505b50509050806111bb5760405162461bcd60e51b815260206004820152603a60248201527f416464726573733a20756e61626c6520746f2073656e642076616c75652c207260448201527f6563697069656e74206d617920686176652072657665727465640000000000006064820152608401610796565b505050565b6040805161012081019091526000808252602082019081526020016000815260200160008152602001600081526020016000815260200160008152602001600081526020016000151581525090565b60006020828403121561122157600080fd5b5035919050565b634e487b7160e01b600052602160045260246000fd5b6001811061125c57634e487b7160e01b600052602160045260246000fd5b9052565b6001600160a01b038a168152610120810161127e602083018b61123e565b60408201989098526060810196909652608086019490945260a085019290925260c084015260e083015215156101009091015292915050565b6000602082840312156112c957600080fd5b81356001600160a01b0381168114610e2d57600080fd5b600080604083850312156112f357600080fd5b82356001811061130257600080fd5b946020939093013593505050565b6000806040838503121561132357600080fd5b50508035926020909101359150565b80516001600160a01b03168252602080820151906113529084018261123e565b5060408101516040830152606081015160608301526080810151608083015260a081015160a083015260c081015160c083015260e081015160e083015261010080820151151581840152505050565b6020808252825182820181905260009190848201906040850190845b818110156113e4576113d0838551611332565b9284019261012092909201916001016113bd565b50909695505050505050565b6101208101610c358284611332565b60006020828403121561141157600080fd5b5051919050565b634e487b7160e01b600052601160045260246000fd5b8082028115828204841417610c3557610c35611418565b634e487b7160e01b600052603260045260246000fd5b60006001820161146d5761146d611418565b5060010190565b81810381811115610c3557610c35611418565b80820180821115610c3557610c35611418565b60a081016114a8828861123e565b8560208301528460408301528360608301528260808301529695505050505050565b634e487b7160e01b600052604160045260246000fd5b6000826114fd57634e487b7160e01b600052601260045260246000fd5b50049056fea2646970667358221220239fb35c2add4bbfd261da648a11e1ac4c7b23d7f9b4037519d736da59d5a8e664736f6c63430008110033",
+  "deployedBytecode": "0x6080604052600436106101175760003560e01c80635c580061116100a0578063d1c4e1b411610064578063d1c4e1b414610311578063d82e396214610326578063e9fad8ee14610346578063f9be85231461035b578063fe83bece1461037d57600080fd5b80635c58006114610254578063600bebf514610269578063624d7b7214610296578063779bd562146102c35780637dc0d1d0146102d957600080fd5b80632810e1d6116100e75780632810e1d6146101c3578063371d5d02146101da5780634abf93b7146101ff5780634ce93cc8146102145780635590cfa91461022757600080fd5b80624fbbb0146101235780630166809614610161578063037361e91461018057806314c44e09146101ad57600080fd5b3661011e57005b600080fd5b34801561012f57600080fd5b5061014361013e36600461120f565b6103aa565b60405161015899989796959493929190611260565b60405180910390f35b34801561016d57600080fd5b506002545b604051908152602001610158565b34801561018c57600080fd5b5061017261019b3660046112b7565b60056020526000908152604090205481565b3480156101b957600080fd5b5061017260035481565b3480156101cf57600080fd5b506101d8610417565b005b3480156101e657600080fd5b506101ef610669565b6040519015158152602001610158565b34801561020b57600080fd5b506101ef6106c7565b6101d86102223660046112e0565b61074e565b34801561023357600080fd5b50610247610242366004611310565b610a4f565b60405161015891906113a1565b34801561026057600080fd5b50600454610172565b34801561027557600080fd5b506101726102843660046112b7565b60076020526000908152604090205481565b3480156102a257600080fd5b506101726102b13660046112b7565b60066020526000908152604090205481565b3480156102cf57600080fd5b5061017260045481565b3480156102e557600080fd5b506001546102f9906001600160a01b031681565b6040516001600160a01b039091168152602001610158565b34801561031d57600080fd5b50610247610c3b565b34801561033257600080fd5b506101726103413660046112b7565b610dc6565b34801561035257600080fd5b506101d8610e34565b34801561036757600080fd5b5033600090815260076020526040902054610172565b34801561038957600080fd5b5061039d61039836600461120f565b610f97565b60405161015891906113f0565b600281815481106103ba57600080fd5b6000918252602090912060089091020180546001820154600283015460038401546004850154600586015460068701546007909701546001600160a01b038716985060ff600160a01b909704871697959694959394929391921689565b60015460408051638e15f47360e01b815290516000926001600160a01b031691638e15f4739160048083019260209291908290030181865afa158015610461573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061048591906113ff565b610494906402540be40061142e565b90506000805b600254811080156104a9575081155b156104f657600281815481106104c1576104c1611445565b6000918252602082206007600890920201015460ff16151590036104e457600191505b806104ee8161145b565b91505061049a565b5080610500575050565b60005b60025481101561062f576002818154811061052057610520611445565b600091825260209091206007600890920201015460ff1615801561056857506002818154811061055257610552611445565b9060005260206000209060080201600601544210155b1561061d5760006002828154811061058257610582611445565b906000526020600020906008020160010154905060008482116105ae576105a98286611474565b6105b8565b6105b88583611474565b905080600284815481106105ce576105ce611445565b9060005260206000209060080201600401819055506001600284815481106105f8576105f8611445565b60009182526020909120600890910201600701805460ff191691151591909117905550505b806106278161145b565b915050610503565b50600480549060006106408361145b565b90915550503360009081526005602052604081208054916106608361145b565b91905055505050565b6000805b6002548110156106bf576002818154811061068a5761068a611445565b600091825260209091206007600890920201015460ff166106ad57600191505090565b806106b78161145b565b91505061066d565b506000905090565b6000805b6002548110156106bf57600281815481106106e8576106e8611445565b600091825260209091206007600890920201015460ff1615801561072f57506002818154811061071a5761071a611445565b90600052602060002090600802016006015442115b1561073c57600191505090565b806107468161145b565b9150506106cb565b662386f26fc1000034101561079f5760405162461bcd60e51b8152602060048201526012602482015271125b9d985b1a590819995948185b5bdd5b9d60721b60448201526064015b60405180910390fd5b336000908152600760205260409020543410156107f35760405162461bcd60e51b8152602060048201526012602482015271125b9d985b1a590819995948185b5bdd5b9d60721b6044820152606401610796565b3360009081526007602052604081203480825566038d7ea4c68000929061081b908490611487565b909155505060015460408051638e15f47360e01b815290516000926001600160a01b031691638e15f4739160048083019260209291908290030181865afa15801561086a573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061088e91906113ff565b61089d906402540be40061142e565b90506002604051806101200160405280336001600160a01b031681526020018560008111156108ce576108ce611228565b8152602001848152602001838152602001600081526020016000815260200142815260200142620151806109029190611487565b8152600060209182018190528354600181018555938152819020825160089094020180546001600160a01b039094166001600160a01b031985168117825591830151929390929183916001600160a81b03191617600160a01b83801561096a5761096a611228565b021790555060408201516001820155606082015160028201556080820151600382015560a082015160048083019190915560c0830151600583015560e08301516006830155610100909201516007909101805460ff191691151591909117905580549060006109d88361145b565b90915550503360009081526005602052604081208054916109f88361145b565b909155503390507f046796fc72779cbabd1ea8b64c35f18f13d4d3d4693526deb779040b773c311b84848442610a318162015180611487565b604051610a4295949392919061149a565b60405180910390a2505050565b6060818310610a905760405162461bcd60e51b815260206004820152600d60248201526c496e76616c69642072616e676560981b6044820152606401610796565b600254821115610ad25760405162461bcd60e51b815260206004820152600d60248201526c496e76616c69642072616e676560981b6044820152606401610796565b6000610ade8484611474565b67ffffffffffffffff811115610af657610af66114ca565b604051908082528060200260200182016040528015610b2f57816020015b610b1c6111c0565b815260200190600190039081610b145790505b509050835b83811015610c315760028181548110610b4f57610b4f611445565b600091825260209182902060408051610120810190915260089092020180546001600160a01b0381168352919290919083019060ff600160a01b909104168015610b9b57610b9b611228565b8015610ba957610ba9611228565b815260018201546020820152600282015460408201526003820154606082015260048201546080820152600582015460a0820152600682015460c082015260079091015460ff16151560e09091015282610c038784611474565b81518110610c1357610c13611445565b60200260200101819052508080610c299061145b565b915050610b34565b5090505b92915050565b6002546060906000600a8211610c52576000610c5d565b610c5d600a83611474565b90506000610c6b8284611474565b67ffffffffffffffff811115610c8357610c836114ca565b604051908082528060200260200182016040528015610cbc57816020015b610ca96111c0565b815260200190600190039081610ca15790505b509050815b83811015610dbe5760028181548110610cdc57610cdc611445565b600091825260209182902060408051610120810190915260089092020180546001600160a01b0381168352919290919083019060ff600160a01b909104168015610d2857610d28611228565b8015610d3657610d36611228565b815260018201546020820152600282015460408201526003820154606082015260048201546080820152600582015460a0820152600682015460c082015260079091015460ff16151560e09091015282610d908584611474565b81518110610da057610da0611445565b60200260200101819052508080610db69061145b565b915050610cc1565b509392505050565b6004546001600160a01b03821660009081526005602052604081205490918291610df890670de0b6b3a764000061142e565b610e0291906114e0565b90506002670de0b6b3a7640000610e19834761142e565b610e2391906114e0565b610e2d91906114e0565b9392505050565b3360009081526006602052604090205462278d0090610e539042611474565b1015610eaf5760405162461bcd60e51b815260206004820152602560248201527f5761697420666f722033302064617973206265666f7265206e65787420776974604482015264686472617760d81b6064820152608401610796565b6000610eba33610dc6565b905060008111610f025760405162461bcd60e51b81526020600482015260136024820152724e6f2072657761726420617661696c61626c6560681b6044820152606401610796565b336000908152600560205260408120546004805491929091610f25908490611474565b909155505033600081815260056020908152604080832083905560068252808320429055600354600790925290912055610f5f90826110a2565b60405181815233907f1d3eee4ca001cff39eec6ec7615aacf2f2bd61791273830728ba00ccbd6e13379060200160405180910390a250565b610f9f6111c0565b6002548210610fe05760405162461bcd60e51b815260206004820152600d60248201526c092dcecc2d8d2c840d2dcc8caf609b1b6044820152606401610796565b60028281548110610ff357610ff3611445565b600091825260209182902060408051610120810190915260089092020180546001600160a01b0381168352919290919083019060ff600160a01b90910416801561103f5761103f611228565b801561104d5761104d611228565b815260018201546020820152600282015460408201526003820154606082015260048201546080820152600582015460a0820152600682015460c082015260079091015460ff16151560e09091015292915050565b804710156110f25760405162461bcd60e51b815260206004820152601d60248201527f416464726573733a20696e73756666696369656e742062616c616e63650000006044820152606401610796565b6000826001600160a01b03168260405160006040518083038185875af1925050503d806000811461113f576040519150601f19603f3d011682016040523d82523d6000602084013e611144565b606091505b50509050806111bb5760405162461bcd60e51b815260206004820152603a60248201527f416464726573733a20756e61626c6520746f2073656e642076616c75652c207260448201527f6563697069656e74206d617920686176652072657665727465640000000000006064820152608401610796565b505050565b6040805161012081019091526000808252602082019081526020016000815260200160008152602001600081526020016000815260200160008152602001600081526020016000151581525090565b60006020828403121561122157600080fd5b5035919050565b634e487b7160e01b600052602160045260246000fd5b6001811061125c57634e487b7160e01b600052602160045260246000fd5b9052565b6001600160a01b038a168152610120810161127e602083018b61123e565b60408201989098526060810196909652608086019490945260a085019290925260c084015260e083015215156101009091015292915050565b6000602082840312156112c957600080fd5b81356001600160a01b0381168114610e2d57600080fd5b600080604083850312156112f357600080fd5b82356001811061130257600080fd5b946020939093013593505050565b6000806040838503121561132357600080fd5b50508035926020909101359150565b80516001600160a01b03168252602080820151906113529084018261123e565b5060408101516040830152606081015160608301526080810151608083015260a081015160a083015260c081015160c083015260e081015160e083015261010080820151151581840152505050565b6020808252825182820181905260009190848201906040850190845b818110156113e4576113d0838551611332565b9284019261012092909201916001016113bd565b50909695505050505050565b6101208101610c358284611332565b60006020828403121561141157600080fd5b5051919050565b634e487b7160e01b600052601160045260246000fd5b8082028115828204841417610c3557610c35611418565b634e487b7160e01b600052603260045260246000fd5b60006001820161146d5761146d611418565b5060010190565b81810381811115610c3557610c35611418565b80820180821115610c3557610c35611418565b60a081016114a8828861123e565b8560208301528460408301528360608301528260808301529695505050505050565b634e487b7160e01b600052604160045260246000fd5b6000826114fd57634e487b7160e01b600052601260045260246000fd5b50049056fea2646970667358221220239fb35c2add4bbfd261da648a11e1ac4c7b23d7f9b4037519d736da59d5a8e664736f6c63430008110033",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 56,
+        "contract": "contracts/BaluniPoolPolygon_v1.sol:BaluniPoolV1",
+        "label": "_status",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_uint256"
+      },
+      {
+        "astId": 450,
+        "contract": "contracts/BaluniPoolPolygon_v1.sol:BaluniPoolV1",
+        "label": "oracle",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_contract(Oracle)1877"
+      },
+      {
+        "astId": 476,
+        "contract": "contracts/BaluniPoolPolygon_v1.sol:BaluniPoolV1",
+        "label": "predictions",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_array(t_struct(Prediction)472_storage)dyn_storage"
+      },
+      {
+        "astId": 479,
+        "contract": "contracts/BaluniPoolPolygon_v1.sol:BaluniPoolV1",
+        "label": "registrationFee",
+        "offset": 0,
+        "slot": "3",
+        "type": "t_uint256"
+      },
+      {
+        "astId": 482,
+        "contract": "contracts/BaluniPoolPolygon_v1.sol:BaluniPoolV1",
+        "label": "totalPredictions",
+        "offset": 0,
+        "slot": "4",
+        "type": "t_uint256"
+      },
+      {
+        "astId": 486,
+        "contract": "contracts/BaluniPoolPolygon_v1.sol:BaluniPoolV1",
+        "label": "distributionCounter",
+        "offset": 0,
+        "slot": "5",
+        "type": "t_mapping(t_address,t_uint256)"
+      },
+      {
+        "astId": 490,
+        "contract": "contracts/BaluniPoolPolygon_v1.sol:BaluniPoolV1",
+        "label": "lastWithdraw",
+        "offset": 0,
+        "slot": "6",
+        "type": "t_mapping(t_address,t_uint256)"
+      },
+      {
+        "astId": 494,
+        "contract": "contracts/BaluniPoolPolygon_v1.sol:BaluniPoolV1",
+        "label": "userSubmissionFees",
+        "offset": 0,
+        "slot": "7",
+        "type": "t_mapping(t_address,t_uint256)"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_array(t_struct(Prediction)472_storage)dyn_storage": {
+        "base": "t_struct(Prediction)472_storage",
+        "encoding": "dynamic_array",
+        "label": "struct BaluniPoolV1.Prediction[]",
+        "numberOfBytes": "32"
+      },
+      "t_bool": {
+        "encoding": "inplace",
+        "label": "bool",
+        "numberOfBytes": "1"
+      },
+      "t_contract(Oracle)1877": {
+        "encoding": "inplace",
+        "label": "contract Oracle",
+        "numberOfBytes": "20"
+      },
+      "t_enum(Coin)452": {
+        "encoding": "inplace",
+        "label": "enum BaluniPoolV1.Coin",
+        "numberOfBytes": "1"
+      },
+      "t_mapping(t_address,t_uint256)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => uint256)",
+        "numberOfBytes": "32",
+        "value": "t_uint256"
+      },
+      "t_struct(Prediction)472_storage": {
+        "encoding": "inplace",
+        "label": "struct BaluniPoolV1.Prediction",
+        "members": [
+          {
+            "astId": 454,
+            "contract": "contracts/BaluniPoolPolygon_v1.sol:BaluniPoolV1",
+            "label": "predictor",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address"
+          },
+          {
+            "astId": 457,
+            "contract": "contracts/BaluniPoolPolygon_v1.sol:BaluniPoolV1",
+            "label": "token",
+            "offset": 20,
+            "slot": "0",
+            "type": "t_enum(Coin)452"
+          },
+          {
+            "astId": 459,
+            "contract": "contracts/BaluniPoolPolygon_v1.sol:BaluniPoolV1",
+            "label": "predictedPrice",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 461,
+            "contract": "contracts/BaluniPoolPolygon_v1.sol:BaluniPoolV1",
+            "label": "actualPrice",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 463,
+            "contract": "contracts/BaluniPoolPolygon_v1.sol:BaluniPoolV1",
+            "label": "resolvedPrice",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 465,
+            "contract": "contracts/BaluniPoolPolygon_v1.sol:BaluniPoolV1",
+            "label": "difference",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 467,
+            "contract": "contracts/BaluniPoolPolygon_v1.sol:BaluniPoolV1",
+            "label": "timestamp",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 469,
+            "contract": "contracts/BaluniPoolPolygon_v1.sol:BaluniPoolV1",
+            "label": "endTime",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 471,
+            "contract": "contracts/BaluniPoolPolygon_v1.sol:BaluniPoolV1",
+            "label": "resolved",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_bool"
+          }
+        ],
+        "numberOfBytes": "256"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      }
+    }
+  }
+}

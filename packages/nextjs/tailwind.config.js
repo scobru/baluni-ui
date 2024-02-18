@@ -5,8 +5,14 @@ module.exports = {
   darkTheme: "scaffoldEthDark",
   // DaisyUI theme colors
   daisyui: {
-    themes: ["light", "dark", "cupcake"],
-
+    themes: ["synthwave", "dark", "light"],
+    fontFamily: {
+      sans: ["ui-sans-serif", "system-ui"],
+      serif: ["ui-serif", "Georgia"],
+      mono: ["PT-mono"],
+      roboto: ["Roboto"],
+      sans: ["PT-sans"],
+    },
   },
   theme: {
     extend: {
@@ -15,6 +21,12 @@ module.exports = {
       },
       animation: {
         "pulse-fast": "pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+      },
+      backgroundImage: {
+        back: "url('/images/back.webp')",
+        back2: "url('/images/back2.webp')",
+        back3: "url('/images/back3.jpeg')",
+        back4: "url('/images/back4.jpeg')",
       },
     },
   },
