@@ -6,14 +6,19 @@ import axios from "axios";
 import { BigNumber } from "ethers";
 import { formatEther } from "viem";
 import { useWalletClient } from "wagmi";
+import { useBalance } from "wagmi";
 import { Address } from "~~/components/scaffold-eth/Address";
 import { useScaffoldContract, useScaffoldContractRead, useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
-import { useAccountBalance } from "~~/hooks/scaffold-eth";
 
 const Pool = () => {
   const { data: signer } = useWalletClient();
   const { data: baluni } = useScaffoldContract({ contractName: "BaluniPoolV1", walletClient: signer });
-  const poolBalance = useAccountBalance(baluni?.address);
+
+  const poolBalance = useBalance({
+    address: baluni?.address,
+    token: "0x28f53ba70e5c8ce8d03b1fad41e9df11bb646c36",
+  });
+
   const [currentTokenPrices, setCurrentTokenPrices] = useState<{ [key: string]: any }>({});
 
   const fetchTokenPrices = async () => {
@@ -41,7 +46,7 @@ const Pool = () => {
     args: [BigNumber.from(0).toBigInt(), Number(predictionCount?.data) as any],
   });
 
-  const youtTotalSubmission = useScaffoldContractRead({
+  const yourTotalScore = useScaffoldContractRead({
     contractName: "BaluniPoolV1",
     functionName: "distributionCounter",
     args: [signer?.account.address],
@@ -68,32 +73,34 @@ const Pool = () => {
   };
 
   return (
-    <div className="mx-auto p-5 my-20 w-full text-center ">
+    <div className="mx-auto p-5 my-5 w-full text-center ">
       <div className="font-bold my-10 text-2xl sm:text-3xl md:text-4xl lg:text-5xl  xl:text-6xl  text-black">Pool</div>
       <div className="container mx-auto p-5  rounded-xl w-fit border border-secondary shadow-neutral shadow-lg">
-        <div className="p-6 rounded-xl bg-white/80 backdrop-blur-sm backdrop-filter shadow-lg border-primary">
-          <div className="mb-6 text-lg sm:text-xl md:text-2xl font-semibold text-gray-700">
+        <div className="p-6 rounded-xl bg-base-200 backdrop-blur-sm backdrop-filter shadow-lg border-primary">
+          <div className="mb-6 text-lg sm:text-xl md:text-2xl font-semibold ">
             <p>
-              Pool Balance: <strong className="text-black"> {poolBalance?.balance || "Loading..."} </strong> MATIC
+              Pool Balance: <strong className=""> {poolBalance?.data?.formatted || "Loading..."} </strong> MATIC
             </p>
           </div>
-          <div className="mb-6 text-lg sm:text-xl md:text-2xl font-semibold text-gray-700">
+          <div className="mb-6 text-lg sm:text-xl md:text-2xl font-semibold ">
             <p>
-              Reward:{" "}
-              <strong className="text-black">{userReward?.data ? formatEther(userReward?.data) : "Loading..."} </strong>{" "}
+              Reward: <strong className="">{userReward?.data ? formatEther(userReward?.data) : "Loading..."} </strong>{" "}
               MATIC
             </p>
+            <div className="text-xs sm:text-sm md:text-base font-semibold ">
+              ⚠️Reward are available after resolution
+            </div>{" "}
           </div>
-          <div className="mb-6 text-sm sm:text-md md:text-lg font-semibold text-gray-700">
+          <div className="mb-6 text-sm sm:text-md md:text-lg font-semibold ">
             <p>
-              Submission:{" "}
-              <strong className="text-black">
-                {youtTotalSubmission && youtTotalSubmission?.data ? Number(youtTotalSubmission?.data) : "Loading..."}{" "}
+              Your Score:{" "}
+              <strong className="">
+                {yourTotalScore && yourTotalScore?.data ? Number(yourTotalScore?.data) : "Loading..."}{" "}
               </strong>
             </p>
-            <p className="text-xs sm:text-sm md:text-base font-semibold text-gray-600">
-              Submission count is reset every pool exit
-            </p>
+
+            <p className="text-xs sm:text-sm md:text-base font-semibold ">⚠️ Score reset itself every pool exit</p>
+            <p className="text-xs sm:text-sm md:text-base font-semibold ">⚠️ Score is available after resolution</p>
           </div>
           <button
             className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out transform hover:-translate-y-1 shadow-lg hover:shadow-red-500/50"

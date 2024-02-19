@@ -15,8 +15,8 @@ const nextConfig = {
     return config;
   },
   images: {
-    // cache delle immagini ottimizzate per 60 secondi 
-    minimumCacheTTL: 60,  
+    // cache delle immagini ottimizzate per 60 secondi
+    minimumCacheTTL: 60,
   },
 };
 

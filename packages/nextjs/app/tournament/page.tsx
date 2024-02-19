@@ -2,12 +2,9 @@
 
 // Make sure to install axios for making HTTP requests
 import { formatEther } from "viem";
-import { usePublicClient } from "wagmi";
 import { useScaffoldContractRead, useScaffoldEventHistory } from "~~/hooks/scaffold-eth";
 
 const Tournament = () => {
-  const provider = usePublicClient();
-
   const round = useScaffoldContractRead({
     contractName: "BaluniTournamentV1",
     functionName: "getCurrentRound",
@@ -22,8 +19,9 @@ const Tournament = () => {
     receiptData: true,
     watch: true,
     enabled: true,
-    filters: { round: 0 },
   });
+
+  console.log("tournamentResolved", tournamentResolved.data);
 
   const verificationTime = useScaffoldContractRead({
     contractName: "BaluniTournamentV1",
@@ -56,11 +54,11 @@ const Tournament = () => {
   });
 
   return (
-    <div className="mx-auto p-5 my-20  ">
+    <div className="mx-auto p-5 my-">
       <div className="container mx-auto p-5">
         <div className="text-center font-bold mx-auto my-10 text-6xl text-black">Tournament</div>
         <div className="container mx-auto p-5 rounded-xl w-fit border border-secondary shadow-neutral shadow-lg">
-          <div className="card bg-white/80 text-black shadow-md shadow-secondary mx-auto max-w-4xl border-primary border-1">
+          <div className="card bg-base-200  shadow-md shadow-secondary mx-auto max-w-4xl border-primary border-1">
             <div className="card-body text-center">
               <p className="text-4xl">
                 round <strong>{Number(round.data)}</strong>
@@ -79,7 +77,6 @@ const Tournament = () => {
                   <span className="badge badge-error">closed</span>
                 )}
               </p>
-              z
               <p className="text-2xl">
                 There are <strong>{Number(partecipants.data)}/50</strong> participants
               </p>{" "}

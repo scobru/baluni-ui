@@ -3,6 +3,9 @@ pragma solidity ^0.8.0;
 import "./Oracle.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
+import "./interfaces/IWETH.sol";
+import "./interfaces/IVault.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract BaluniPoolV1 is ReentrancyGuard {
 	Oracle public oracle;
@@ -25,8 +28,16 @@ contract BaluniPoolV1 is ReentrancyGuard {
 
 	Prediction[] public predictions;
 
-	uint256 public registrationFee = 0.01 ether;
+	IWETH public wnative;
+	IVault public yearnVault;
+
+	uint256 public submissionBaseFee = 0.01 ether;
+	uint256 public submissionStepFee = 0.001 ether;
+	uint256 public predictionDuration = 1 days;
+	uint256 public resolutionLimit = 10 minutes;
+	uint256 public exitLimit = 7 days;
 	uint256 public totalPredictions = 0;
+	uint256 public totalDistribution = 0;
 
 	mapping(address => uint256) public distributionCounter;
 	mapping(address => uint256) public lastWithdraw;
@@ -42,8 +53,14 @@ contract BaluniPoolV1 is ReentrancyGuard {
 	);
 	event RewardWithdrawn(address indexed predictor, uint256 amount);
 
-	constructor(address _oracleAddress) ReentrancyGuard() {
+	constructor(
+		address _oracleAddress,
+		address _wnative,
+		address _yearnVault
+	) ReentrancyGuard() {
 		oracle = Oracle(_oracleAddress);
+		wnative = IWETH(_wnative);
+		yearnVault = IVault(_yearnVault);
 	}
 
 	function getSubmissionFee() public view returns (uint256) {
@@ -51,14 +68,14 @@ contract BaluniPoolV1 is ReentrancyGuard {
 	}
 
 	function submit(Coin _token, uint256 _predictedPrice) public payable {
-		require(msg.value >= 0.01 ether, "Invalid fee amount");
+		require(msg.value >= submissionBaseFee, "Invalid fee amount");
 		require(
 			msg.value >= userSubmissionFees[msg.sender],
 			"Invalid fee amount"
 		);
 
 		userSubmissionFees[msg.sender] = msg.value;
-		userSubmissionFees[msg.sender] += 0.001 ether;
+		userSubmissionFees[msg.sender] += submissionStepFee;
 
 		uint256 price = oracle.getLatestPrice() * 1e10;
 
@@ -71,12 +88,15 @@ contract BaluniPoolV1 is ReentrancyGuard {
 				0,
 				0,
 				block.timestamp,
-				block.timestamp + 1 days,
+				block.timestamp + predictionDuration,
 				false
 			)
 		);
+
 		totalPredictions++;
-		distributionCounter[msg.sender]++;
+		wnative.deposit{ value: msg.value }();
+		IERC20(address(wnative)).approve(address(yearnVault), msg.value);
+		yearnVault.deposit(msg.value, address(this));
 
 		emit PredictionRegistered(
 			msg.sender,
@@ -84,36 +104,52 @@ contract BaluniPoolV1 is ReentrancyGuard {
 			_predictedPrice,
 			price,
 			block.timestamp,
-			block.timestamp + 1 days
+			block.timestamp + predictionDuration
 		);
 	}
 
 	function exit() public {
 		require(
-			block.timestamp - lastWithdraw[msg.sender] >= 30 days,
-			"Wait for 30 days before next withdraw"
+			block.timestamp - lastWithdraw[msg.sender] >= exitLimit,
+			"Wait for exitLimit before next withdraw"
 		);
 
 		uint256 reward = calculateReward(msg.sender);
 
 		require(reward > 0, "No reward available");
 
+		IERC20(address(yearnVault)).approve(address(yearnVault), reward);
+
+		uint256 ctxBalanceB4 = address(this).balance;
+		yearnVault.withdraw(reward, address(this), address(this), 200);
+		uint256 ctxBalanceAfter = address(this).balance;
+		uint256 rewardToTransfer = ctxBalanceAfter - ctxBalanceB4;
+
+		wnative.withdraw(rewardToTransfer);
+
 		// Aggiornamento dello stato prima della trasferimento per prevenire reentrancy
 		totalPredictions -= distributionCounter[msg.sender];
 		distributionCounter[msg.sender] = 0;
 		lastWithdraw[msg.sender] = block.timestamp;
 
-		userSubmissionFees[msg.sender] = registrationFee;
+		userSubmissionFees[msg.sender] = submissionBaseFee;
 
-		Address.sendValue(payable(msg.sender), reward);
+		Address.sendValue(payable(msg.sender), rewardToTransfer);
 
-		emit RewardWithdrawn(msg.sender, reward);
+		emit RewardWithdrawn(msg.sender, rewardToTransfer);
 	}
 
 	function calculateReward(address user) public view returns (uint256) {
+		require(distributionCounter[user] > 0, "No predictions made");
+		require(totalDistribution > 0, "No rewards available");
 		uint256 userShare = (distributionCounter[user] * 1e18) /
-			totalPredictions;
-		return (address(this).balance * userShare) / 1e18 / 2;
+			totalDistribution;
+		uint256 yeanBalance = IERC20(address(yearnVault)).balanceOf(
+			address(this)
+		);
+		uint256 userBalance = (yeanBalance * userShare) / 1e18;
+		uint256 userReward = userBalance - userBalance / 2;
+		return userReward;
 	}
 
 	function last10Predictions() public view returns (Prediction[] memory) {
@@ -169,37 +205,67 @@ contract BaluniPoolV1 is ReentrancyGuard {
 	function resolve() public {
 		uint256 latestPrice = oracle.getLatestPrice() * 1e10;
 
-		bool hasUnresolvedPredictions = false;
-
-		for (
-			uint256 i = 0;
-			i < predictions.length && !hasUnresolvedPredictions;
-			i++
-		) {
-			if (predictions[i].resolved == false) {
-				hasUnresolvedPredictions = true;
-			}
-		}
-
-		if (!hasUnresolvedPredictions) return;
-
 		for (uint256 i = 0; i < predictions.length; i++) {
 			if (
 				!predictions[i].resolved &&
 				block.timestamp >= predictions[i].endTime
 			) {
+				require(
+					block.timestamp <= predictions[i].endTime + resolutionLimit,
+					"La risoluzione puo avvenire al massimo 1 ora dopo la scadenza"
+				);
+
 				uint256 predictedPrice = predictions[i].predictedPrice;
 				uint256 priceDifference = predictedPrice > latestPrice
 					? predictedPrice - latestPrice
 					: latestPrice - predictedPrice;
+				uint256 score = calculateScore(predictedPrice, latestPrice);
 
 				predictions[i].difference = priceDifference;
 				predictions[i].resolved = true;
+				predictions[i].resolvedPrice = latestPrice;
+
+				distributionCounter[predictions[i].predictor] += score; // Assumi che esista questo campo
+				totalDistribution += score;
 			}
 		}
 
-		totalPredictions++;
 		distributionCounter[msg.sender]++;
+		totalDistribution++;
+	}
+
+	function calculateScore(
+		uint256 predictedPrice,
+		uint256 resolvedPrice
+	) private pure returns (uint256) {
+		if (resolvedPrice == 0) return 1; // Evita divisione per zero
+		uint256 priceDifference = predictedPrice > resolvedPrice
+			? predictedPrice - resolvedPrice
+			: resolvedPrice - predictedPrice;
+		uint256 differencePercentage = (priceDifference * 100) / resolvedPrice;
+
+		// Il punteggio diminuisce all'aumentare della differenza percentuale
+		if (differencePercentage == 0) {
+			return 10; // Puntaeggio massimo per previsione perfetta
+		} else if (differencePercentage <= 5) {
+			return 9;
+		} else if (differencePercentage <= 10) {
+			return 8;
+		} else if (differencePercentage <= 15) {
+			return 7;
+		} else if (differencePercentage <= 20) {
+			return 6;
+		} else if (differencePercentage <= 25) {
+			return 5;
+		} else if (differencePercentage <= 30) {
+			return 4;
+		} else if (differencePercentage <= 35) {
+			return 3;
+		} else if (differencePercentage <= 40) {
+			return 2;
+		} else {
+			return 1; // Punteggio minimo per grande differenza
+		}
 	}
 
 	function hasUnresolvedPredictions() public view returns (bool) {

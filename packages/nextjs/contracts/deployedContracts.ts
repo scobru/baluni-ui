@@ -7,13 +7,23 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   137: {
     BaluniPoolV1: {
-      address: "0x41D1341541aB776A35f671309C7035c5B4BBBC63",
+      address: "0x82227666D494BA6bD31248257F4B282d3693C10c",
       abi: [
         {
           inputs: [
             {
               internalType: "address",
               name: "_oracleAddress",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "_wnative",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "_yearnVault",
               type: "address",
             },
           ],
@@ -125,6 +135,19 @@ const deployedContracts = {
           name: "exit",
           outputs: [],
           stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "exitLimit",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
           type: "function",
         },
         {
@@ -422,6 +445,19 @@ const deployedContracts = {
           type: "function",
         },
         {
+          inputs: [],
+          name: "predictionDuration",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
           inputs: [
             {
               internalType: "uint256",
@@ -482,7 +518,7 @@ const deployedContracts = {
         },
         {
           inputs: [],
-          name: "registrationFee",
+          name: "resolutionLimit",
           outputs: [
             {
               internalType: "uint256",
@@ -501,6 +537,32 @@ const deployedContracts = {
           type: "function",
         },
         {
+          inputs: [],
+          name: "submissionBaseFee",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "submissionStepFee",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
           inputs: [
             {
               internalType: "enum BaluniPoolV1.Coin",
@@ -516,6 +578,19 @@ const deployedContracts = {
           name: "submit",
           outputs: [],
           stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "totalDistribution",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
           type: "function",
         },
         {
@@ -551,6 +626,32 @@ const deployedContracts = {
           type: "function",
         },
         {
+          inputs: [],
+          name: "wnative",
+          outputs: [
+            {
+              internalType: "contract IWETH",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "yearnVault",
+          outputs: [
+            {
+              internalType: "contract IVault",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
           stateMutability: "payable",
           type: "receive",
         },
@@ -558,7 +659,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     BaluniTournamentV1: {
-      address: "0xbAc698969620A4e129eBE3cdDD7Be93d8bd637B8",
+      address: "0xf823c515eAdC0C8fC2699f88F3e87389e97953b0",
       abi: [
         {
           inputs: [
@@ -686,6 +787,19 @@ const deployedContracts = {
         },
         {
           inputs: [],
+          name: "getLastWinners",
+          outputs: [
+            {
+              internalType: "address[]",
+              name: "",
+              type: "address[]",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
           name: "getLatestRoundPrice",
           outputs: [
             {
@@ -718,6 +832,54 @@ const deployedContracts = {
               internalType: "uint256",
               name: "",
               type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getPartecipants",
+          outputs: [
+            {
+              internalType: "address[]",
+              name: "",
+              type: "address[]",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getPredictions",
+          outputs: [
+            {
+              components: [
+                {
+                  internalType: "uint256",
+                  name: "round",
+                  type: "uint256",
+                },
+                {
+                  internalType: "address",
+                  name: "predictor",
+                  type: "address",
+                },
+                {
+                  internalType: "uint256",
+                  name: "predictedPrice",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
+                  name: "amount",
+                  type: "uint256",
+                },
+              ],
+              internalType: "struct BaluniTournamentV1.Prediction[]",
+              name: "",
+              type: "tuple[]",
             },
           ],
           stateMutability: "view",
@@ -863,9 +1025,54 @@ const deployedContracts = {
         },
         {
           inputs: [],
+          name: "resolutionEndTime",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
           name: "resolveTournament",
           outputs: [],
           stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          name: "roundWinners",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "submissionEndTime",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
           type: "function",
         },
         {
@@ -879,6 +1086,19 @@ const deployedContracts = {
           name: "submitPrediction",
           outputs: [],
           stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "verificationEndTime",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
           type: "function",
         },
         {

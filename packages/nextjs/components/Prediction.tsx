@@ -80,7 +80,7 @@ const Prediction = ({ signer }: PredictionProps) => {
   };
 
   return (
-    <div className="container mx-auto p-5 bg-base-100 text-base-content rounded-xl border border-secondary shadow-neutral">
+    <div className="container mx-auto p-10 bg-base-200 text-base-content rounded-xl border border-secondary shadow-neutral">
       <label htmlFor="algoName" className="block mb-2 font-semibold">
         Algorithm
       </label>
@@ -125,39 +125,41 @@ const Prediction = ({ signer }: PredictionProps) => {
       </button>
       {predictionResult.actual && predictionResult.predicted && (
         <div className="mt-4 card card-compact ">
-          <h2 className="text-2xl font-bold">Prediction Result:</h2>
-          <p className="text-lg ">
+          <h2 className="text-3xl mt-2 font-bold">Prediction</h2>
+          <p className="text-3xl font-light ">
             <strong>Actual:</strong> {Number(predictionResult?.actual).toFixed(2)}
           </p>
-          <p className="text-lg ">
+          <p className="text-3xl font-light ">
             <strong>Predicted:</strong> {Number(predictionResult?.predicted).toFixed(2)}
           </p>
           {userFee && userFee?.data ? (
             <p className="text-lg ">
-              <strong>Submission Fee:</strong>{" "}
-              {Number(userFee?.data) == 0 ? parseEther("0.01").toString() : formatEther(Number(userFee?.data) as any)}
+              Submission Fee:{" "}
+              <strong>
+                {Number(userFee?.data) == 0 ? parseEther("0.01").toString() : formatEther(Number(userFee?.data) as any)}
+              </strong>
             </p>
           ) : null}
-          <h2 className="text-xl font-semibold">
-            📣Publish your forecast and partecipate to the BALUNI community pool{" "}
+          <h2 className="text-md mt-5 font-semibold">
+            📣Stake your forecast and partecipate to the BALUNI community pool{" "}
           </h2>
 
           <button onClick={submitPrediction} className="bg-primary text-white p-2 rounded-md mt-4 w-full">
             Stake Forecast
           </button>
+          <h2 className="text-md mt-10 font-semibold">
+            📣Submit your prediction for the tournament. The more you bet, the greater your chances of winning.{" "}
+          </h2>
+
+          <h2 className="text-sm my-2 mt-2">Bet Amount</h2>
+          <input type="text" className="input input-primary" onChange={e => setTournamentBet(e.target.value)} />
           <button
             onClick={submitPredictionTournament}
-            className="bg-primary text-white p-2 rounded-md mt-4 w-full"
+            className="bg-primary mt-2  text-white p-2 rounded-md  w-full"
             disabled={Boolean(tournamentBet == "")}
           >
             Submit to Tournament
           </button>
-          <h2 className="text-sm my-2">Tournament Bet</h2>
-          <input
-            type="text"
-            className="input inpit-primary border-1"
-            onChange={e => setTournamentBet(e.target.value)}
-          />
         </div>
       )}
       <p className="text-base font-semibold ">🔢Check the console for the rest of the metrics.</p>

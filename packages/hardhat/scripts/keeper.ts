@@ -2,8 +2,8 @@ import { ethers } from "hardhat";
 import * as dotenv from "dotenv";
 dotenv.config();
 
-const tournamentAddress = "0xbAc698969620A4e129eBE3cdDD7Be93d8bd637B8"; // Polygon
-const poolAddress = "0x41D1341541aB776A35f671309C7035c5B4BBBC63"; // Aggiungi l'indirizzo della pool al tuo file .env
+const tournamentAddress = "0xf823c515eAdC0C8fC2699f88F3e87389e97953b0"; // Polygon
+const poolAddress = "0x82227666D494BA6bD31248257F4B282d3693C10c"; // Aggiungi l'indirizzo della pool al tuo file .env
 
 async function main() {
   const signers = await ethers.getSigners();
