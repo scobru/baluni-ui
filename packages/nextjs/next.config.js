@@ -14,6 +14,10 @@ const nextConfig = {
     config.externals.push("pino-pretty", "lokijs", "encoding");
     return config;
   },
+  images: {
+    // cache delle immagini ottimizzate per 60 secondi 
+    minimumCacheTTL: 60,  
+  },
 };
 
 module.exports = nextConfig;

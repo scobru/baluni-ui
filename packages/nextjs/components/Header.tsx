@@ -19,8 +19,20 @@ export const menuLinks: HeaderMenuLink[] = [
     href: "/",
   },
   {
-    label: "Rebalancer",
-    href: "/baluni",
+    label: "Rebalance",
+    href: "/rebalance",
+  },
+  {
+    label: "Forecast",
+    href: "/forecast",
+  },
+  {
+    label: "Pool",
+    href: "/pool",
+  },
+  {
+    label: "Tournament",
+    href: "/tournament",
   },
   // {
   //   label: "Debug Contracts",
@@ -43,7 +55,7 @@ export const HeaderMenuLinks = () => {
               passHref
               className={`${
                 isActive ? "bg-base shadow-md" : ""
-              } hover:bg-base hover:shadow-md focus:!bg-base active:!text-neutral py-1.5 px-3 font-semibold  rounded-full gap-2 grid grid-flow-col`}
+              } hover:bg-base hover:shadow-md focus:!bg-base active:!text-neutral py-1.5 px-3 text-md font-semibold  rounded-full gap-2 grid grid-flow-col`}
             >
               {icon}
               <span>{label}</span>
@@ -94,7 +106,7 @@ export const Header = () => {
         <Link href="/" passHref className="hidden lg:flex items-center gap-2 ml-4 mr-6 shrink-0">
           <div className="flex flex-col">
             <span className="font-bold leading-tight text-3xl">BALUNI</span>
-            {/* <span className="text-xs">Rebalance Tool for Uniswap</span> */}
+            {/* <span className="text-sm font-semibold">Rebalance Tool for Uniswap 🦄</span> */}
           </div>
         </Link>
         <ul className="hidden lg:flex lg:flex-nowrap menu menu-horizontal px-1 gap-2">

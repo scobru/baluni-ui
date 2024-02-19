@@ -5,7 +5,7 @@ import useTokenList from "../hooks/useTokenList";
 import { clientToSigner } from "../utils/ethers";
 //import { JsonRpcProvider } from "@ethersproject/providers";
 import { USDC } from "baluni/dist/config";
-import { calculateRebalanceStats, rebalancePortfolio } from "baluni/dist/uniswap/rebalanceSimple";
+import { calculateRebalanceStats, rebalancePortfolio } from "baluni/dist/ui/rebalanceSimple";
 import { PrettyConsole } from "baluni/dist/utils/prettyConsole";
 import { BigNumber, ethers } from "ethers";
 import { usePublicClient, useWalletClient } from "wagmi";
@@ -267,19 +267,23 @@ const TokenSelector = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="card bg-base-100 shadow-xl">
+      <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+        <div className="card bg-base-100 shadow-md border border-secondary shadow-neutral">
           <div className="card-body">
             <h2 className="card-title">Select Tokens</h2>
             {tokenSelections.map((selection, index) => (
-              <div key={index} className="card bg-base-200 shadow-md mb-2">
+              <div
+                key={index}
+                className="card bg-base-300 shadow-sm shadow-neutral mb-2 border-base-focus border-opacity-30"
+              >
                 <div className="card-body">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 items-center">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-center">
                     <select
-                      className="select select-bordered w-full"
+                      className="select select-bordered w-full max-w-xs border-2 border-base-focus"
                       value={selection.token}
                       onChange={e => handleTokenChange(index, e.target.value)}
                     >
+                      <option value="">Select a token</option>
                       {tokens.map((token: Token) => (
                         <option key={token.address} value={token.address}>
                           {token.name} ({token.symbol})
@@ -287,7 +291,7 @@ const TokenSelector = () => {
                       ))}
                     </select>
                     <input
-                      className="range range-primary"
+                      className="range range-primary w-full max-w-xs"
                       type="range"
                       min="0"
                       max="100"
@@ -295,17 +299,17 @@ const TokenSelector = () => {
                       onChange={e => handlePercentageChange(index, e.target.value)}
                     />
                     <span>{selection.percentage}%</span>
-                    <button onClick={() => fetchTokenBalance(index, selection.token)} className="btn btn-primary ">
+                    <button onClick={() => fetchTokenBalance(index, selection.token)} className="btn btn-primary">
                       Fetch Balance
                     </button>
                   </div>
-                  <div className="text-right mt-2">
-                    <span>Balance: {selection.balance ? selection.balance : "N/A"}</span>
+                  <div className="text-right mt-2 font-semibold">
+                    <span>{selection.balance ? selection.balance : "N/A"}</span>
                   </div>
                 </div>
               </div>
             ))}
-            <div className="flex justify-center mt-4 gap-2">
+            <div className="flex flex-wrap justify-center mt-4 gap-2">
               <button className="btn btn-primary" onClick={addTokenSelection}>
                 Add Token
               </button>
@@ -319,7 +323,7 @@ const TokenSelector = () => {
           </div>
         </div>
 
-        <div className="card bg-base-100 shadow-xl">
+        <div className="card bg-base-100 shadow-md border border-secondary shadow-neutral">
           <div className="card-body">
             <h2 className="card-title">Rebalance Stats</h2>
             {renderRebalanceStats()}
