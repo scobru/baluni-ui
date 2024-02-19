@@ -6,7 +6,7 @@ This is a simple web interface build with [Scaffold-Eth2](https://scaffoldeth.io
  - Baluni Pods
  - Decentralized Rebalance Smart Contract.
  - Index Fund Marketplace.
- - Multi Token Forecast
+ - Multi Token Forecast.
  - Multi Token Tournament and Pool
 
  # Baluni GUI: Open Source Interface for DeFi Enthusiasts
@@ -118,8 +118,27 @@ Optimize your investment strategy with our rebalance feature, ensuring your port
 #### Benefits:
 Rebalancing is crucial for managing risk, seizing market opportunities, and maintaining a diversified portfolio aligned with your investment objectives.
 
-## Getting Started
+## Keeper Script Overview
 
-Dive into the DeFi space with Baluni GUI, leveraging our suite of features to manage your assets, make informed predictions, and optimize your investment strategy. Our open-source project welcomes your contributions and feedback as we grow and improve together.
+The Keeper script is an automation tool for the Baluni platform, designed to ensure efficient and timely operation of the Baluni Tournament and Pool smart contracts.
 
-Thank you for choosing Baluni. Together, let's explore the potential of decentralized finance.
+### Key Functions:
+
+- **Automates Tournament Resolution:** Checks if the current time has passed the `verificationTime` of the tournament. If so, it triggers the resolution process to finalize outcomes and distribute rewards.
+
+- **Automates Pool Resolution:** Identifies pools with unresolved predictions past their end time and triggers their resolution, ensuring participants are rewarded based on engagement.
+
+### Continuous Operation:
+
+- Runs in a loop, executing at regular intervals to monitor and resolve tournaments and pools without manual intervention.
+
+### Error Handling and Logging:
+
+- Logs activities and errors for transparency and troubleshooting, ensuring smooth platform operation.
+
+### Enhances User Experience:
+
+- By automating critical functions, it supports a fair, engaging, and reliable environment for platform participants.
+
+This script exemplifies the integration of automation in DeFi platforms, improving accessibility and reliability for users.
+
