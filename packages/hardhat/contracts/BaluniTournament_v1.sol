@@ -10,6 +10,9 @@ contract BaluniTournamentV1 is ReentrancyGuard {
 	Oracle public oracle;
 
 	uint256 public keeperPercentageFee = 100;
+	uint256 public submissionEndTime = 8 hours;
+	uint256 public verificationEndTime = 1 days;
+	uint256 public resolutionEndTime = 1 hours;
 
 	struct Prediction {
 		uint256 round;
@@ -28,6 +31,11 @@ contract BaluniTournamentV1 is ReentrancyGuard {
 	address public priceFeedAddress;
 	uint256 public prizePool;
 	uint256 public currentRound = 0;
+
+	mapping(uint256 => uint256) scores;
+	mapping(uint256 => uint256) prizePerScore;
+
+	address[] public roundWinners;
 
 	struct WinnerInfo {
 		uint256 index;
@@ -54,7 +62,7 @@ contract BaluniTournamentV1 is ReentrancyGuard {
 	) ReentrancyGuard() {
 		oracle = Oracle(_oracleAddress);
 		maxParticipants = _maxParticipants;
-		verificationTime = block.timestamp + 1 days;
+		verificationTime = block.timestamp + verificationEndTime;
 	}
 
 	function isRoundOpen() public view returns (bool) {
@@ -68,7 +76,7 @@ contract BaluniTournamentV1 is ReentrancyGuard {
 			"Participant limit reached"
 		);
 		require(
-			block.timestamp <= verificationTime - 4 hours,
+			block.timestamp <= verificationTime - submissionEndTime,
 			"Submissions closed 4 hours before round ends"
 		);
 
@@ -87,7 +95,7 @@ contract BaluniTournamentV1 is ReentrancyGuard {
 	function _resetTournament() private {
 		delete predictions;
 		prizePool = 0;
-		verificationTime = block.timestamp + 1 days;
+		verificationTime = block.timestamp + verificationEndTime;
 		currentRound += 1;
 	}
 
@@ -97,109 +105,127 @@ contract BaluniTournamentV1 is ReentrancyGuard {
 			"Tournament cannot be resolved yet"
 		);
 
-		uint256 actualPrice = oracle.getLatestPrice();
-		uint256 actualPriceUint = actualPrice * 1e10;
-		lastRoundPrice = actualPriceUint;
-
-		WinnerInfo[3] memory winners;
-		address[] memory winnersAddresses = new address[](3);
-		uint256[] memory prizeAmounts = new uint256[](3);
-
-		if (predictions.length == 0) {
+		if (block.timestamp >= verificationTime + resolutionEndTime) {
+			for (uint256 i = 0; i < predictions.length; i++) {
+				Address.sendValue(
+					payable(predictions[i].predictor),
+					predictions[i].amount
+				);
+			}
 			emit TournamentResolved(
 				currentRound,
-				winnersAddresses,
-				prizeAmounts
+				new address[](0),
+				new uint256[](0)
 			);
 			_resetTournament();
 			return;
 		}
 
-		uint256 winnersCount = 0; // Contatore per i vincitori effettivi
+		uint256 actualPrice = oracle.getLatestPrice();
+		uint256 actualPriceUint = actualPrice * 1e10;
+		lastRoundPrice = actualPriceUint;
+
+		if (predictions.length == 0) {
+			emit TournamentResolved(
+				currentRound,
+				new address[](0),
+				new uint256[](0)
+			);
+			roundWinners = new address[](0);
+			_resetTournament();
+			return;
+		}
 
 		if (predictions.length == 1) {
-			// Restituisci i fondi all'unico partecipante
-			Address.sendValue(
-				payable(predictions[0].predictor),
-				predictions[0].amount
-			);
-			winnersAddresses[winnersCount] = predictions[0].predictor;
-			prizeAmounts[winnersCount] = predictions[0].amount;
-			winnersCount++;
-		} else if (predictions.length == 2) {
-			// Distribuisci i fondi equamente o basati sulla loro scommessa, qui esempio con distribuzione equa
+			// Restituisce il premio all'unico partecipante
+			address[] memory winnerAddress = new address[](1);
+			uint256[] memory winnerPrize = new uint256[](1);
+			winnerAddress[0] = predictions[0].predictor;
+			winnerPrize[0] = prizePool;
+			Address.sendValue(payable(winnerAddress[0]), winnerPrize[0]);
+			emit TournamentResolved(currentRound, winnerAddress, winnerPrize);
+			roundWinners = winnerAddress;
+			_resetTournament();
+			return;
+		}
+
+		if (predictions.length == 2) {
+			// Distribuisci il premio tra i due partecipanti
+			address[] memory winnersAddresses = new address[](2);
+			uint256[] memory prizes = new uint256[](2);
 			uint256 halfPrize = prizePool / 2;
 			for (uint256 i = 0; i < 2; i++) {
-				Address.sendValue(payable(predictions[i].predictor), halfPrize);
-				winnersAddresses[winnersCount] = predictions[i].predictor;
-				prizeAmounts[winnersCount] = halfPrize;
+				winnersAddresses[i] = predictions[i].predictor;
+				prizes[i] = halfPrize;
+				Address.sendValue(payable(winnersAddresses[i]), prizes[i]);
+			}
+			emit TournamentResolved(currentRound, winnersAddresses, prizes);
+			roundWinners = winnersAddresses;
+			_resetTournament();
+			return;
+		}
+
+		WinnerInfo[3] memory winners;
+		uint256 winnersCount = 0;
+
+		// Identifica i potenziali vincitori e calcola la differenza di prezzo
+		for (uint256 i = 0; i < predictions.length; i++) {
+			uint256 difference = predictions[i].predictedPrice > actualPriceUint
+				? predictions[i].predictedPrice - actualPriceUint
+				: actualPriceUint - predictions[i].predictedPrice;
+
+			if (winnersCount < 3) {
+				winners[winnersCount] = WinnerInfo(i, difference, true);
 				winnersCount++;
-			}
-		} else {
-			for (uint256 i = 0; i < winners.length; i++) {
-				winners[i].difference = type(uint256).max;
-				winners[i].exists = false;
-			}
-
-			for (uint256 i = 0; i < predictions.length; i++) {
-				uint256 difference = predictions[i].predictedPrice >
-					actualPriceUint
-					? predictions[i].predictedPrice - actualPriceUint
-					: actualPriceUint - predictions[i].predictedPrice;
-
-				for (uint256 j = 0; j < winners.length; j++) {
-					if (difference < winners[j].difference) {
-						for (uint256 k = winners.length - 1; k > j; k--) {
-							winners[k] = winners[k - 1];
-						}
-						winners[j] = WinnerInfo(i, difference, true);
-						break;
+			} else {
+				// Trova e sostituisci il vincitore con la differenza maggiore se ce n'è uno con una differenza minore
+				uint256 maxDiffIndex = 0;
+				uint256 maxDiff = winners[0].difference;
+				for (uint256 j = 1; j < 3; j++) {
+					if (winners[j].difference > maxDiff) {
+						maxDiff = winners[j].difference;
+						maxDiffIndex = j;
 					}
 				}
-			}
 
-			uint256 totalBetTopThree = 0;
-			for (uint256 i = 0; i < winners.length; i++) {
-				if (winners[i].exists) {
-					totalBetTopThree += predictions[winners[i].index].amount;
-				}
-			}
-
-			require(totalBetTopThree > 0, "Total bet of top three is zero");
-
-			uint256 keeperFee = (prizePool * keeperPercentageFee) / 10000;
-
-			prizePool = prizePool - keeperFee;
-
-			Address.sendValue(payable(msg.sender), keeperFee);
-
-			for (uint256 i = 0; i < winners.length; i++) {
-				if (winners[i].exists) {
-					uint256 winnerPrize = (predictions[winners[i].index]
-						.amount * prizePool) / totalBetTopThree;
-					Address.sendValue(
-						payable(predictions[winners[i].index].predictor),
-						winnerPrize
-					);
-					prizeAmounts[i] = winnerPrize;
+				if (difference < maxDiff) {
+					winners[maxDiffIndex] = WinnerInfo(i, difference, true);
 				}
 			}
 		}
 
-		// Ridimensiona gli array basati sul numero effettivo di vincitori
+		uint256 keeperFee = (prizePool * keeperPercentageFee) / 10000;
+		prizePool -= keeperFee;
+		Address.sendValue(payable(msg.sender), keeperFee);
+
+		uint256 totalPrize = prizePool;
+
+		// Preparazione degli array per i vincitori e i premi
 		address[] memory finalWinnersAddresses = new address[](winnersCount);
 		uint256[] memory finalPrizeAmounts = new uint256[](winnersCount);
 
 		for (uint256 i = 0; i < winnersCount; i++) {
-			finalWinnersAddresses[i] = winnersAddresses[i];
-			finalPrizeAmounts[i] = prizeAmounts[i];
+			finalWinnersAddresses[i] = predictions[winners[i].index].predictor;
+			// Distribuzione equa del premio
+			finalPrizeAmounts[i] = totalPrize / winnersCount;
+			Address.sendValue(
+				payable(finalWinnersAddresses[i]),
+				finalPrizeAmounts[i]
+			);
 		}
+
+		roundWinners = finalWinnersAddresses;
+
 		emit TournamentResolved(
 			currentRound,
 			finalWinnersAddresses,
 			finalPrizeAmounts
 		);
 		_resetTournament();
+	}
+
+	function getLastWinners() external view returns (address[] memory) {
+		return roundWinners;
 	}
 
 	function getPrice() public view returns (uint256) {
@@ -228,6 +254,18 @@ contract BaluniTournamentV1 is ReentrancyGuard {
 
 	function getNextVerificationTime() external view returns (uint256) {
 		return verificationTime;
+	}
+
+	function getPredictions() external view returns (Prediction[] memory) {
+		return predictions;
+	}
+
+	function getPartecipants() external view returns (address[] memory) {
+		address[] memory partecipants = new address[](predictions.length);
+		for (uint256 i = 0; i < predictions.length; i++) {
+			partecipants[i] = predictions[i].predictor;
+		}
+		return partecipants;
 	}
 
 	receive() external payable {

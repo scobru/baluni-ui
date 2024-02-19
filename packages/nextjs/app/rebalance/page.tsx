@@ -4,7 +4,7 @@ import { NextPage } from "next";
 
 const Rebalance: NextPage = () => {
   return (
-    <div className="mx-auto  p-5 my-20  ">
+    <div className="mx-auto  p-5 my-5  ">
       <div className="text-center font-bold mx-auto my-10 text-6xl text-black">Rebalance</div>
       <div className="text-center mx-auto my-10 text-base font-semibold text-black">
         ⚖️ Select some tokens that you hold in your wallet, assign them a weight, and let Baluni handle the rest.
