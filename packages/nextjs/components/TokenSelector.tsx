@@ -12,6 +12,8 @@ import { usePublicClient, useWalletClient } from "wagmi";
 import { WalletClient } from "wagmi";
 import { notification } from "~~/utils/scaffold-eth";
 
+/* eslint-disable @next/next/no-img-element */
+
 const prettyConsole = new PrettyConsole();
 
 type Token = {

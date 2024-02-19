@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@master
+        uses: actions/checkout@main
 
       - name: Setup node env
         uses: actions/setup-node@v3
@@ -29,9 +29,6 @@ jobs:
 
       - name: Install dependencies
         run: yarn install --immutable
-
-      - name: Run hardhat node, deploy contracts (& generate contracts typescript output)
-        run: yarn chain & yarn deploy
 
       - name: Run nextjs lint
         run: yarn next:lint --max-warnings=0
