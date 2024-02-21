@@ -210,22 +210,23 @@ contract BaluniPoolV1 is ReentrancyGuard {
 				!predictions[i].resolved &&
 				block.timestamp >= predictions[i].endTime
 			) {
-				require(
-					block.timestamp <= predictions[i].endTime + resolutionLimit,
-					"La risoluzione puo avvenire al massimo 1 ora dopo la scadenza"
-				);
-
 				uint256 predictedPrice = predictions[i].predictedPrice;
 				uint256 priceDifference = predictedPrice > latestPrice
 					? predictedPrice - latestPrice
 					: latestPrice - predictedPrice;
 				uint256 score = calculateScore(predictedPrice, latestPrice);
 
+				if (
+					block.timestamp <= predictions[i].endTime + resolutionLimit
+				) {
+					distributionCounter[predictions[i].predictor] += 0; // Assumi che esista questo campo
+				} else {
+					distributionCounter[predictions[i].predictor] += score; // Assumi che esista questo campo
+				}
+
 				predictions[i].difference = priceDifference;
 				predictions[i].resolved = true;
 				predictions[i].resolvedPrice = latestPrice;
-
-				distributionCounter[predictions[i].predictor] += score; // Assumi che esista questo campo
 				totalDistribution += score;
 			}
 		}

@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   137: {
     BaluniPoolV1: {
-      address: "0x82227666D494BA6bD31248257F4B282d3693C10c",
+      address: "0x26EcB9aCa9d7d44EAbbE3f4f6905DEbb115843Dc",
       abi: [
         {
           inputs: [
