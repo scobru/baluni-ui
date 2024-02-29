@@ -12,11 +12,11 @@ import { useScaffoldContract, useScaffoldContractRead, useScaffoldContractWrite 
 
 const Pool = () => {
   const { data: signer } = useWalletClient();
-  const { data: baluni } = useScaffoldContract({ contractName: "BaluniPoolV1", walletClient: signer });
+  const { data: baluni } = useScaffoldContract({ contractName: "Pool", walletClient: signer });
 
   const poolBalance = useBalance({
     address: baluni?.address,
-    token: "0x28f53ba70e5c8ce8d03b1fad41e9df11bb646c36",
+    token: "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889",
   });
 
   const [currentTokenPrices, setCurrentTokenPrices] = useState<{ [key: string]: any }>({});
@@ -36,29 +36,29 @@ const Pool = () => {
   }, []);
 
   const predictionCount = useScaffoldContractRead({
-    contractName: "BaluniPoolV1",
+    contractName: "Pool",
     functionName: "getPredictionCount",
   });
 
   const last10Predictions = useScaffoldContractRead({
-    contractName: "BaluniPoolV1",
+    contractName: "Pool",
     functionName: "getPredictionFromTo",
     args: [BigNumber.from(0).toBigInt(), Number(predictionCount?.data) as any],
   });
 
   const yourTotalScore = useScaffoldContractRead({
-    contractName: "BaluniPoolV1",
+    contractName: "Pool",
     functionName: "distributionCounter",
     args: [signer?.account.address],
   });
 
   const exit = useScaffoldContractWrite({
-    contractName: "BaluniPoolV1",
+    contractName: "Pool",
     functionName: "exit",
   });
 
   const userReward = useScaffoldContractRead({
-    contractName: "BaluniPoolV1",
+    contractName: "Pool",
     functionName: "calculateReward",
     args: [signer?.account.address],
   });

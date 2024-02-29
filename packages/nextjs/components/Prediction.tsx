@@ -21,20 +21,20 @@ const Prediction = ({ signer }: PredictionProps) => {
   const [tournamentBet, setTournamentBet] = useState("0.01");
 
   const userFee = useScaffoldContractRead({
-    contractName: "BaluniPoolV1",
+    contractName: "Pool",
     functionName: "userSubmissionFees",
     args: [signer?.account?.address],
   });
 
   const executeSubmitPrediction = useScaffoldContractWrite({
-    contractName: "BaluniPoolV1",
+    contractName: "Pool",
     functionName: "submit",
     args: [submisionSymbol, parseEther(predictionResult.predicted)],
     value: Number(userFee?.data) == 0 ? parseEther("0.01") : userFee?.data,
   });
 
   const executeSubmitTournament = useScaffoldContractWrite({
-    contractName: "BaluniTournamentV1",
+    contractName: "Tournament",
     functionName: "submitPrediction",
     args: [parseEther(predictionResult.predicted)],
     value: parseEther(tournamentBet),

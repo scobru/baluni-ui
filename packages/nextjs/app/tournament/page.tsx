@@ -6,12 +6,12 @@ import { useScaffoldContractRead, useScaffoldEventHistory } from "~~/hooks/scaff
 
 const Tournament = () => {
   const round = useScaffoldContractRead({
-    contractName: "BaluniTournamentV1",
+    contractName: "Tournament",
     functionName: "getCurrentRound",
   });
 
   const tournamentResolved = useScaffoldEventHistory({
-    contractName: "BaluniTournamentV1",
+    contractName: "Tournament",
     eventName: "TournamentResolved",
     fromBlock: 53685900n, // two days
     transactionData: true,
@@ -24,32 +24,32 @@ const Tournament = () => {
   console.log("tournamentResolved", tournamentResolved.data);
 
   const verificationTime = useScaffoldContractRead({
-    contractName: "BaluniTournamentV1",
+    contractName: "Tournament",
     functionName: "getNextVerificationTime",
   });
 
   const latestPrice = useScaffoldContractRead({
-    contractName: "BaluniTournamentV1",
+    contractName: "Tournament",
     functionName: "getLatestRoundPrice",
   });
 
   const price = useScaffoldContractRead({
-    contractName: "BaluniTournamentV1",
+    contractName: "Tournament",
     functionName: "getPrice",
   });
 
   const prizePool = useScaffoldContractRead({
-    contractName: "BaluniTournamentV1",
+    contractName: "Tournament",
     functionName: "getCurrentPricePool",
   });
 
   const partecipants = useScaffoldContractRead({
-    contractName: "BaluniTournamentV1",
+    contractName: "Tournament",
     functionName: "getCurrentRoundPartecipants",
   });
 
   const isRoundOpen = useScaffoldContractRead({
-    contractName: "BaluniTournamentV1",
+    contractName: "Tournament",
     functionName: "isRoundOpen",
   });
 

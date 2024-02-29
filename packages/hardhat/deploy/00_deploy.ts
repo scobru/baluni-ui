@@ -24,7 +24,7 @@ const deployYourContract: DeployFunction = async function (hre: HardhatRuntimeEn
   const oracle = await deploy("Oracle", {
     from: deployer,
     // Contract constructor arguments
-    args: ["0xAB594600376Ec9fD91F8e885dADF0CE036862dE0"],
+    args: ["0xd0D5e3DB44DE05E9F294BB0a3bEEaF030DE24Ada"], // POLYGON MUMBAI MATIC/USD FEED
     log: true,
     // autoMine: can be passed to the deploy function to make the deployment process faster on local networks by
     // automatically mining the contract deployment transaction. There is no effect on live networks.
@@ -33,10 +33,10 @@ const deployYourContract: DeployFunction = async function (hre: HardhatRuntimeEn
 
   console.log("oracle:", oracle.address);
 
-  const pool = await deploy("BaluniPoolV1", {
+  const pool = await deploy("Pool", {
     from: deployer,
     // Contract constructor arguments
-    args: [oracle.address, "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270", "0x28F53bA70E5c8ce8D03b1FaD41E9dF11Bb646c36"],
+    args: [oracle.address, "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889"],
     log: true,
     // autoMine: can be passed to the deploy function to make the deployment process faster on local networks by
     // automatically mining the contract deployment transaction. There is no effect on live networks.
@@ -45,7 +45,7 @@ const deployYourContract: DeployFunction = async function (hre: HardhatRuntimeEn
 
   console.log("pool:", pool.address);
 
-  const tournament = await deploy("BaluniTournamentV1", {
+  const tournament = await deploy("Tournament", {
     from: deployer,
     // Contract constructor arguments
     args: [oracle.address, 50],
@@ -62,4 +62,4 @@ export default deployYourContract;
 
 // Tags are useful if you have multiple deploy files and only want to run one of them.
 // e.g. yarn deploy --tags YourContract
-deployYourContract.tags = ["BaluniPoolV1"];
+deployYourContract.tags = ["Pool", "Tournament", "Oracle"];

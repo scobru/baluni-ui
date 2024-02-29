@@ -312,15 +312,17 @@ const TokenSelector = () => {
               </div>
             ))}
             <div className="flex flex-wrap justify-center mt-4 gap-2">
-              <button className="btn btn-primary" onClick={addTokenSelection}>
+              <button className="btn btn-primary" onClick={addTokenSelection} disabled={true}>
                 Add Token
               </button>
-              <button className="btn btn-secondary" onClick={handleRebalance}>
+              <button className="btn btn-secondary" onClick={handleRebalance} disabled={true}>
                 Simulate
               </button>
-              <button className="btn btn-accent" onClick={executeRebalance}>
-                Rebalance
-              </button>
+              <div className="tooltip" data-tip="Available soon on mainnet">
+                <button className="btn btn-accent " onClick={executeRebalance} disabled={true}>
+                  Rebalance
+                </button>
+              </div>
             </div>
           </div>
         </div>

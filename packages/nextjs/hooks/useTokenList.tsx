@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import fetch from "node-fetch";
 
-const TOKENS_URL = "https://gateway.ipfs.io/ipns/tokens.uniswap.org";
+const TOKENS_URL = "https://tokens.uniswap.org";
 
 const useTokenList = () => {
   const [loading, setLoading] = useState(true);
