@@ -8,7 +8,7 @@ temp
 
 #Hardhat files
 cache
-artifacts
+#artifacts
 
 #zkSync files
 artifacts-zk
