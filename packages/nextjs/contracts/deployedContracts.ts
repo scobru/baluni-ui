@@ -1818,7 +1818,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     Tournament: {
-      address: "0xe1743C0358487B46B87669A6695d662237C52F4E",
+      address: "0x640aBCe4cfCCcb8c67f8800e8C1EDFc902609666",
       abi: [
         {
           inputs: [

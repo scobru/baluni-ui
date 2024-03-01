@@ -194,24 +194,26 @@ contract Tournament is ReentrancyGuard {
 			}
 		}
 
+		uint256 totalBetAmount = 0;
+		for (uint256 i = 0; i < predictions.length; i++) {
+			totalBetAmount += predictions[i].amount;
+		}
+
 		uint256 keeperFee = (prizePool * keeperPercentageFee) / 10000;
 		prizePool -= keeperFee;
 		Address.sendValue(payable(msg.sender), keeperFee);
-
-		uint256 totalPrize = prizePool;
 
 		// Preparazione degli array per i vincitori e i premi
 		address[] memory finalWinnersAddresses = new address[](winnersCount);
 		uint256[] memory finalPrizeAmounts = new uint256[](winnersCount);
 
-		for (uint256 i = 0; i < winnersCount; i++) {
-			finalWinnersAddresses[i] = predictions[winners[i].index].predictor;
-			// Distribuzione equa del premio
-			finalPrizeAmounts[i] = totalPrize / winnersCount;
-			Address.sendValue(
-				payable(finalWinnersAddresses[i]),
-				finalPrizeAmounts[i]
-			);
+		for (uint256 i = 0; i < predictions.length; i++) {
+			uint256 participantShare = predictions[i].amount;
+			uint256 winnerPrize = (prizePool * participantShare) /
+				totalBetAmount; // Calcolo del premio proporzionale
+			finalPrizeAmounts[i] = winnerPrize;
+			finalWinnersAddresses[i] = predictions[i].predictor;
+			Address.sendValue(payable(predictions[i].predictor), winnerPrize);
 		}
 
 		roundWinners = finalWinnersAddresses;
