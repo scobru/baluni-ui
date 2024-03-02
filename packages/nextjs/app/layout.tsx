@@ -11,14 +11,14 @@ const imageUrl = `${baseUrl}/thumbnail.jpg`;
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: "Baluni",
-    template: "%s | Baluni",
+    default: "Baluni Beta",
+    template: "%s | Scaffold-ETH 2",
   },
   description: "Built with 🏗 Scaffold-ETH 2",
   openGraph: {
     title: {
-      default: "Baluni",
-      template: "%s | Baluni",
+      default: "Baluni Beta",
+      template: "%s | Baluni Beta",
     },
     description: "Built with 🏗 Scaffold-ETH 2",
     images: [
@@ -27,17 +27,17 @@ export const metadata: Metadata = {
       },
     ],
   },
-  twitter: {
+  /*  twitter: {
     card: "summary_large_image",
     images: [imageUrl],
     title: {
-      default: "Baluni",
-      template: "%s | Baluni",
+      default: "Scaffold-ETH 2",
+      template: "%s | Scaffold-ETH 2",
     },
     description: "Built with 🏗 Scaffold-ETH 2",
-  },
+  }, */
   icons: {
-    icon: [{ url: "/favicon.png", sizes: "32x32", type: "image/png" }],
+    icon: [{ url: "/favicon.webp", sizes: "32x32", type: "image/png" }],
   },
 };
 
