@@ -1,6 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import {
+  JSXElementConstructor,
+  Key,
+  PromiseLikeOfReactNode,
+  ReactElement,
+  ReactNode,
+  ReactPortal,
+  useState,
+} from "react";
 import useTokenList from "../hooks/useTokenList";
 import { clientToSigner } from "../utils/ethers";
 //import { JsonRpcProvider } from "@ethersproject/providers";
@@ -56,7 +64,7 @@ const TokenSelector = () => {
     const formattedBalance = ethers.utils.formatUnits(balance, decimals);
 
     // Update the state with the fetched balance
-    const updatedSelections = tokenSelections.map((selection, selIndex) => {
+    const updatedSelections = tokenSelections.map((selection: any, selIndex: number) => {
       if (index === selIndex) {
         return { ...selection, balance: formattedBalance };
       }
@@ -103,7 +111,10 @@ const TokenSelector = () => {
   };
 
   const calculateTotalPercentage = () => {
-    return tokenSelections.reduce((total, selection) => total + Number(selection.percentage), 0);
+    return tokenSelections.reduce(
+      (total: number, selection: { percentage: any }) => total + Number(selection.percentage),
+      0,
+    );
   };
 
   const handleRebalance = async () => {
@@ -136,13 +147,16 @@ const TokenSelector = () => {
       [key: string]: number;
     };
 
-    const tokenPercentages = tokenSelections.reduce<TokenPercentages>((acc, selection) => {
-      if (selection.token && selection.percentage) {
-        // Ensure that token is a string and percentage is a number, then assign
-        acc[selection.token] = parseFloat((selection.percentage * 100).toFixed(2)); // Use toFixed(2) if you want to keep only two decimal places
-      }
-      return acc;
-    }, {});
+    const tokenPercentages = tokenSelections.reduce<TokenPercentages>(
+      (acc: { [x: string]: number }, selection: { token: string | number; percentage: number }) => {
+        if (selection.token && selection.percentage) {
+          // Ensure that token is a string and percentage is a number, then assign
+          acc[selection.token] = parseFloat((selection.percentage * 100).toFixed(2)); // Use toFixed(2) if you want to keep only two decimal places
+        }
+        return acc;
+      },
+      {},
+    );
 
     try {
       const stats = (await calculateRebalanceStats(
@@ -191,13 +205,16 @@ const TokenSelector = () => {
       [key: string]: number;
     };
 
-    const tokenPercentages = tokenSelections.reduce<TokenPercentages>((acc, selection) => {
-      if (selection.token && selection.percentage) {
-        // Ensure that token is a string and percentage is a number, then assign
-        acc[selection.token] = parseFloat((selection.percentage * 100).toFixed(2)); // Use toFixed(2) if you want to keep only two decimal places
-      }
-      return acc;
-    }, {});
+    const tokenPercentages = tokenSelections.reduce<TokenPercentages>(
+      (acc: { [x: string]: number }, selection: { token: string | number; percentage: number }) => {
+        if (selection.token && selection.percentage) {
+          // Ensure that token is a string and percentage is a number, then assign
+          acc[selection.token] = parseFloat((selection.percentage * 100).toFixed(2)); // Use toFixed(2) if you want to keep only two decimal places
+        }
+        return acc;
+      },
+      {},
+    );
 
     try {
       const stats = (await rebalancePortfolio(
@@ -228,28 +245,38 @@ const TokenSelector = () => {
             ? Number(ethers.utils.formatEther(rebalanceStats.totalPortfolioValue)).toFixed(3)
             : "0"}{" "}
         </div>
-        {rebalanceStats?.adjustments.map((adj, index) => (
-          <div key={index} className="p-4 my-4 border-b last:border-b-0 bg-base-300 rounded-md text-base-content">
-            <div className="flex items-center space-x-2">
-              <img src={getTokenIcon(adj.token)} alt={adj.token} className="w-6 h-6" /> {/* Aggiunto qui */}
-              <span className="text-lg font-bold">{getTokenSymbol(adj.token)}</span>
-              {adj.action === "Buy" ? (
-                <span className="text-green-500">🔼 Buy</span>
-              ) : (
-                <span className="text-red-500">🔽 Sell</span>
-              )}
+        {rebalanceStats?.adjustments.map(
+          (
+            adj: {
+              token: string | undefined;
+              action: string;
+              differencePercentage: number;
+              valueToRebalance: ethers.BigNumberish;
+            },
+            index: Key | null | undefined,
+          ) => (
+            <div key={index} className="p-4 my-4 border-b last:border-b-0 bg-base-300 rounded-md text-base-content">
+              <div className="flex items-center space-x-2">
+                <img src={getTokenIcon(adj.token as string)} alt={adj.token} className="w-6 h-6" /> {/* Aggiunto qui */}
+                <span className="text-lg font-bold">{getTokenSymbol(adj.token as string)}</span>
+                {adj.action === "Buy" ? (
+                  <span className="text-green-500">🔼 Buy</span>
+                ) : (
+                  <span className="text-red-500">🔽 Sell</span>
+                )}
+              </div>
+              <div className="mt-2">
+                <span className="text-md">
+                  <strong>Difference:</strong> {adj.differencePercentage / 100}%
+                </span>
+                <span className="ml-4 text-md">
+                  <strong>Value to Rebalance (USD):</strong>{" "}
+                  {Number(ethers.utils.formatEther(adj.valueToRebalance)).toFixed(3)}
+                </span>
+              </div>
             </div>
-            <div className="mt-2">
-              <span className="text-md">
-                <strong>Difference:</strong> {adj.differencePercentage / 100}%
-              </span>
-              <span className="ml-4 text-md">
-                <strong>Value to Rebalance (USD):</strong>{" "}
-                {Number(ethers.utils.formatEther(adj.valueToRebalance)).toFixed(3)}
-              </span>
-            </div>
-          </div>
-        ))}
+          ),
+        )}
       </div>
     );
   };
@@ -273,44 +300,73 @@ const TokenSelector = () => {
         <div className="card bg-base-100 shadow-md border border-secondary shadow-neutral">
           <div className="card-body">
             <h2 className="card-title">Select Tokens</h2>
-            {tokenSelections.map((selection, index) => (
-              <div
-                key={index}
-                className="card bg-base-300 shadow-sm shadow-neutral mb-2 border-base-focus border-opacity-30"
-              >
-                <div className="card-body">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-center">
-                    <select
-                      className="select select-bordered w-full max-w-xs border-2 border-base-focus"
-                      value={selection.token}
-                      onChange={e => handleTokenChange(index, e.target.value)}
-                    >
-                      <option value="">Select a token</option>
-                      {tokens.map((token: Token) => (
-                        <option key={token.address} value={token.address}>
-                          {token.name} ({token.symbol})
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      className="range range-primary w-full max-w-xs"
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={selection.percentage}
-                      onChange={e => handlePercentageChange(index, e.target.value)}
-                    />
-                    <span>{selection.percentage}%</span>
-                    <button onClick={() => fetchTokenBalance(index, selection.token)} className="btn btn-primary">
-                      Fetch Balance
-                    </button>
-                  </div>
-                  <div className="text-right mt-2 font-semibold">
-                    <span>{selection.balance ? selection.balance : "N/A"}</span>
+            {tokenSelections.map(
+              (
+                selection: {
+                  token: string | number | readonly string[] | undefined;
+                  percentage:
+                    | string
+                    | number
+                    | boolean
+                    | ReactElement<any, string | JSXElementConstructor<any>>
+                    | Iterable<ReactNode>
+                    | PromiseLikeOfReactNode
+                    | null
+                    | undefined;
+                  balance:
+                    | string
+                    | number
+                    | boolean
+                    | ReactElement<any, string | JSXElementConstructor<any>>
+                    | Iterable<ReactNode>
+                    | ReactPortal
+                    | PromiseLikeOfReactNode
+                    | null
+                    | undefined;
+                },
+                index: Key | null | undefined,
+              ) => (
+                <div
+                  key={index}
+                  className="card bg-base-300 shadow-sm shadow-neutral mb-2 border-base-focus border-opacity-30"
+                >
+                  <div className="card-body">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-center">
+                      <select
+                        className="select select-bordered w-full max-w-xs border-2 border-base-focus"
+                        value={selection.token}
+                        onChange={e => handleTokenChange(Number(index), String(e.target.value))}
+                      >
+                        <option value="">Select a token</option>
+                        {tokens.map((token: Token) => (
+                          <option key={Number(token.address)} value={token.address}>
+                            {token.name} ({token.symbol})
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        className="range range-primary w-full max-w-xs"
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={selection?.percentage as string}
+                        onChange={e => handlePercentageChange(index as number, e.target.value)}
+                      />
+                      <span>{selection.percentage}%</span>
+                      <button
+                        onClick={() => fetchTokenBalance(index as number, selection.token as string)}
+                        className="btn btn-primary"
+                      >
+                        Fetch Balance
+                      </button>
+                    </div>
+                    <div className="text-right mt-2 font-semibold">
+                      <span>{selection.balance ? selection.balance : "N/A"}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ),
+            )}
             <div className="flex flex-wrap justify-center mt-4 gap-2">
               <button className="btn btn-primary" onClick={addTokenSelection} disabled={true}>
                 Add Token

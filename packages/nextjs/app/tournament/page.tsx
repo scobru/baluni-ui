@@ -1,6 +1,5 @@
 "use client";
 
-// Make sure to install axios for making HTTP requests
 import { formatEther } from "viem";
 import { useScaffoldContractRead, useScaffoldEventHistory } from "~~/hooks/scaffold-eth";
 

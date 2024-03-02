@@ -10,7 +10,6 @@ const Forecast: NextPage = () => {
   return (
     <div className="mx-auto p-5 my-5 text-black">
       <div className="text-center font-bold mx-auto my-10 text-6xl">Forecast</div>
-
       <div className="text-center mx-auto my-10 text-base font-semibold">
         🔮 Use Baluni to forecast the future price of MATIC token.
       </div>
