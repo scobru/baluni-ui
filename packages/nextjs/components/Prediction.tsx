@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import React, { useState } from "react";
@@ -5,6 +6,28 @@ import { predict } from "baluni/dist/predict/predict";
 import { WalletClient, formatEther, parseEther } from "viem";
 import { useScaffoldContractRead, useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
 import { notification } from "~~/utils/scaffold-eth";
+
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 // props
 interface PredictionProps {
@@ -143,7 +166,7 @@ const Prediction = ({ signer }: PredictionProps) => {
           <h2 className="text-md mt-5 font-semibold">
             📣Stake your forecast and partecipate to the BALUNI community pool{" "}
           </h2>
-
+          {/* 
           <button onClick={submitPrediction} className="bg-primary text-white p-2 rounded-md mt-4 w-full">
             Stake Forecast
           </button>
@@ -159,7 +182,7 @@ const Prediction = ({ signer }: PredictionProps) => {
             disabled={Boolean(tournamentBet == "")}
           >
             Submit to Tournament
-          </button>
+          </button> */}
         </div>
       )}
       <p className="text-base font-semibold ">🔢Check the console for the rest of the metrics.</p>

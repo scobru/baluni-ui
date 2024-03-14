@@ -26,14 +26,14 @@ export const menuLinks: HeaderMenuLink[] = [
     label: "Forecast",
     href: "/forecast",
   },
-  {
+  /* {
     label: "Pool",
     href: "/pool",
   },
   {
     label: "Tournament",
     href: "/tournament",
-  },
+  }, */
   // {
   //   label: "Debug Contracts",
   //   href: "/debug",
