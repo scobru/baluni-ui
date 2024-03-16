@@ -4,9 +4,9 @@ import React, { useState } from "react";
 import useTokenList from "../hooks/useTokenList";
 import { clientToSigner } from "../utils/ethers";
 //import { JsonRpcProvider } from "@ethersproject/providers";
-import { USDC } from "baluni/dist/config";
-import { calculateRebalanceStats, rebalancePortfolio } from "baluni/dist/ui/rebalanceSimple";
+import { USDC } from "baluni-api/dist/constants";
 import { PrettyConsole } from "baluni/dist/utils/prettyConsole";
+import { calculateRebalanceStats, rebalancePortfolio } from "baluni/src";
 import { BigNumber, ethers } from "ethers";
 import { usePublicClient, useWalletClient } from "wagmi";
 import { WalletClient } from "wagmi";
@@ -143,7 +143,7 @@ const TokenSelector = () => {
       }
       return acc;
     }, {});
-
+    console.log(dexWallet, tokens, tokenPercentages, USDC[provider.chain.id], dexWallet.walletProvider);
     try {
       const stats = (await calculateRebalanceStats(
         dexWallet,
