@@ -2029,7 +2029,7 @@ __metadata:
     "@uniswap/sdk-core": ^4.0.1
     "@uniswap/v2-sdk": ^3.0.1
     autoprefixer: ^10.4.12
-    baluni: ^2.0.2
+    baluni: ^2.0.5
     baluni-api: ^1.4.9
     blo: ^1.0.1
     daisyui: ^4.4.19
@@ -4771,9 +4771,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"baluni@npm:^2.0.2":
-  version: 2.0.2
-  resolution: "baluni@npm:2.0.2"
+"baluni@npm:^2.0.5":
+  version: 2.0.5
+  resolution: "baluni@npm:2.0.5"
   dependencies:
     "@tensorflow/tfjs": ^4.15.0
     "@types/node": ^20.10.5
@@ -4790,7 +4790,7 @@ __metadata:
     express: ^4.18.3
     prettier: ^2.8.4
     trading-indicator: ^2.0.4
-  checksum: 1e081ff7b7ec44d2392c811d24d4e8cf4b12e2802264053d5d363df36137293fb561c02ac3fdddfe9db86a7810f91cff66e786503e2f3599f2ebe7b5b55985e2
+  checksum: 4c36dcbd799929fdef4b79119c45c96f36abfb08b18cfe836d17ee3e400de0bb894721b5fa5e23c4b82bcfd82e119fcc12999cafa33b747556b7dbee0f5b098f
   languageName: node
   linkType: hard
 

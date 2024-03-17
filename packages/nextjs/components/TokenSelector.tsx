@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-//import { calculateRebalanceStats, rebalancePortfolio } from "baluni/src";
-import { calculateRebalanceStats, rebalancePortfolio } from "../../../../baluni/src";
+//import { calculateRebalanceStats, rebalancePortfolio } from "../../../../baluni/src";
 import useTokenList from "../hooks/useTokenList";
 import { clientToSigner } from "../utils/ethers";
+import { calculateRebalanceStats, rebalancePortfolio } from "baluni";
 import { USDC } from "baluni-api/dist/constants";
 import { PrettyConsole } from "baluni/dist/utils/prettyConsole";
 import { BigNumber, ethers } from "ethers";
