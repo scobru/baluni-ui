@@ -8,11 +8,14 @@ const Home: NextPage = () => {
       <div className="flex items-center flex-col flex-grow pt-10 mx-4">
         <div className="px-5">
           <h1 className="text-center mb-8 text-black">
-            <span className="block text-2xl mb-2">Welcome to the Web Interface for</span>
-            <span className="block text-5xl font-bold">Baluni CLI</span>
+            <span className="block text-2xl mb-2">Welcome to </span>
+            <span className="block text-5xl font-bold">Baluni</span>
           </h1>
           <pre className="text-lg bg-gray-100 p-2 rounded-md text-black shadow-secondary shadow-md">
-            <code>npm install baluni</code>
+            <code>git clone https://github.com/scobru/baluni</code>
+          </pre>
+          <pre className="text-lg mt-2 bg-gray-100 p-2 rounded-md text-black shadow-secondary shadow-md">
+            <code>npm install baluni-api</code>
           </pre>
         </div>
 
@@ -33,7 +36,7 @@ const Home: NextPage = () => {
             </Link>
             .
           </p>
-          <div className="my-8">
+          {/*  <div className="my-8">
             <div className="container mx-auto px-4 py-8">
               <div className="shadow rounded-lg p-10 bg-base-100 border border-secondary shadow-neutral ">
                 <h1 className="text-6xl font-bold  mb-4">Pool</h1>
@@ -93,8 +96,8 @@ const Home: NextPage = () => {
                 </Link>
               </div>
             </div>
-          </div>
-          <div className="container mx-auto px-4 py-8">
+          </div> */}
+          {/* <div className="container mx-auto px-4 py-8">
             <div className="shadow rounded-lg p-10 bg-base-100 border border-secondary shadow-neutral">
               <h2 className="text-6xl font-bold  mb-4">Tournament</h2>
               <p className="text-xl  mb-6">
@@ -132,6 +135,42 @@ const Home: NextPage = () => {
                 Tournament
               </Link>
             </div>
+          </div> */}
+          <div className="container mx-auto px-4 py-8">
+            <div className="shadow rounded-lg p-10 bg-base-100 border border-secondary shadow-neutral">
+              <h2 className="text-6xl font-bold  mb-4">Rebalance Your Portfolio</h2>
+              <p className="text-xl mb-6">
+                Optimize your investments with our Rebalance feature. Ensure your portfolio aligns with your strategic
+                goals by adjusting the distribution of your assets.
+              </p>
+
+              <div className="md:flex md:justify-center md:space-x-8">
+                <div className="mb-6 md:mb-0">
+                  <ul className="list-disc pl-5 space-y-2 text-lg">
+                    <li>
+                      <strong>Token Selection:</strong> Choose from a wide range of tokens to include in your portfolio.
+                      Customize the percentage allocation for each token based on your investment strategy.
+                    </li>
+                    {/* <li>
+                      <strong>Automatic Balancing:</strong> Our platform analyzes your portfolio and suggests
+                      adjustments to match your target allocation, enhancing your portfolio's performance over time.
+                    </li> */}
+                    <li>
+                      <strong>Execution:</strong> With a simple click, execute the suggested rebalance. Our smart
+                      contracts will adjust your holdings to reflect your desired portfolio composition.
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <Link
+                href="/rebalance"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-hover mt-4 mx-auto text-lg"
+              >
+                Rebalance
+              </Link>
+            </div>
           </div>
           <div className="container mx-auto px-4 py-8">
             <div className="shadow rounded-lg p-10 bg-base-100 border border-secondary shadow-neutral">
@@ -142,7 +181,6 @@ const Home: NextPage = () => {
               </p>
               <div className="md:flex md:justify-center md:space-x-8">
                 <div className="mb-6 md:mb-0">
-                  <h2 className="text-5xl  mt-6 mb-4">Forecasting Features</h2>
                   <ul className="list-disc pl-5 space-y-2 text-lg">
                     <li>
                       <strong>Algorithm Selection:</strong> Choose from a variety of prediction algorithms including
@@ -178,50 +216,6 @@ const Home: NextPage = () => {
                 className="btn btn-hover mt-4 mx-auto text-lg"
               >
                 Forecast
-              </Link>
-            </div>
-          </div>
-          <div className="container mx-auto px-4 py-8">
-            <div className="shadow rounded-lg p-10 bg-base-100 border border-secondary shadow-neutral">
-              <h2 className="text-6xl font-bold  mb-4">Rebalance Your Portfolio</h2>
-              <p className="text-xl mb-6">
-                Optimize your investments with our Rebalance feature. Ensure your portfolio aligns with your strategic
-                goals by adjusting the distribution of your assets.
-              </p>
-
-              <div className="md:flex md:justify-center md:space-x-8">
-                <div className="mb-6 md:mb-0">
-                  <h3 className="text-5xl  mb-2 my-2">Rebalance Process</h3>
-                  <ul className="list-disc pl-5 space-y-2 text-lg">
-                    <li>
-                      <strong>Token Selection:</strong> Choose from a wide range of tokens to include in your portfolio.
-                      Customize the percentage allocation for each token based on your investment strategy.
-                    </li>
-                    <li>
-                      <strong>Automatic Balancing:</strong> Our platform analyzes your portfolio and suggests
-                      adjustments to match your target allocation, enhancing your portfolio's performance over time.
-                    </li>
-                    <li>
-                      <strong>Execution:</strong> With a simple click, execute the suggested rebalance. Our smart
-                      contracts will adjust your holdings to reflect your desired portfolio composition.
-                    </li>
-                  </ul>
-                  <div className="mt-4">
-                    <h4 className="text-xl font-semibold mb-2">Benefits:</h4>
-                    <p className="text-lg">
-                      Rebalancing helps manage risk, take advantage of market cycles, and maintain a well-diversified
-                      portfolio. Stay aligned with your investment goals without the hassle of manual adjustments.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <Link
-                href="/rebalance"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-hover mt-4 mx-auto text-lg"
-              >
-                Rebalance
               </Link>
             </div>
           </div>
