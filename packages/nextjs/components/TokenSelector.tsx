@@ -3,9 +3,8 @@
 import React, { useState } from "react";
 import useTokenList from "../hooks/useTokenList";
 import { clientToSigner } from "../utils/ethers";
-//import { JsonRpcProvider } from "@ethersproject/providers";
-import { USDC } from "baluni/dist/config";
-import { calculateRebalanceStats, rebalancePortfolio } from "baluni/dist/ui/rebalanceSimple";
+import { calculateRebalanceStats, rebalancePortfolio } from "baluni";
+import { USDC } from "baluni-api";
 import { PrettyConsole } from "baluni/dist/utils/prettyConsole";
 import { BigNumber, ethers } from "ethers";
 import { usePublicClient, useWalletClient } from "wagmi";
