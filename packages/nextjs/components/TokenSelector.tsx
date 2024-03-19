@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+//import { calculateRebalanceStats, rebalancePortfolio } from "../../../../baluni/src";
 import useTokenList from "../hooks/useTokenList";
 import { clientToSigner } from "../utils/ethers";
 import { calculateRebalanceStats, rebalancePortfolio } from "baluni";
@@ -142,7 +143,7 @@ const TokenSelector = () => {
       }
       return acc;
     }, {});
-
+    console.log(dexWallet, tokens, tokenPercentages, USDC[provider.chain.id], dexWallet.walletProvider);
     try {
       const stats = (await calculateRebalanceStats(
         dexWallet,

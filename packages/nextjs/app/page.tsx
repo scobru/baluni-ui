@@ -9,6 +9,8 @@ const Home: NextPage = () => {
           <h1 className="text-center mb-8 text-black">
             <span className="block text-2xl mb-2">Welcome to </span>
             <span className="block text-5xl font-bold">Baluni</span>
+            <span className="block text-2xl mb-2">Welcome to </span>
+            <span className="block text-5xl font-bold">Baluni</span>
           </h1>
           <pre className="text-lg bg-gray-100 p-2 rounded-md text-black shadow-secondary shadow-md">
             <code>npm install baluni</code>

@@ -8,7 +8,6 @@ module.exports = {
     themes: ["synthwave", "dark", "light"],
     fontFamily: {
       sans: ["ui-sans-serif", "system-ui"],
-      serif: ["ui-serif", "Georgia"],
       mono: ["PT-mono"],
       roboto: ["Roboto"],
       sans: ["PT-sans"],

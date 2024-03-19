@@ -2030,6 +2030,7 @@ __metadata:
     "@uniswap/v2-sdk": ^3.0.1
     autoprefixer: ^10.4.12
     baluni: ^2.0.5
+    baluni-api: ^1.4.9
     blo: ^1.0.1
     daisyui: ^4.4.19
     eslint: ^8.15.0
@@ -4740,7 +4741,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"baluni-api@npm:^1.5.0":
+"baluni-api@npm:^1.4.9, baluni-api@npm:^1.5.0":
   version: 1.5.0
   resolution: "baluni-api@npm:1.5.0"
   dependencies:
