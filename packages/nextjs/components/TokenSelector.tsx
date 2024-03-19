@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  JSXElementConstructor,
-  Key,
-  PromiseLikeOfReactNode,
-  ReactElement,
-  ReactNode,
-  ReactPortal,
-  useState,
-} from "react";
+import { JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal, useState } from "react";
 import useTokenList from "../hooks/useTokenList";
 import { clientToSigner } from "../utils/ethers";
 //import { JsonRpcProvider } from "@ethersproject/providers";
@@ -310,7 +302,6 @@ const TokenSelector = () => {
                     | boolean
                     | ReactElement<any, string | JSXElementConstructor<any>>
                     | Iterable<ReactNode>
-                    | PromiseLikeOfReactNode
                     | null
                     | undefined;
                   balance:
@@ -320,7 +311,6 @@ const TokenSelector = () => {
                     | ReactElement<any, string | JSXElementConstructor<any>>
                     | Iterable<ReactNode>
                     | ReactPortal
-                    | PromiseLikeOfReactNode
                     | null
                     | undefined;
                 },

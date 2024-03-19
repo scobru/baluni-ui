@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { predict } from "baluni/dist/predict/predict";
+import { predict } from "baluni";
 import { WalletClient, formatEther, parseEther } from "viem";
 import { useScaffoldContractRead, useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
 import { notification } from "~~/utils/scaffold-eth";
@@ -9,6 +9,14 @@ import { notification } from "~~/utils/scaffold-eth";
 // props
 interface PredictionProps {
   signer: WalletClient;
+}
+
+interface PredictionResult {
+  actual: number;
+  predicted: number;
+  /* mape: string;
+  rmse: string;
+  mae: string; */
 }
 
 const Prediction = ({ signer }: PredictionProps) => {
@@ -65,7 +73,7 @@ const Prediction = ({ signer }: PredictionProps) => {
         return;
       }
       const notificationLoading = notification.loading("Making prediction...");
-      const { actual, predicted } = await predict(algoName, symbol, period, epochs);
+      const { actual, predicted } = (await predict(algoName, symbol, period, epochs)) as PredictionResult;
       if (!actual || !predicted) {
         notification.remove(notificationLoading);
         notification.error("Error making prediction");
