@@ -1,4 +1,4 @@
-# Baluni GUI: Open Source Interface for DeFi Enthusiasts
+# BALUNI GUI
 
 Welcome to Baluni GUI, the graphical interface that simplifies your interaction with the decentralized finance (DeFi) world. Built as an open-source layer on top of the Baluni command-line tool, this interface is designed to make the management of ERC-20 tokens and smart contract interactions more accessible to everyone, from beginners to advanced users.
 
