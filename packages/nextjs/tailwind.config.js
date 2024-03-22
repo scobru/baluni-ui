@@ -5,13 +5,7 @@ module.exports = {
   darkTheme: "scaffoldEthDark",
   // DaisyUI theme colors
   daisyui: {
-    themes: ["synthwave", "dark", "light"],
-    fontFamily: {
-      sans: ["ui-sans-serif", "system-ui"],
-      mono: ["PT-mono"],
-      roboto: ["Roboto"],
-      sans: ["PT-sans"],
-    },
+    themes: ["synthwave", "lofi"],
   },
   theme: {
     extend: {

@@ -22,11 +22,11 @@ export const menuLinks: HeaderMenuLink[] = [
     label: "Rebalance",
     href: "/rebalance",
   },
-  {
+  /*{
     label: "Forecast",
     href: "/forecast",
   },
-  /* {
+  {
     label: "Pool",
     href: "/pool",
   },
