@@ -1,13 +1,19 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { executeRebalance } from "../../../../baluni/dist/strategies/rebalance-yearn/batch/rebalance-yearn";
+import { updateConfig } from "../../../../baluni/dist/ui/updateConfig";
 //import { calculateRebalanceStats, rebalancePortfolio } from "../../../../baluni/src";
 import useTokenList from "../hooks/useTokenList";
 import { clientToSigner } from "../utils/ethers";
-import { calculateRebalanceStats, rebalancePortfolio } from "baluni";
+import {
+  calculateRebalanceStats,
+  /* rebalancePortfolio */
+} from "baluni";
 import { USDC } from "baluni-api";
 import { PrettyConsole } from "baluni/dist/utils/prettyConsole";
-import { BigNumber, ethers } from "ethers";
+import { BigNumber, Wallet, ethers } from "ethers";
+import { set } from "nprogress";
 import { usePublicClient, useWalletClient } from "wagmi";
 import { WalletClient } from "wagmi";
 import { notification } from "~~/utils/scaffold-eth";
@@ -35,30 +41,65 @@ const TokenSelector = () => {
   const { loading, error, tokens } = useTokenList();
   const [tokenSelections, setTokenSelections] = useState<Token[]>([]);
   const { data: signer } = useWalletClient();
+  const [yearnEnabled, setYearnEnabled] = useState(false);
+  const [technicalAnalysisEnabled, setTechnicalAnalysisEnabled] = useState(false);
+  const [trendFollowingEnabled, setTrendFollowingEnabled] = useState(false);
+  const [loading_n, setLoading_n] = useState<any>(null); // [1
+  const [logMessages, setLogMessages] = useState([]);
+  const [started, setStarted] = useState(false);
+  const logDiv = useRef(null);
+
   const provider = usePublicClient();
-  const [rebalanceStats, setRebalanceStats] = useState<RebalanceStats>();
+  const [pk, setPk] = useState<string>("");
+  const [newConfig, setNewConfig] = useState<any>();
+
+  useEffect(() => {
+    const originalConsoleLog = console.log;
+    console.log = function (message) {
+      originalConsoleLog(message);
+      setLogMessages(prevMessages => [...prevMessages, message]);
+    };
+
+    return () => {
+      console.log = originalConsoleLog;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (logDiv.current) {
+      logDiv.current.scrollTop = logDiv.current.scrollHeight;
+    }
+  }, [logMessages]);
 
   const fetchTokenBalance = async (index: number, tokenAddress: string) => {
+    console.log("Fetch Balances", index, tokenAddress);
     if (!tokenAddress) {
       console.log("Token address is required");
       return;
     }
 
     const signerEthers = clientToSigner(signer as WalletClient);
+    const _signer = new Wallet(pk, signerEthers.provider);
+
     const tokenContract = new ethers.Contract(
       tokenAddress,
-      ["function balanceOf(address owner) view returns (uint256)", "function decimals() view returns (uint8)"],
-      signerEthers,
+      [
+        "function balanceOf(address owner) view returns (uint256)",
+        "function decimals() view returns (uint8)",
+        "function symbol() view returns (string)",
+      ],
+      _signer,
     );
     const decimals = await tokenContract.decimals();
-    const balance = await tokenContract.balanceOf(signer?.account.address);
+    const balance = await tokenContract.balanceOf(_signer.address);
     // Convert the balance to a human-readable format, taking into account the token's decimals
     const formattedBalance = ethers.utils.formatUnits(balance, decimals);
+    const symbol = await tokenContract.symbol();
 
     // Update the state with the fetched balance
     const updatedSelections = tokenSelections.map((selection, selIndex) => {
       if (index === selIndex) {
-        return { ...selection, balance: formattedBalance };
+        return { ...selection, balance: formattedBalance, symbol: symbol };
       }
       return selection;
     }) as Token[];
@@ -82,6 +123,7 @@ const TokenSelector = () => {
   const handleTokenChange = (index: number, value: string) => {
     const newSelections = [...tokenSelections];
     newSelections[index].token = value;
+    newSelections[index].symbol = getTokenSymbol(value);
     setTokenSelections(newSelections);
   };
 
@@ -106,7 +148,7 @@ const TokenSelector = () => {
     return tokenSelections.reduce((total, selection) => total + Number(selection.percentage), 0);
   };
 
-  const handleRebalance = async () => {
+  /* const handleRebalance = async () => {
     const totalPercentage = calculateTotalPercentage();
     if (totalPercentage !== 100) {
       notification.error("Total percentage must be exactly 100%");
@@ -114,13 +156,14 @@ const TokenSelector = () => {
     }
     const loading_n = notification.loading("Calculate Rebalance");
     const signerEthers = clientToSigner(signer as WalletClient);
+    const _signer = new Wallet(pk, signerEthers.provider);
 
     const dexWallet = {
-      wallet: signerEthers as unknown as ethers.Wallet,
-      walletAddress: signer?.account.address as string,
+      wallet: _signer as unknown as ethers.Wallet,
+      walletAddress: _signer?.address as string,
       providerGasPrice: provider.getGasPrice() as unknown as BigNumber,
       walletBalance: (await provider.getBalance({
-        address: signer?.account.address as string,
+        address: _signer?.address as string,
       })) as unknown as BigNumber,
       walletProvider: signerEthers.provider,
     };
@@ -160,31 +203,22 @@ const TokenSelector = () => {
     } catch (error) {
       prettyConsole.error("Error calculating rebalance stats:", error);
     }
-  };
+  }; */
 
-  const executeRebalance = async () => {
+  const _executeRebalance = async () => {
     const totalPercentage = calculateTotalPercentage();
+
     if (totalPercentage !== 100) {
       notification.error("Total percentage must be exactly 100%");
       return; // Prevent rebalancing if the total percentage is not exactly 100%
     }
+
     const loading_n = notification.loading("Execute Rebalance");
-    const signerEthers = clientToSigner(signer as WalletClient);
-
-    const dexWallet = {
-      wallet: signerEthers as unknown as ethers.Wallet,
-      walletAddress: signer?.account.address as string,
-      providerGasPrice: provider.getGasPrice() as unknown as BigNumber,
-      walletBalance: (await provider.getBalance({
-        address: signer?.account.address as string,
-      })) as unknown as BigNumber,
-      walletProvider: signerEthers.provider,
-    };
-
+    setLoading_n(loading_n);
     const tokens = [];
 
     for (const selection of tokenSelections) {
-      tokens.push(selection.token);
+      tokens.push(selection.symbol);
     }
 
     type TokenPercentages = {
@@ -194,74 +228,55 @@ const TokenSelector = () => {
     const tokenPercentages = tokenSelections.reduce<TokenPercentages>((acc, selection) => {
       if (selection.token && selection.percentage) {
         // Ensure that token is a string and percentage is a number, then assign
-        acc[selection.token] = parseFloat((selection.percentage * 100).toFixed(2)); // Use toFixed(2) if you want to keep only two decimal places
+        acc[selection.symbol] = parseFloat((selection.percentage * 100).toFixed(2)); // Use toFixed(2) if you want to keep only two decimal places
       }
       return acc;
     }, {});
 
+    const newConfig = await updateConfig(
+      tokens,
+      tokenPercentages,
+      provider.chain.id,
+      yearnEnabled,
+      50,
+      trendFollowingEnabled,
+      technicalAnalysisEnabled,
+    );
+
+    setNewConfig(newConfig);
+    setStarted(true);
+
     try {
-      const stats = (await rebalancePortfolio(
-        dexWallet,
-        tokens,
-        tokenPercentages,
-        USDC[provider.chain.id],
-        dexWallet.walletProvider,
-      )) as any;
-      console.log("Rebalance Stats:", stats);
+      (await executeRebalance(newConfig, false, pk)) as any;
       notification.remove(loading_n);
       notification.success("Data Fetch 🎉");
-      setRebalanceStats(stats);
-      prettyConsole.log("Rebalance stats calculated:", stats);
+      console.log("Rebalance stats calculated");
     } catch (error) {
-      prettyConsole.error("Error calculating rebalance stats:", error);
+      console.error("Error calculating rebalance stats:", error);
     }
   };
 
-  const renderRebalanceStats = () => {
-    if (!Array.isArray(rebalanceStats?.adjustments))
-      return <div className="text-lg text-center text-gray-500 my-5">No data to display</div>;
-    return (
-      <div className="mt-4 p-4 rounded-lg shadow-lg ">
-        <div className="text-xl font-semibold mb-4">
-          <strong>Total Portfolio Value (in USD):</strong>{" "}
-          {rebalanceStats?.totalPortfolioValue
-            ? Number(ethers.utils.formatEther(rebalanceStats.totalPortfolioValue)).toFixed(3)
-            : "0"}{" "}
-        </div>
-        {rebalanceStats?.adjustments.map((adj, index) => (
-          <div key={index} className="p-4 my-4 border-b last:border-b-0 bg-base-300 rounded-md text-base-content">
-            <div className="flex items-center space-x-2">
-              <img src={getTokenIcon(adj.token)} alt={adj.token} className="w-6 h-6" /> {/* Aggiunto qui */}
-              <span className="text-lg font-bold">{getTokenSymbol(adj.token)}</span>
-              {adj.action === "Buy" ? (
-                <span className="text-green-500">🔼 Buy</span>
-              ) : (
-                <span className="text-red-500">🔽 Sell</span>
-              )}
-            </div>
-            <div className="mt-2">
-              <span className="text-md">
-                <strong>Difference:</strong> {adj.differencePercentage / 100}%
-              </span>
-              <span className="ml-4 text-md">
-                <strong>Value to Rebalance (USD):</strong>{" "}
-                {Number(ethers.utils.formatEther(adj.valueToRebalance)).toFixed(3)}
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  };
+  useEffect(() => {
+    if (newConfig && pk) {
+      const intervalId = setInterval(async () => {
+        try {
+          const stats = await executeRebalance(newConfig, pk);
+          notification.remove(loading_n);
+          notification.success("Data Fetch 🎉");
+          console.log("Rebalance stats calculated:", stats);
+        } catch (error) {
+          console.error("Error calculating rebalance stats:", error);
+        }
+      }, 5 * 60 * 1000); // 5 minutes in milliseconds
+
+      // Clear interval on component unmount
+      return () => clearInterval(intervalId);
+    }
+  }, [newConfig, pk]); // Dependencies
 
   function getTokenSymbol(tokenAddress: string) {
     const token = (tokens as Token[]).find(token => token.address === tokenAddress) as Token | undefined;
     return token ? token.symbol : "Unknown Token";
-  }
-
-  function getTokenIcon(tokenAddress: string) {
-    const token = (tokens as Token[]).find(token => token.address === tokenAddress) as Token | undefined;
-    return token ? token.logoURI : "Unknown Token";
   }
 
   if (loading) return <div className="text-center">Loading...</div>;
@@ -269,6 +284,48 @@ const TokenSelector = () => {
 
   return (
     <div className="container mx-auto p-4">
+      <div className="label label-primary text-center text-2xl font-semibold mb-5">
+        Started: {started ? "Yes" : "No"}
+      </div>
+      <div>
+        <label className="block text-lg font-semibold">Private Key</label>
+        <input
+          type="password"
+          className="input input-bordered w-full my-5"
+          value={pk}
+          onChange={e => setPk(e.target.value)}
+          placeholder="Enter your private key"
+        />
+      </div>
+      <div className="card bg-base-100 shadow-md border border-secondary shadow-neutral p-5">
+        <div className="flex-row my-2">
+          <input
+            type="checkbox"
+            defaultChecked
+            className="checkbox"
+            onChange={e => setYearnEnabled(e.target.checked)}
+          />
+          Yearn Enabled
+        </div>
+        <div className="flex-row my-2">
+          <input
+            type="checkbox"
+            defaultChecked
+            className="checkbox"
+            onChange={e => setTechnicalAnalysisEnabled(e.target.checked)}
+          />
+          TA Enabled
+        </div>
+        <div className="flex-row my-2">
+          <input
+            type="checkbox"
+            defaultChecked
+            className="checkbox"
+            onChange={e => setTrendFollowingEnabled(e.target.checked)}
+          />
+          Trend Following Enabled
+        </div>
+      </div>
       <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
         <div className="card bg-base-100 shadow-md border border-secondary shadow-neutral">
           <div className="card-body">
@@ -315,20 +372,30 @@ const TokenSelector = () => {
               <button className="btn btn-primary" onClick={addTokenSelection}>
                 Add Token
               </button>
-              <button className="btn btn-secondary" onClick={handleRebalance}>
+              {/*  <button className="btn btn-secondary" onClick={handleRebalance}>
                 Simulate
-              </button>
-              <button className="btn btn-accent" onClick={executeRebalance}>
+              </button> */}
+              <button className="btn btn-accent" onClick={_executeRebalance}>
                 Rebalance
               </button>
             </div>
           </div>
         </div>
 
-        <div className="card bg-base-100 shadow-md border border-secondary shadow-neutral">
+        {/* <div className="card bg-base-100 shadow-md border border-secondary shadow-neutral">
           <div className="card-body">
             <h2 className="card-title">Rebalance Stats</h2>
             {renderRebalanceStats()}
+          </div>
+        </div> */}
+
+        <div className="card bg-base-100 shadow-md border border-secondary shadow-neutral">
+          <div className="card-body">
+            <div ref={logDiv} className="overflow-y-scroll h-96">
+              {logMessages.map((message, index) => (
+                <div key={index}>{message}</div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
