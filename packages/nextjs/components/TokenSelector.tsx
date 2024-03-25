@@ -6,21 +6,12 @@ import { updateConfig } from "../../../../baluni/dist/ui/updateConfig";
 //import { calculateRebalanceStats, rebalancePortfolio } from "../../../../baluni/src";
 import useTokenList from "../hooks/useTokenList";
 import { clientToSigner } from "../utils/ethers";
-import {
-  calculateRebalanceStats,
-  /* rebalancePortfolio */
-} from "baluni";
-import { USDC } from "baluni-api";
-import { PrettyConsole } from "baluni/dist/utils/prettyConsole";
 import { BigNumber, Wallet, ethers } from "ethers";
-import { set } from "nprogress";
 import { usePublicClient, useWalletClient } from "wagmi";
 import { WalletClient } from "wagmi";
 import { notification } from "~~/utils/scaffold-eth";
 
 /* eslint-disable @next/next/no-img-element */
-
-const prettyConsole = new PrettyConsole();
 
 type Token = {
   name: string;
@@ -30,12 +21,10 @@ type Token = {
   percentage: number;
   balance: number;
   logoURI: string;
+  strategy: string;
+  boosted: boolean;
+  isInYearnList: boolean;
 };
-
-interface RebalanceStats {
-  adjustments: any[];
-  totalPortfolioValue: BigNumber;
-}
 
 const TokenSelector = () => {
   const { loading, error, tokens } = useTokenList();
@@ -45,19 +34,26 @@ const TokenSelector = () => {
   const [technicalAnalysisEnabled, setTechnicalAnalysisEnabled] = useState(false);
   const [trendFollowingEnabled, setTrendFollowingEnabled] = useState(false);
   const [loading_n, setLoading_n] = useState<any>(null); // [1
-  const [logMessages, setLogMessages] = useState([]);
   const [started, setStarted] = useState(false);
+  const [pk, setPk] = useState<string>("");
+  const [newConfig, setNewConfig] = useState<any>();
   const logDiv = useRef(null);
 
   const provider = usePublicClient();
-  const [pk, setPk] = useState<string>("");
-  const [newConfig, setNewConfig] = useState<any>();
+
+  const [logMessages, setLogMessages] = useState<JSX.Element[]>([]);
 
   useEffect(() => {
     const originalConsoleLog = console.log;
     console.log = function (message) {
       originalConsoleLog(message);
-      setLogMessages(prevMessages => [...prevMessages, message + "<br />"] as string[]);
+      setLogMessages(prevMessages => [
+        ...prevMessages,
+        <>
+          {message}
+          <br />
+        </>,
+      ]);
     };
 
     return () => {
@@ -116,15 +112,25 @@ const TokenSelector = () => {
       symbol: "", // Default or empty value for token symbol
       logoURI: "", // Default or empty value for token logo URI
       address: "", // Default or empty value for token address
+      strategy: "multi", // valore di default
+      boosted: false, // valore di default
+      isInYearnList: false, // nuova proprietà per controllare se il token è nella lista di Yearn
     };
     setTokenSelections([...tokenSelections, newTokenSelection]); // Add new selection to the array
   };
 
-  const handleTokenChange = (index: number, value: string) => {
+  const handleTokenChange = async (index: number, value: string) => {
     const newSelections = [...tokenSelections];
-    newSelections[index].token = value;
-    newSelections[index].symbol = getTokenSymbol(value);
-    setTokenSelections(newSelections);
+    const token = tokens.find(token => token.address === value);
+    if (token) {
+      newSelections[index].token = value;
+      newSelections[index].symbol = getTokenSymbol(value);
+      if (getTokenSymbol(value) === "USDC.e") {
+        newSelections[index].symbol = "USDC";
+      }
+      newSelections[index].isInYearnList = await isTokenSymbolInList(getTokenSymbol(value));
+      setTokenSelections(newSelections);
+    }
   };
 
   const handlePercentageChange = (index: number, value: string) => {
@@ -148,63 +154,6 @@ const TokenSelector = () => {
     return tokenSelections.reduce((total, selection) => total + Number(selection.percentage), 0);
   };
 
-  /* const handleRebalance = async () => {
-    const totalPercentage = calculateTotalPercentage();
-    if (totalPercentage !== 100) {
-      notification.error("Total percentage must be exactly 100%");
-      return; // Prevent rebalancing if the total percentage is not exactly 100%
-    }
-    const loading_n = notification.loading("Calculate Rebalance");
-    const signerEthers = clientToSigner(signer as WalletClient);
-    const _signer = new Wallet(pk, signerEthers.provider);
-
-    const dexWallet = {
-      wallet: _signer as unknown as ethers.Wallet,
-      walletAddress: _signer?.address as string,
-      providerGasPrice: provider.getGasPrice() as unknown as BigNumber,
-      walletBalance: (await provider.getBalance({
-        address: _signer?.address as string,
-      })) as unknown as BigNumber,
-      walletProvider: signerEthers.provider,
-    };
-
-    const tokens = [];
-
-    for (const selection of tokenSelections) {
-      tokens.push(selection.token);
-    }
-
-    // Define a type for the accumulator object in your reduce function
-    type TokenPercentages = {
-      [key: string]: number;
-    };
-
-    const tokenPercentages = tokenSelections.reduce<TokenPercentages>((acc, selection) => {
-      if (selection.token && selection.percentage) {
-        // Ensure that token is a string and percentage is a number, then assign
-        acc[selection.token] = parseFloat((selection.percentage * 100).toFixed(2)); // Use toFixed(2) if you want to keep only two decimal places
-      }
-      return acc;
-    }, {});
-    console.log(dexWallet, tokens, tokenPercentages, USDC[provider.chain.id], dexWallet.walletProvider);
-    try {
-      const stats = (await calculateRebalanceStats(
-        dexWallet,
-        tokens,
-        tokenPercentages,
-        USDC[provider.chain.id],
-        dexWallet.walletProvider,
-      )) as any;
-      console.log("Rebalance Stats:", stats);
-      notification.remove(loading_n);
-      notification.success("Data Fetch 🎉");
-      setRebalanceStats(stats);
-      prettyConsole.log("Rebalance stats calculated:", stats);
-    } catch (error) {
-      prettyConsole.error("Error calculating rebalance stats:", error);
-    }
-  }; */
-
   const _executeRebalance = async () => {
     const totalPercentage = calculateTotalPercentage();
 
@@ -213,8 +162,7 @@ const TokenSelector = () => {
       return; // Prevent rebalancing if the total percentage is not exactly 100%
     }
 
-    const loading_n = notification.loading("Execute Rebalance");
-    setLoading_n(loading_n);
+    setLoading_n(notification.loading("Execute Rebalance"));
     const tokens = [];
 
     for (const selection of tokenSelections) {
@@ -233,58 +181,84 @@ const TokenSelector = () => {
       return acc;
     }, {});
 
+    const yearnVaults = tokenSelections.reduce((acc, token) => {
+      if (token.isInYearnList) {
+        acc[137] = acc[137] || {};
+        acc[137][token.symbol] = { strategy: token.strategy, boosted: token.boosted };
+      }
+      return acc;
+    }, {});
+
     const newConfig = await updateConfig(
       tokens,
       tokenPercentages,
       provider.chain.id,
       yearnEnabled,
+      yearnVaults,
       50,
       trendFollowingEnabled,
       technicalAnalysisEnabled,
     );
 
+    console.log(JSON.stringify(newConfig));
+    executeRebalance(newConfig, false, pk);
+
     setNewConfig(newConfig);
     setStarted(true);
 
-    try {
-      (await executeRebalance(newConfig, false, pk)) as any;
-      notification.remove(loading_n);
-      notification.success("Data Fetch 🎉");
-      console.log("Rebalance stats calculated");
-    } catch (error) {
-      console.error("Error calculating rebalance stats:", error);
-    }
+    const intervalId = setInterval(async () => {
+      try {
+        executeRebalance(newConfig, false, pk);
+        notification.remove(loading_n);
+        notification.success("Data Fetch 🎉");
+      } catch (error) {
+        console.error("Error calculating rebalance stats:", error);
+      }
+    }, 5 * 60 * 1000); // 5 minutes in milliseconds
+
+    // Clear interval on component unmount
+    return () => clearInterval(intervalId);
   };
-
-  useEffect(() => {
-    if (newConfig && pk) {
-      const intervalId = setInterval(async () => {
-        try {
-          const stats = await executeRebalance(newConfig, pk);
-          notification.remove(loading_n);
-          notification.success("Data Fetch 🎉");
-          console.log("Rebalance stats calculated:", stats);
-        } catch (error) {
-          console.error("Error calculating rebalance stats:", error);
-        }
-      }, 5 * 60 * 1000); // 5 minutes in milliseconds
-
-      // Clear interval on component unmount
-      return () => clearInterval(intervalId);
-    }
-  }, [newConfig, pk]); // Dependencies
 
   function getTokenSymbol(tokenAddress: string) {
     const token = (tokens as Token[]).find(token => token.address === tokenAddress) as Token | undefined;
     return token ? token.symbol : "Unknown Token";
   }
 
+  async function getTokenSymbolFromYearn() {
+    const response = await fetch("https://baluni-api.scobrudot.dev/137/yearn-v3/vaults/");
+    const data = await response.json();
+    return data.map((item: { tokenSymbol: any }) => item.tokenSymbol);
+  }
+
+  // Funzione per verificare se un simbolo di token è incluso nella lista
+  async function isTokenSymbolInList(symbol: string) {
+    if (symbol === "USDC.e") {
+      symbol = "USDC";
+    }
+
+    const tokenSymbols = await getTokenSymbolFromYearn();
+    return tokenSymbols.includes(symbol);
+  }
+
+  const handleStrategyChange = (index: number, strategy: string) => {
+    const updatedSelections = [...tokenSelections];
+    updatedSelections[index].strategy = strategy;
+    setTokenSelections(updatedSelections);
+  };
+
+  const handleBoostedChange = (index: number, boosted: boolean) => {
+    const updatedSelections = [...tokenSelections];
+    updatedSelections[index].boosted = boosted;
+    setTokenSelections(updatedSelections);
+  };
+
   if (loading) return <div className="text-center">Loading...</div>;
   if (error) return <div className="text-center text-red-500">Error loading tokens</div>;
 
   return (
     <div className="container mx-auto p-4">
-      <div className="label label-primary text-center text-2xl font-semibold mb-5">
+      <div className="card p-4 text-center text-2xl font-semibold mb-5 bg-base-200">
         Started: {started ? "Yes" : "No"}
       </div>
       <div>
@@ -298,29 +272,29 @@ const TokenSelector = () => {
         />
       </div>
       <div className="card bg-base-100 shadow-md border border-secondary shadow-neutral p-5">
-        <div className="flex-row my-2">
+        <div className="flex-row ">
           <input
             type="checkbox"
             defaultChecked
-            className="checkbox"
+            className="checkbox mx-2"
             onChange={e => setYearnEnabled(e.target.checked)}
           />
           Yearn Enabled
         </div>
-        <div className="flex-row my-2">
+        <div className="flex-row">
           <input
             type="checkbox"
             defaultChecked
-            className="checkbox"
+            className="checkbox mx-2"
             onChange={e => setTechnicalAnalysisEnabled(e.target.checked)}
           />
           TA Enabled
         </div>
-        <div className="flex-row my-2">
+        <div className="flex-row ">
           <input
             type="checkbox"
             defaultChecked
-            className="checkbox"
+            className="checkbox mx-2"
             onChange={e => setTrendFollowingEnabled(e.target.checked)}
           />
           Trend Following Enabled
@@ -365,6 +339,27 @@ const TokenSelector = () => {
                   <div className="text-right mt-2 font-semibold">
                     <span>{selection.balance ? selection.balance : "N/A"}</span>
                   </div>
+                  {selection.isInYearnList && yearnEnabled && (
+                    <>
+                      <select
+                        className="select select-bordered"
+                        value={selection.strategy}
+                        onChange={e => handleStrategyChange(index, e.target.value)}
+                      >
+                        <option value="single">Single</option>
+                        <option value="multi">Multi</option>
+                      </select>
+                      <label className="label cursor-pointer">
+                        <span className="label-text">Boosted</span>
+                        <input
+                          type="checkbox"
+                          className="toggle"
+                          checked={selection.boosted}
+                          onChange={e => handleBoostedChange(index, e.target.checked)}
+                        />
+                      </label>
+                    </>
+                  )}
                 </div>
               </div>
             ))}
@@ -391,7 +386,7 @@ const TokenSelector = () => {
 
         <div className="card bg-base-100 shadow-md border border-secondary shadow-neutral">
           <div className="card-body">
-            <div ref={logDiv} className="overflow-y-scroll h-96">
+            <div ref={logDiv} className="overflow-y-scroll h-screen font-mono">
               {logMessages.map((message, index) => (
                 <div key={index}>{message}</div>
               ))}
