@@ -1,0 +1,26 @@
+{
+  "name": "baluni-ui",
+  "version": "1.0.0",
+  "workspaces": {
+    "packages": [
+      "packages/nextjs",
+      "packages/indexer",
+      "packages/server"
+    ]
+  },
+  "scripts": {
+    "start": "yarn workspace @baluni-ui/nextjs dev",
+    "next:lint": "yarn workspace @baluni-ui/nextjs lint",
+    "next:format": "yarn workspace @baluni-ui/nextjs format",
+    "next:check-types": "yarn workspace @baluni-ui/nextjs check-types",
+    "postinstall": "husky install",
+    "precommit": "lint-staged",
+    "vercel": "yarn workspace @baluni-ui/nextjs vercel",
+    "vercel:yolo": "yarn workspace @baluni-ui/nextjs vercel:yolo"
+  },
+  "packageManager": "yarn@3.8.2",
+  "devDependencies": {
+    "husky": "^8.0.1",
+    "lint-staged": "^13.0.3"
+  }
+}

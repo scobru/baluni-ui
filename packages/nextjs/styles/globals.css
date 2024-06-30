@@ -1,0 +1,73 @@
+@import url("https://fonts.googleapis.com/css2?family=Reddit+Sans:ital,wght@0,200..900;1,200..900&display=swap");
+
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+@keyframes spin-bounce {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.1);
+  } /* Larger scale for bounce */
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+.animate-spin-bounce {
+  animation: spin-bounce 0.5s ease-in-out infinite; /* Adjust timing as needed */
+}
+
+.click-effect {
+  position: absolute;
+  width: 50px; /* Adjust size as needed */
+  height: 50px;
+  pointer-events: none;
+  animation: launch 1s ease-out forwards;
+}
+
+@keyframes launch {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translate(-50px, -100px) scale(1.5);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-100px, -200px) scale(0.5);
+  }
+}
+
+:root,
+[data-theme] {
+  background: oklch(var(--b2));
+}
+
+body {
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin-bottom: 0.5rem;
+  line-height: 1;
+}
+
+p {
+  margin: 1rem 0;
+}
+
+.btn {
+  @apply shadow-md;
+}
+
+.btn.btn-ghost {
+  @apply shadow-none;
+}
