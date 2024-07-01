@@ -7,11 +7,11 @@ import { calculateStatistics } from "./calculateStatistics";
 const cors = require("cors");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 app.use(
   cors({
-    origin: "http://localhost:3000", // Replace with your frontend's domain
+    origin: "http://localhost:3001", // Replace with your frontend's domain
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     allowedHeaders: "Content-Type,Authorization",
   }),
