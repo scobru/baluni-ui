@@ -11,7 +11,8 @@ import vaultRegistryAbi from "baluni-contracts/artifacts/contracts/registry/Balu
 import baluniVaultAbi from "baluni-contracts/artifacts/contracts/vaults/BaluniV1YearnVault.sol/BaluniV1YearnVault.json";
 import { INFRA } from "baluni/dist/api/";
 import { Contract, ethers } from "ethers";
-import { erc20ABI, useWalletClient } from "wagmi";
+import { erc20Abi } from "viem";
+import { useWalletClient } from "wagmi";
 
 const vaultDescription = {
   Accumulator: {
@@ -86,7 +87,7 @@ function getVaultDescription() {
   return vaultDescription.Accumulator;
 }
 
-const YVaultBox = () => {
+const YearnVaultBox = () => {
   const { data: signer } = useWalletClient();
   const { tokens } = useTokenList();
 
@@ -218,7 +219,7 @@ const YVaultBox = () => {
       const yearnVault = await vault.yearnVault();
 
       //const baseAsset = await vault.baseAsset();
-      const baseAssetContract = new ethers.Contract(yearnVault, erc20ABI, clientToSigner(signer));
+      const baseAssetContract = new ethers.Contract(yearnVault, erc20Abi, clientToSigner(signer));
       const baseDecimal = await baseAssetContract.decimals();
       const balanceBase = await baseAssetContract.balanceOf(vaultAddress);
       tlvs[vaultAddress] = ethers.utils.formatUnits(await vault.totalValuation(), baseDecimal);
@@ -229,10 +230,10 @@ const YVaultBox = () => {
       assetsSymbol[0] = getTokenSymbol(poolAssets[0]);
       assetsSymbol[1] = getTokenSymbol(poolAssets[1]);
 
-      const poolERC20 = new ethers.Contract(vaultAddress, erc20ABI, clientToSigner(signer));
+      const poolERC20 = new ethers.Contract(vaultAddress, erc20Abi, clientToSigner(signer));
       const totalSupply = await poolERC20.totalSupply();
       const quoteAsset = await vault.quoteAsset();
-      const quoteAssetContract = new ethers.Contract(quoteAsset, erc20ABI, clientToSigner(signer));
+      const quoteAssetContract = new ethers.Contract(quoteAsset, erc20Abi, clientToSigner(signer));
       const quoteDecimal = await quoteAssetContract.decimals();
       const balanceQuote = await quoteAssetContract.balanceOf(vaultAddress);
       const chainId = await signer.getChainId();
@@ -285,7 +286,7 @@ const YVaultBox = () => {
   }
 
   const fetchTokenBalance = async (tokenAddress: string, account: string) => {
-    const tokenContract = new ethers.Contract(tokenAddress, erc20ABI, clientToSigner(signer as any));
+    const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, clientToSigner(signer as any));
     const balance = await tokenContract.balanceOf(account);
     const decimals = await tokenContract.decimals();
     return ethers.utils.formatUnits(balance, decimals);
@@ -337,7 +338,7 @@ const YVaultBox = () => {
     const vault = new ethers.Contract(vaultAddress, baluniVaultAbi.abi, clientToSigner(signer as any));
     const baseAsset = await vault.baseAsset();
     if (!signer) return;
-    const tokenContract = new ethers.Contract(baseAsset, erc20ABI, clientToSigner(signer));
+    const tokenContract = new ethers.Contract(baseAsset, erc20Abi, clientToSigner(signer));
     const decimals = await tokenContract.decimals();
     const allowance = await tokenContract.allowance(signer.account.address, vaultAddress);
 
@@ -413,7 +414,7 @@ const YVaultBox = () => {
   }
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6 mb-8">
       <div className="overflow-x-auto">
         <table className="table">
           <thead>
@@ -475,7 +476,7 @@ const YVaultBox = () => {
                   </td>
                   <td className="hover:text-info-content">
                     <button
-                      className="label label-text text-xl font-semibold text-slate-600"
+                      className="label label-text text-xl font-semibold "
                       onClick={() => {
                         handleVaultClick(vault);
                         openVaultInfoModal(vault);
@@ -484,7 +485,7 @@ const YVaultBox = () => {
                       Details
                     </button>
                     <button
-                      className="label label-text text-xl font-semibold text-slate-600"
+                      className="label label-text text-xl font-semibold "
                       onClick={() => {
                         handleVaultClick(vault);
                         openDepositModal();
@@ -493,7 +494,7 @@ const YVaultBox = () => {
                       Add
                     </button>
                     <button
-                      className="label label-text text-xl font-semibold text-slate-600"
+                      className="label label-text text-xl font-semibold "
                       onClick={() => {
                         handleVaultClick(vault);
                         openWithdrawModal();
@@ -520,7 +521,7 @@ const YVaultBox = () => {
           </tfoot>
         </table>
       </div>
-      {isVaultInfoModalOpen && (
+      {selectedVault && isVaultInfoModalOpen && (
         <div className="p-4 shadow rounded">
           <input type="checkbox" id="vault-info-modal" className="modal-toggle" />
           <div className="modal modal-open bg-blend-exclusion">
@@ -660,4 +661,4 @@ const YVaultBox = () => {
   );
 };
 
-export default YVaultBox;
+export default YearnVaultBox;

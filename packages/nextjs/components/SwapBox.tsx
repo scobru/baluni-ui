@@ -8,7 +8,8 @@ import poolRegistryAbi from "baluni-contracts/artifacts/contracts/registry/Balun
 import registryAbi from "baluni-contracts/artifacts/contracts/registry/BaluniV1Registry.sol/BaluniV1Registry.json";
 import { INFRA } from "baluni/dist/api/";
 import { Contract, ethers } from "ethers";
-import { erc20ABI, useWalletClient } from "wagmi";
+import { useWalletClient } from "wagmi";
+import { erc20Abi } from "viem";
 import Spinner from "~~/components/Spinner";
 import { clientToSigner } from "~~/utils/ethers";
 import { notification } from "~~/utils/scaffold-eth";
@@ -98,7 +99,7 @@ const SwapBox = () => {
       const assets = await pool.getAssets();
 
       for (let i = 0; i < assets.length; i++) {
-        const token = new ethers.Contract(assets[i], erc20ABI, clientToSigner(signer));
+        const token = new ethers.Contract(assets[i], erc20Abi, clientToSigner(signer));
         const symbol = await token.symbol();
         symbols.push(symbol);
       }
@@ -110,7 +111,7 @@ const SwapBox = () => {
   };
 
   const fetchTokenBalance = async (tokenAddress: string, account: string) => {
-    const tokenContract = new ethers.Contract(tokenAddress, erc20ABI, clientToSigner(signer as any));
+    const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, clientToSigner(signer as any));
     const balance = await tokenContract.balanceOf(account);
     const decimals = await tokenContract.decimals();
     return ethers.utils.formatUnits(balance, decimals);
@@ -164,8 +165,8 @@ const SwapBox = () => {
     if (!signer || !fromToken || !toToken || !amount || !poolPeriphery) return;
 
     const periphery = new ethers.Contract(poolPeriphery!, poolPeripheryAbi.abi, clientToSigner(signer));
-    const fromTokenContract = new ethers.Contract(fromToken, erc20ABI, clientToSigner(signer));
-    const toTokenContract = new ethers.Contract(toToken, erc20ABI, clientToSigner(signer));
+    const fromTokenContract = new ethers.Contract(fromToken, erc20Abi, clientToSigner(signer));
+    const toTokenContract = new ethers.Contract(toToken, erc20Abi, clientToSigner(signer));
 
     const decimalsFrom = await fromTokenContract.decimals();
     const decimalsTo = await toTokenContract.decimals();
@@ -185,7 +186,7 @@ const SwapBox = () => {
     const { fromToken, toToken, fromAmount } = swapData;
     if (!signer || !fromToken || !toToken || !fromAmount || !poolPeriphery || !toReserve) return;
 
-    const fromTokenContract = new ethers.Contract(fromToken, erc20ABI, clientToSigner(signer));
+    const fromTokenContract = new ethers.Contract(fromToken, erc20Abi, clientToSigner(signer));
     const decimals = await fromTokenContract.decimals();
     const allowance = await fromTokenContract.allowance(signer.account.address, poolPeriphery);
 

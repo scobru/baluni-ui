@@ -11,7 +11,8 @@ import registryAbi from "baluni-contracts/artifacts/contracts/registry/BaluniV1R
 import baluniDCAVaultAbi from "baluni-contracts/artifacts/contracts/vaults/BaluniV1DCAVault.sol/BaluniV1DCAVault.json";
 import { INFRA } from "baluni/dist/api/";
 import { Contract, ethers } from "ethers";
-import { erc20ABI, useWalletClient } from "wagmi";
+import { useWalletClient } from "wagmi";
+import { erc20Abi } from "viem";
 
 const vaultDescription = {
   DCA: {
@@ -72,7 +73,7 @@ interface StatisticsData {
   valuation: { daily: number };
 }
 
-function getVaultDescription(vault: string) {
+function getVaultDescription() {
   return vaultDescription.DCA;
 }
 
@@ -104,7 +105,6 @@ const DCAVaultBox = () => {
     vaultAddress: "",
     amount: "",
   });
-  const [, /* activeForm */ setActiveForm] = useState<{ [key: string]: string }>({});
   const [vaultData, setVaultData] = useState<{ [key: string]: VaultData }>({});
   const [valuationData, setValuationData] = useState<ValuationData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -201,7 +201,7 @@ const DCAVaultBox = () => {
       const balance = await vault.balanceOf(signer.account.address);
       balances[vaultAddress] = ethers.utils.formatUnits(balance, 18);
       const baseAsset = await vault.baseAsset();
-      const baseAssetContract = new ethers.Contract(baseAsset, erc20ABI, clientToSigner(signer));
+      const baseAssetContract = new ethers.Contract(baseAsset, erc20Abi, clientToSigner(signer));
       const baseDecimal = await baseAssetContract.decimals();
       const balanceBase = await baseAssetContract.balanceOf(vaultAddress);
       tlvs[vaultAddress] = ethers.utils.formatUnits(await vault.totalValuation(), baseDecimal);
@@ -212,10 +212,10 @@ const DCAVaultBox = () => {
       assetsSymbol[0] = getTokenSymbol(poolAssets[0]);
       assetsSymbol[1] = getTokenSymbol(poolAssets[1]);
 
-      const poolERC20 = new ethers.Contract(vaultAddress, erc20ABI, clientToSigner(signer));
+      const poolERC20 = new ethers.Contract(vaultAddress, erc20Abi, clientToSigner(signer));
       const totalSupply = await poolERC20.totalSupply();
       const quoteAsset = await vault.quoteAsset();
-      const quoteAssetContract = new ethers.Contract(quoteAsset, erc20ABI, clientToSigner(signer));
+      const quoteAssetContract = new ethers.Contract(quoteAsset, erc20Abi, clientToSigner(signer));
       const quoteDecimal = await quoteAssetContract.decimals();
       const balanceQuote = await quoteAssetContract.balanceOf(vaultAddress);
 
@@ -249,7 +249,7 @@ const DCAVaultBox = () => {
   }
 
   const fetchTokenBalance = async (tokenAddress: string, account: string) => {
-    const tokenContract = new ethers.Contract(tokenAddress, erc20ABI, clientToSigner(signer as any));
+    const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, clientToSigner(signer as any));
     const balance = await tokenContract.balanceOf(account);
     const decimals = await tokenContract.decimals();
     return ethers.utils.formatUnits(balance, decimals);
@@ -299,7 +299,7 @@ const DCAVaultBox = () => {
     const vault = new ethers.Contract(vaultAddress, baluniDCAVaultAbi.abi, clientToSigner(signer as any));
     const baseAsset = await vault.baseAsset();
     if (!signer) return;
-    const tokenContract = new ethers.Contract(baseAsset, erc20ABI, clientToSigner(signer));
+    const tokenContract = new ethers.Contract(baseAsset, erc20Abi, clientToSigner(signer));
     const decimals = await tokenContract.decimals();
     const allowance = await tokenContract.allowance(signer.account.address, vaultAddress);
 
@@ -356,7 +356,7 @@ const DCAVaultBox = () => {
   }
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6 mb-8">
       <div className="overflow-x-auto">
         <table className="table">
           <thead>
@@ -490,13 +490,9 @@ const DCAVaultBox = () => {
             </div>
             <div className="p-4 rounded shadow mt-4">
               <span className="text-lg font-bold mt-2">Strategy Objective</span>
-              <div className="text-lg font-semibold text-gray-700">
-                {getVaultDescription(vaultData[selectedVault]?.symbol)?.objective}
-              </div>
+              <div className="text-lg font-semibold text-gray-700">{getVaultDescription()?.objective}</div>
               <span className="text-lg font-bold mt-2">Strategy Description</span>
-              <div className="mt-2 text-gray-600">
-                {getVaultDescription(vaultData[selectedVault]?.symbol)?.description}
-              </div>
+              <div className="mt-2 text-gray-600">{getVaultDescription()?.description}</div>
             </div>
             <div className="modal-action">
               <button className="btn" onClick={closeVaultInfoModal}>

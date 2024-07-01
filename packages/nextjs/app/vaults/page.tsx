@@ -1,5 +1,5 @@
 import React from "react";
-import YVaultBox from "../../components/VaultBox";
+import YearnVaultBox from "../../components/YearnVaultBox";
 import { NextPage } from "next";
 
 /* eslint-disable @next/next/no-img-element */
@@ -19,7 +19,7 @@ const YVaults: NextPage = () => {
           className="bg-black   rounded-xl mask mask-circle w-16 h-16 mr-2 "
         />{" "}
       </div>
-      <YVaultBox />
+      <YearnVaultBox />
       <div className=" text-center mx-auto my-10 text-sm font-semibold ">
         🪄 Check the console to see the magic happen{" "}
       </div>

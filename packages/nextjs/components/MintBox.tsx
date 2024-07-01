@@ -5,7 +5,8 @@ import registryABI from "baluni-contracts/artifacts/contracts/registry/BaluniV1R
 import { RouterABI } from "baluni/dist/api";
 import { INFRA } from "baluni/dist/api/constants";
 import { ethers } from "ethers";
-import { erc20ABI, useWalletClient } from "wagmi";
+import { useWalletClient } from "wagmi";
+import { erc20Abi } from "viem";
 import { useScaffoldEventSubscriber } from "~~/hooks/scaffold-eth";
 import { clientToSigner } from "~~/utils/ethers";
 import { notification } from "~~/utils/scaffold-eth";
@@ -51,7 +52,7 @@ const MintBox = () => {
     const registry = new ethers.Contract(INFRA[137].REGISTRY, registryABI.abi, signerEthers);
     const routerAddress = await registry.getBaluniRouter();
     const usdcAddress = await registry.getUSDC();
-    const erc20Contract = new ethers.Contract(usdcAddress, erc20ABI, signerEthers);
+    const erc20Contract = new ethers.Contract(usdcAddress, erc20Abi, signerEthers);
     const stakingContract = new ethers.Contract(routerAddress, RouterABI.abi, signerEthers);
     const decimals = await erc20Contract.decimals();
     const amountInWei = ethers.utils.parseUnits(amount, decimals);
@@ -63,7 +64,7 @@ const MintBox = () => {
     const signerEthers = await clientToSigner(signer as any);
     const registry = new ethers.Contract(INFRA[137].REGISTRY, registryABI.abi, signerEthers);
     const routerAddress = await registry.getBaluniRouter();
-    const erc20Contract = new ethers.Contract(routerAddress, erc20ABI, signerEthers);
+    const erc20Contract = new ethers.Contract(routerAddress, erc20Abi, signerEthers);
     const stakingContract = new ethers.Contract(routerAddress, RouterABI.abi, signerEthers);
     const unitPrice = await stakingContract.unitPrice();
     const totalSupply = await stakingContract.totalSupply();

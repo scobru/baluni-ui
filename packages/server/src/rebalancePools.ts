@@ -63,7 +63,7 @@ async function rebalance() {
           console.log(`Transaction confirmed for pool: ${pool}, block number: ${receipt.blockNumber}`);
         }
       } catch (error) {
-        console.error(`Error executing Rebalance for pool ${pool}:`, error);
+        console.error(`Error executing Rebalancefor pool ${pool}:`, error);
       }
     }
   } catch (error) {
@@ -76,6 +76,6 @@ async function rebalance() {
   await setup();
   if (registryCtx) {
     setInterval(rebalance, Number(process.env.INTERVAL)); // Fetch every interval
-    rebalance(); // Initial fetch
+    await rebalance();
   }
 })();

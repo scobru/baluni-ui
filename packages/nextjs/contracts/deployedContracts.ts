@@ -17,6 +17,7 @@ import dcaVaultABI from "baluni-contracts/artifacts/contracts/vaults/BaluniV1DCA
 import yearnVaultABI from "baluni-contracts/artifacts/contracts/vaults/BaluniV1YearnVault.sol/BaluniV1YearnVault.json";
 import contracts from "baluni-contracts/deployments/deployedContracts.json";
 import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
+import poolZapABI from "baluni-contracts/artifacts/contracts/managers/BaluniV1PoolZap.sol/BaluniV1PoolZap.json";
 
 const deployedContracts = {
   137: {
@@ -60,6 +61,10 @@ const deployedContracts = {
       address: contracts[137].BaluniV1Oracle,
       abi: oracleABI.abi,
     },
+    PoolZap: {
+      address: contracts[137].BaluniV1PoolZap,
+      abi: poolZapABI.abi,
+    },
     PoolStable: {
       address: contracts[137].BaluniPoolStable,
       abi: poolABI.abi,
@@ -76,12 +81,12 @@ const deployedContracts = {
       address: contracts[137].BaluniPoolModerate,
       abi: poolABI.abi,
     },
-    BaluniVaultYearn_USDCxWBTC: {
-      address: contracts[137].BaluniVaultYearn_USDCxWBTC,
+    BaluniYearnVault_USDCxWBTC: {
+      address: contracts[137].BaluniYearnVault_USDCxWBTC,
       abi: yearnVaultABI.abi,
     },
-    BaluniVaultDCA_USDCxWBTC: {
-      address: contracts[137].BaluniVaultDCA_USDCxWBTC,
+    BaluniDCAVault_USDCxWBTC: {
+      address: contracts[137].BaluniDCAVault_USDCxWBTC,
       abi: dcaVaultABI.abi,
     },
   },

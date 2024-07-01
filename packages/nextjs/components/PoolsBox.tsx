@@ -8,10 +8,13 @@ import poolRegistryAbi from "baluni-contracts/artifacts/contracts/registry/Balun
 import registryAbi from "baluni-contracts/artifacts/contracts/registry/BaluniV1Registry.sol/BaluniV1Registry.json";
 import { INFRA } from "baluni/dist/api/";
 import { Contract, ethers } from "ethers";
-import { erc20ABI, useWalletClient } from "wagmi";
+import { useWalletClient } from "wagmi";
+import { erc20Abi } from "viem";
 import Spinner from "~~/components/Spinner";
 import { clientToSigner } from "~~/utils/ethers";
 import { notification } from "~~/utils/scaffold-eth";
+import poolZapAbi from "baluni-contracts/artifacts/contracts/managers/BaluniV1PoolZap.sol/BaluniV1PoolZap.json";
+import { registry } from "chart.js";
 
 interface DeviationData {
   symbol: string;
@@ -120,6 +123,7 @@ const PoolsBox = () => {
 
   const [poolFactory, setPoolFactory] = useState<string | undefined>();
   const [poolPeriphery, setPoolPeriphery] = useState<string | undefined>();
+  const [poolZap, setPoolZap] = useState<string | undefined>();
 
   const [, /* tokenBalances */ setTokenBalances] = useState<TokenBalance>({
     fromTokenBalance: "0",
@@ -165,6 +169,48 @@ const PoolsBox = () => {
     fetchData();
   }, [signer, poolFactory]);
 
+  const zapIn = async (poolAddress: string, tokenAddress: string, amount: string) => {
+    if (!signer || !poolZap) return;
+    const zapCtx = new Contract(poolZap, poolZapAbi.abi, clientToSigner(signer as any));
+
+    let token: any;
+    let decimals: any;
+
+    if (tokenAddress == ethers.constants.AddressZero) {
+      decimals = 18;
+
+      const tx = await zapCtx.zapIn(
+        poolAddress,
+        tokenAddress,
+        ethers.utils.parseUnits(amount, decimals),
+        0,
+        signer.account.address,
+        {
+          value: ethers.utils.parseUnits(amount, decimals),
+        },
+      );
+
+      await tx.wait();
+    } else {
+      token = new Contract(tokenAddress, erc20Abi, clientToSigner(signer as any));
+      decimals = await token.decimals();
+
+      const approveTx = await token.approve(poolZap, ethers.utils.parseUnits(amount, decimals));
+      await approveTx.wait();
+
+      const tx = await zapCtx.zapIn(
+        poolAddress,
+        tokenAddress,
+        ethers.utils.parseUnits(amount, decimals),
+        0,
+        signer.account.address,
+      );
+      await tx.wait();
+    }
+
+    notification.success("Zap in successful!");
+  };
+
   const fetchData = async () => {
     if (!signer) return;
     setLoading(true);
@@ -180,9 +226,11 @@ const PoolsBox = () => {
   const setContract = async () => {
     const registry = new Contract(INFRA[137].REGISTRY, registryAbi.abi, clientToSigner(signer as any));
     const poolFactory = await registry.getBaluniPoolRegistry();
+    const poolZap = await registry.getBaluniPoolZap();
     const poolPeriphery = await registry.getBaluniPoolPeriphery();
     setPoolFactory(poolFactory);
     setPoolPeriphery(poolPeriphery);
+    setPoolZap(poolZap);
   };
 
   if (loading) {
@@ -219,7 +267,7 @@ const PoolsBox = () => {
       }));
 
       const assetContracts = poolAssets.map(
-        (asset: string) => new ethers.Contract(asset, erc20ABI, clientToSigner(signer)),
+        (asset: string) => new ethers.Contract(asset, erc20Abi, clientToSigner(signer)),
       );
 
       const assetSymbols = await Promise.all(
@@ -228,7 +276,7 @@ const PoolsBox = () => {
 
       symbols[poolAddress] = assetSymbols.join(" / ");
 
-      const poolERC20 = new ethers.Contract(poolAddress, erc20ABI, clientToSigner(signer));
+      const poolERC20 = new ethers.Contract(poolAddress, erc20Abi, clientToSigner(signer));
       const totalSupply = await poolERC20.totalSupply();
 
       let deviationsArray: string[] = [];
@@ -259,7 +307,7 @@ const PoolsBox = () => {
   };
 
   const fetchTokenBalance = async (tokenAddress: string, account: string) => {
-    const tokenContract = new ethers.Contract(tokenAddress, erc20ABI, clientToSigner(signer as any));
+    const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, clientToSigner(signer as any));
     const balance = await tokenContract.balanceOf(account);
     const decimals = await tokenContract.decimals();
     return ethers.utils.formatUnits(balance, decimals);
@@ -303,11 +351,12 @@ const PoolsBox = () => {
   };
 
   const fetchBalances = async (poolAddress: string) => {
-    const pool = new ethers.Contract(poolAddress, baluniPoolAbi.abi, clientToSigner(signer));
+    if (!signer) return;
+    const pool = new ethers.Contract(poolAddress, baluniPoolAbi.abi, clientToSigner(signer as any));
     const tokens = await pool.getAssets();
     const balances: any[] = [];
     for (const token of tokens) {
-      const tokenContract = new ethers.Contract(token, erc20ABI, clientToSigner(signer as any));
+      const tokenContract = new ethers.Contract(token, erc20Abi, clientToSigner(signer as any));
       const balance = await tokenContract.balanceOf(signer.account.address);
       const decimals = await tokenContract.decimals();
       balances.push({ token: token, balance: ethers.utils.formatUnits(balance, decimals) });
@@ -323,7 +372,7 @@ const PoolsBox = () => {
     const decimals: number[] = [];
 
     for (const token of tokens) {
-      const tokenContract = new ethers.Contract(token, erc20ABI, clientToSigner(signer));
+      const tokenContract = new ethers.Contract(token, erc20Abi, clientToSigner(signer));
 
       decimals.push(await tokenContract.decimals());
 
@@ -358,7 +407,7 @@ const PoolsBox = () => {
       const { tokens, poolAddress } = liquidityData;
 
       for (const token of tokens) {
-        const tokenContract = new ethers.Contract(token, erc20ABI, clientToSigner(signer));
+        const tokenContract = new ethers.Contract(token, erc20Abi, clientToSigner(signer));
         const allowance = await tokenContract.allowance(signer.account.address, poolAddress);
 
         if (allowance.lt(ethers.constants.MaxUint256)) {
@@ -425,13 +474,13 @@ const PoolsBox = () => {
     const reserves = await pool.getReserves();
     const symbols = await Promise.all(
       assets.map(async (asset: string) => {
-        const assetContract = new ethers.Contract(asset, erc20ABI, clientToSigner(signer as any));
+        const assetContract = new ethers.Contract(asset, erc20Abi, clientToSigner(signer as any));
         return assetContract.symbol();
       }),
     );
     const decimals = await Promise.all(
       assets.map(async (asset: string) => {
-        const assetContract = new ethers.Contract(asset, erc20ABI, clientToSigner(signer as any));
+        const assetContract = new ethers.Contract(asset, erc20Abi, clientToSigner(signer as any));
         return assetContract.decimals();
       }),
     );
@@ -477,13 +526,17 @@ const PoolsBox = () => {
     return token ? token.symbol : "Unknown Token";
   }
 
-  function getTokenIcon(tokenAddress: string) {
-    const token = (tokens as Token[]).find(token => token.address === tokenAddress) as Token | undefined;
-    return token ? token.logoURI : "Unknown Token";
-  }
+  // function getTokenIcon(tokenAddress: string) {
+  //   const token = (tokens as Token[]).find(token => token.address === tokenAddress) as Token | undefined;
+  //   return token ? token.logoURI : "Unknown Token";
+  // }
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6 mb-8">
+      <button className="button btn-base rounded-none" onClick={fetchData}>
+        {" "}
+        <img src="https://www.svgrepo.com/download/470882/refresh.svg" alt="" className="mask mask-circle h-10 w-10" />
+      </button>
       <div className="overflow-x-auto">
         <table className="table">
           <thead>
@@ -499,109 +552,111 @@ const PoolsBox = () => {
             </tr>
           </thead>
           <tbody className="text-xl">
-            {pools.map((pool, index) => {
-              const stats = statisticsData.find(stat => stat.address === pool);
-              return (
-                <tr
-                  key={index}
-                  className="my-4 p-4 hover:bg-info hover:text-info-content rounded-2xl bg-base-100 mx-auto items-center"
-                >
-                  <td>
-                    <div className="flex items-center gap-3">
-                      <div className="flex flex-wrap justify-center text-3xl">
-                        {poolSymbols[pool] &&
-                          poolSymbols[pool].split(" / ").map((symbol, index) => {
+            {poolData &&
+              pools.map((pool, index) => {
+                const stats = statisticsData.find(stat => stat.address === pool);
+                return (
+                  <tr
+                    key={index}
+                    className="my-4 p-4 hover:bg-info hover:text-info-content rounded-2xl bg-base-100 mx-auto items-center"
+                  >
+                    <td>
+                      <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap justify-center text-3xl">
+                          {poolSymbols[pool]?.split(" / ").map(symbol => {
                             const token = tokens.find((token: Token) => token.symbol === symbol) as unknown as Token;
                             return token ? (
                               <img
-                                key={index}
+                                key={symbol}
                                 src={token.logoURI}
                                 alt={symbol}
                                 className="mask mask-circle w-10 h-10"
                               />
                             ) : null;
                           })}
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="flex items-center gap-3">
-                      <div>
-                        <div className="font-bold">{poolData[pool].name}</div>
-                        <div className="font-semibold text-lg  opacity-30">{poolData[pool].symbol}</div>
-                        <div className="text-sm opacity-50">{poolSymbols[pool]}</div>
+                    </td>
+                    <td>
+                      <div className="flex items-center gap-3">
+                        {poolData[pool]?.name && (
+                          <div>
+                            <div className="font-bold">{poolData[pool]?.name}</div>
+                            <div className="font-semibold text-lg  opacity-30">{poolData[pool]?.symbol}</div>
+                            <div className="text-sm opacity-50">{poolSymbols[pool]}</div>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  </td>
-                  <td>{Number(tlvs[pool]).toFixed(4)}</td>
-                  <td>{Number(liquidityBalances[pool]) || "0"}</td>
-                  <td>
-                    {deviations[pool]
-                      ? deviations[pool].map((deviation, index) => (
-                          <span key={index}>
-                            {deviation.direction ? "" : "-"}
-                            {Number(deviation.deviation) / 100}%{index < deviations[pool].length - 1 && " / "}
-                          </span>
-                        ))
-                      : "N/A"}
-                  </td>
-                  <td>
-                    {deviations[pool] ? (
-                      <>
-                        {deviations[pool].map((deviation, index) => (
-                          <span key={index}>
-                            {Number(deviation.currentWeight) / 100}%{index < deviations[pool].length - 1 && " / "}
-                          </span>
-                        ))}
-                      </>
-                    ) : (
-                      "N/A"
-                    )}
-                  </td>
-                  <td>
-                    {stats ? (
-                      <>
-                        <div>Unit Price: {stats.unitPrice.daily ? stats.unitPrice.daily.toFixed(2) : 0}%</div>
-                        <div>Valuation: {stats.valuation.daily ? stats.valuation.daily.toFixed(2) : 0}%</div>
-                      </>
-                    ) : (
-                      "N/A"
-                    )}
-                  </td>
-                  <td>
-                    <button
-                      className="btn btn-base-100 btn-xl w-20 rounded-none"
-                      onClick={async () => {
-                        openModal(pool);
-                        handlePoolClick(pool);
-                      }}
-                    >
-                      details
-                    </button>
-                    <button
-                      className="btn btn-base-100 btn-xl w-20 rounded-none"
-                      onClick={async () => {
-                        handlePoolClick(pool);
-                        fetchBalances(pool);
-                        openAddLiquidityModal();
-                      }}
-                    >
-                      add
-                    </button>
-                    <button
-                      className="btn btn-base-100 btn-xl w-20 rounded-none"
-                      onClick={async () => {
-                        handlePoolClick(pool);
-                        fetchBalances(pool);
-                        openRemoveLiquidityModal();
-                      }}
-                    >
-                      remove
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
+                    </td>
+                    <td>{Number(tlvs[pool]).toFixed(4)}</td>
+                    <td>{Number(liquidityBalances[pool]) || "0"}</td>
+                    <td>
+                      {deviations[pool]
+                        ? deviations[pool].map((deviation, index) => (
+                            <span key={index}>
+                              {deviation.direction ? "" : "-"}
+                              {Number(deviation.deviation) / 100}%{index < deviations[pool].length - 1 && " / "}
+                            </span>
+                          ))
+                        : "N/A"}
+                    </td>
+                    <td>
+                      {deviations[pool] ? (
+                        <>
+                          {deviations[pool].map((deviation, index) => (
+                            <span key={index}>
+                              {Number(deviation.currentWeight) / 100}%{index < deviations[pool].length - 1 && " / "}
+                            </span>
+                          ))}
+                        </>
+                      ) : (
+                        "N/A"
+                      )}
+                    </td>
+                    <td>
+                      {stats ? (
+                        <>
+                          <div>Unit Price: {stats.unitPrice.daily ? stats.unitPrice.daily.toFixed(2) : 0}%</div>
+                          <div>Valuation: {stats.valuation.daily ? stats.valuation.daily.toFixed(2) : 0}%</div>
+                        </>
+                      ) : (
+                        "N/A"
+                      )}
+                    </td>
+                    <td>
+                      <button
+                        className="btn btn-base-100 btn-xl w-20 rounded-none"
+                        onClick={async () => {
+                          openModal(pool);
+                          handlePoolClick(pool);
+                        }}
+                      >
+                        details
+                      </button>
+                      <button
+                        className="btn btn-base-100 btn-xl w-20 rounded-none"
+                        onClick={async () => {
+                          handlePoolClick(pool);
+                          fetchBalances(pool);
+                          openAddLiquidityModal();
+                        }}
+                      >
+                        add
+                      </button>
+                      <button
+                        className="btn btn-base-100 btn-xl w-20 rounded-none"
+                        onClick={async () => {
+                          handlePoolClick(pool);
+                          fetchBalances(pool);
+                          openRemoveLiquidityModal();
+                        }}
+                      >
+                        remove
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
           </tbody>
           <tfoot>
             <tr className="my-4 p-4 rounded-2xl bg-base-100 mx-auto items-center">
@@ -760,6 +815,22 @@ const PoolsBox = () => {
                   }}
                 >
                   Max
+                </button>
+                <button
+                  className="btn btn-sm btn-primary my-2"
+                  onClick={async () => {
+                    await zapIn(liquidityData.poolAddress, token, liquidityData.amounts[index]);
+                  }}
+                >
+                  Zap In
+                </button>
+                <button
+                  className="btn btn-sm btn-primary my-2"
+                  onClick={async () => {
+                    await zapIn(liquidityData.poolAddress, ethers.constants.AddressZero, liquidityData.amounts[index]);
+                  }}
+                >
+                  Zap In ETH
                 </button>
               </div>
             ))}
