@@ -1,9 +1,10 @@
-import baluniDCAVaultRegistryAbi from "baluni-contracts/artifacts/contracts/registry/BaluniV1DCAVaultRegistry.sol/BaluniV1DCAVaultRegistry.json";
-import baluniDCAVaultAbi from "baluni-contracts/artifacts/contracts/vaults/BaluniV1DCAVault.sol/BaluniV1DCAVault.json";
+import baluniYearnVaultRegistryAbi from "baluni-contracts/artifacts/contracts/registry/BaluniV1YearnVaultRegistry.sol/BaluniV1YearnVaultRegistry.json";
+import baluniYearnVaultAbi from "baluni-contracts/artifacts/contracts/vaults/BaluniV1YearnVault.sol/BaluniV1YearnVault.json";
 import dotenv from "dotenv";
 import { Contract, ethers } from "ethers";
 import baluniRegistryAbi from "baluni-contracts/artifacts/contracts/registry/BaluniV1Registry.sol/BaluniV1Registry.json";
 import contracts from "baluni-contracts/deployments/deployedContracts.json";
+import erc20Abi from "baluni-contracts/abis/common/ERC20.json";
 
 dotenv.config();
 
@@ -24,31 +25,37 @@ async function setup() {
   }
 }
 
-async function executeDca() {
+async function reinvestEarnings() {
   if (!registryCtx) {
     console.error("Registry context not initialized");
     return;
   }
 
   try {
-    const dcaVaultRegistry = await registryCtx.getBaluniDCAVaultRegistry();
-    const dcaVaultRegistryCtx = new ethers.Contract(String(dcaVaultRegistry), baluniDCAVaultRegistryAbi.abi, provider);
-    const vaults = await dcaVaultRegistryCtx.getAllVaults();
+    const yearnVaultRegistry = await registryCtx.getBaluniYearnVaultRegistry();
+    const yearnVaultRegistryCtx = new ethers.Contract(
+      String(yearnVaultRegistry),
+      baluniYearnVaultRegistryAbi.abi,
+      provider,
+    );
+    const vaults = await yearnVaultRegistryCtx.getAllVaults();
 
     for (const vault of vaults) {
-      const vaultContract = new ethers.Contract(vault, baluniDCAVaultAbi.abi, signer);
+      const vaultContract = new ethers.Contract(vault, baluniYearnVaultAbi.abi, signer);
+      const baseAsset = await vaultContract.baseAsset();
+      const baseAssetCtx = new ethers.Contract(baseAsset, erc20Abi, provider);
+      const baseDecimals = await baseAssetCtx.decimals();
 
       try {
-        const dcaTrigger = await vaultContract.canSystemDeposit();
-        console.log("DCA Trigger:", dcaTrigger);
+        const interestEarned = await vaultContract.interestEarned()();
+        console.log("Interest Earned:", ethers.utils.formatUnits(interestEarned, baseDecimals));
 
-        if (dcaTrigger) {
-          // Simulate the transaction
-          const gasEstimate = await vaultContract.estimateGas.systemDeposit();
+        if (Number(ethers.utils.formatUnits(interestEarned, baseDecimals)) > 0.01) {
+          const gasEstimate = await vaultContract.estimateGas.buy();
           console.log(`Estimated gas for systemDeposit in vault ${vault}: ${gasEstimate.toString()}`);
 
           // Call static method to simulate
-          await vaultContract.callStatic.systemDeposit();
+          await vaultContract.callStatic.buy();
           console.log(`Simulation successful for vault: ${vault}`);
 
           const gasPrice = await provider.getGasPrice();
@@ -56,7 +63,7 @@ async function executeDca() {
           const gasLimit = gasEstimate.mul(120).div(100); // Add 20% buffer
 
           // If simulation is successful, send the transaction
-          const tx = await vaultContract.systemDeposit({ gasLimit, gasPrice });
+          const tx = await vaultContract.buy({ gasLimit, gasPrice });
           console.log(`Transaction sent for vault: ${vault}, tx hash: ${tx.hash}`);
 
           const receipt = await tx.wait();
@@ -75,7 +82,7 @@ async function executeDca() {
 (async () => {
   await setup();
   if (registryCtx) {
-    setInterval(executeDca, Number(process.env.INTERVAL)); // Fetch every interval
-    executeDca(); // Initial fetch
+    setInterval(reinvestEarnings, Number(process.env.INTERVAL)); // Fetch every interval
+    reinvestEarnings(); // Initial fetch
   }
 })();
