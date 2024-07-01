@@ -32,9 +32,9 @@ async function rebalance() {
   }
 
   try {
-    const yearnVaultRegistry = await registryCtx.getBaluniYearnVaultRegistry();
-    const yearnVaultRegistryCtx = new ethers.Contract(String(yearnVaultRegistry), baluniPoolsRegistryAbi.abi, provider);
-    const pools = await yearnVaultRegistryCtx.getAllPools();
+    const poolsRegistry = await registryCtx.getBaluniPoolRegistry();
+    const poolsRegistryCtx = new ethers.Contract(String(poolsRegistry), baluniPoolsRegistryAbi.abi, provider);
+    const pools = await poolsRegistryCtx.getAllPools();
 
     for (const pool of pools) {
       const poolContract = new ethers.Contract(pool, baluniPoolAbi.abi, signer);
@@ -63,7 +63,7 @@ async function rebalance() {
           console.log(`Transaction confirmed for pool: ${pool}, block number: ${receipt.blockNumber}`);
         }
       } catch (error) {
-        console.error(`Error executing for pool ${pool}:`, error);
+        console.error(`Error executing Rebalance for pool ${pool}:`, error);
       }
     }
   } catch (error) {

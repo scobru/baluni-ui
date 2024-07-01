@@ -47,7 +47,7 @@ async function reinvestEarnings() {
       const baseDecimals = await baseAssetCtx.decimals();
 
       try {
-        const interestEarned = await vaultContract.interestEarned()();
+        const interestEarned = await vaultContract.interestEarned();
         console.log("Interest Earned:", ethers.utils.formatUnits(interestEarned, baseDecimals));
 
         if (Number(ethers.utils.formatUnits(interestEarned, baseDecimals)) > 0.01) {
@@ -70,11 +70,11 @@ async function reinvestEarnings() {
           console.log(`Transaction confirmed for vault: ${vault}, block number: ${receipt.blockNumber}`);
         }
       } catch (error) {
-        console.error(`Error executing DCA for vault ${vault}:`, error);
+        console.error(`Error executing Reinvest for vault ${vault}:`, error);
       }
     }
   } catch (error) {
-    console.error("Error fetching vaults or DCA vault registry:", error);
+    console.error("Error fetching vaults or vault registry:", error);
   }
 }
 
