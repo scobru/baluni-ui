@@ -96,7 +96,8 @@ const setupDatabase = async () => {
 
   await db.exec(`
       CREATE TABLE IF NOT EXISTS hyperPoolsData (
-        id TEXT PRIMARY KEY,
+        timestamp TEXT PRIMARY KEY NOT NULL,
+        id TEXT,
         apy REAL,
         totalValueLockedUSD TEXT,
         volumeUSD TEXT,
@@ -120,7 +121,6 @@ const setupDatabase = async () => {
         formattedPrice REAL,
         totalValuation REAL,
         unitPrice REAL,
-        timestamp TEXT NOT NULL
       );
     `);
 
@@ -300,9 +300,10 @@ export async function fetchHyperPools() {
           });
 
           await db.run(
-            `INSERT INTO hyperPoolsData 
-                       (id, apy, totalValueLockedUSD, volumeUSD, feesUSD, token0Symbol, token1Symbol, baseLower, baseUpper, limitLower, limitUpper, currentTick, basePosition, totalAmounts, limitPosition, totalSupply, baseLowerPrice, baseUpperPrice, limitLowerPrice, limitUpperPrice, currentPrice, formattedPrice, totalValuation, unitPrice, timestamp ) 
+            `INSERT OR REPLACE INTO hyperPoolsData 
+                       (timestmp, id, apy, totalValueLockedUSD, volumeUSD, feesUSD, token0Symbol, token1Symbol, baseLower, baseUpper, limitLower, limitUpper, currentTick, basePosition, totalAmounts, limitPosition, totalSupply, baseLowerPrice, baseUpperPrice, limitLowerPrice, limitUpperPrice, currentPrice, formattedPrice, totalValuation, unitPrice) 
                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            new Date().toISOString(),
             pool.id,
             apy,
             pool.totalValueLockedUSD,
@@ -327,7 +328,6 @@ export async function fetchHyperPools() {
             formattedPrice,
             hypervisorData.totalValuation,
             hypervisorData.unitPrice,
-            new Date().toISOString(),
           );
 
           await db.run(
