@@ -96,7 +96,7 @@ const setupDatabase = async () => {
 
   await db.exec(`
       CREATE TABLE IF NOT EXISTS hyperPoolsData (
-        timestamp TEXT PRIMARY KEY NOT NULL,
+        timestamp TEXT PRIMARY KEY,
         id TEXT,
         apy REAL,
         totalValueLockedUSD TEXT,
