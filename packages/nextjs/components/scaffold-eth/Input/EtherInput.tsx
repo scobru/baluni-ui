@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { ArrowsRightLeftIcon } from "@heroicons/react/24/outline";
-import { CommonInputProps, InputBase, SIGNED_NUMBER_REGEX } from "~~/components/scaffold-eth";
+import { type CommonInputProps, InputBase, SIGNED_NUMBER_REGEX } from "~~/components/scaffold-eth";
 import { useDisplayUsdMode } from "~~/hooks/scaffold-eth/useDisplayUsdMode";
 import { useGlobalState } from "~~/services/store/store";
 
@@ -8,7 +8,7 @@ const MAX_DECIMALS_USD = 2;
 
 function etherValueToDisplayValue(usdMode: boolean, etherValue: string, nativeCurrencyPrice: number) {
   if (usdMode && nativeCurrencyPrice) {
-    const parsedEthValue = parseFloat(etherValue);
+    const parsedEthValue = Number.parseFloat(etherValue);
     if (Number.isNaN(parsedEthValue)) {
       return etherValue;
     } else {
@@ -26,7 +26,7 @@ function etherValueToDisplayValue(usdMode: boolean, etherValue: string, nativeCu
 
 function displayValueToEtherValue(usdMode: boolean, displayValue: string, nativeCurrencyPrice: number) {
   if (usdMode && nativeCurrencyPrice) {
-    const parsedDisplayValue = parseFloat(displayValue);
+    const parsedDisplayValue = Number.parseFloat(displayValue);
     if (Number.isNaN(parsedDisplayValue)) {
       // Invalid number.
       return displayValue;
@@ -56,13 +56,15 @@ export const EtherInput = ({
   const nativeCurrencyPrice = useGlobalState(state => state.nativeCurrency.price);
   const isNativeCurrencyPriceFetching = useGlobalState(state => state.nativeCurrency.isFetching);
 
-  const { displayUsdMode, toggleDisplayUsdMode } = useDisplayUsdMode({ defaultUsdMode: usdMode });
+  const { displayUsdMode, toggleDisplayUsdMode } = useDisplayUsdMode({
+    defaultUsdMode: usdMode,
+  });
 
   // The displayValue is derived from the ether value that is controlled outside of the component
   // In usdMode, it is converted to its usd value, in regular mode it is unaltered
   const displayValue = useMemo(() => {
     const newDisplayValue = etherValueToDisplayValue(displayUsdMode, value, nativeCurrencyPrice || 0);
-    if (transitoryDisplayValue && parseFloat(newDisplayValue) === parseFloat(transitoryDisplayValue)) {
+    if (transitoryDisplayValue && Number.parseFloat(newDisplayValue) === Number.parseFloat(transitoryDisplayValue)) {
       return transitoryDisplayValue;
     }
     // Clear any transitory display values that might be set

@@ -1,18 +1,18 @@
 "use client";
 
-import { Dispatch, SetStateAction } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import { Tuple } from "./Tuple";
 import { TupleArray } from "./TupleArray";
-import { AbiParameter } from "abitype";
+import type { AbiParameter } from "abitype";
 import {
   AddressInput,
   Bytes32Input,
   BytesInput,
   InputBase,
   IntegerInput,
-  IntegerVariant,
+  type IntegerVariant,
 } from "~~/components/scaffold-eth";
-import { AbiParameterTuple } from "~~/utils/scaffold-eth/contract";
+import type { AbiParameterTuple } from "~~/utils/scaffold-eth/contract";
 
 type ContractInputProps = {
   setForm: Dispatch<SetStateAction<Record<string, any>>>;

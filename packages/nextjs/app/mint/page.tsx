@@ -1,6 +1,6 @@
 import React from "react";
 import MintBox from "../../components/MintBox";
-import { NextPage } from "next";
+import type { NextPage } from "next";
 
 const Swap: NextPage = () => {
   return (

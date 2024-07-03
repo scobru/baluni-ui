@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import type React from "react";
+import { useEffect, useState } from "react";
 import useTokenList from "../hooks/useTokenList";
 import { UnitPriceChart, ValuationChart } from "./charts/Charts";
 import baluniPoolAbi from "baluni-contracts/artifacts/contracts/pools/BaluniV1Pool.sol/BaluniV1Pool.json";
@@ -14,7 +15,6 @@ import Spinner from "~~/components/Spinner";
 import { clientToSigner } from "~~/utils/ethers";
 import { notification } from "~~/utils/scaffold-eth";
 import poolZapAbi from "baluni-contracts/artifacts/contracts/managers/BaluniV1PoolZap.sol/BaluniV1PoolZap.json";
-import { registry } from "chart.js";
 
 interface DeviationData {
   symbol: string;
@@ -75,6 +75,9 @@ const PoolsBox = () => {
   const [isAddLiquidityModalOpen, setIsAddLiquidityModalOpen] = useState(false);
   const [isRemoveLiquidityModalOpen, setIsRemoveLiquidityModalOpen] = useState(false);
   const [isModalDataModalOpen, setIsModalDataModalOpen] = useState(false);
+  const [customToken, setCustomToken] = useState<string | undefined>();
+  const [customAmount, setCustomAmount] = useState<string | undefined>();
+  const [tokenBalance, setTokenBalance] = useState<string>("");
 
   const openModalDataModal = () => setIsModalDataModalOpen(true);
   const closeModalDataModal = () => setIsModalDataModalOpen(false);
@@ -125,17 +128,16 @@ const PoolsBox = () => {
   const [poolPeriphery, setPoolPeriphery] = useState<string | undefined>();
   const [poolZap, setPoolZap] = useState<string | undefined>();
 
-  const [, /* tokenBalances */ setTokenBalances] = useState<TokenBalance>({
-    fromTokenBalance: "0",
-    toTokenBalance: "0",
-  });
-
   const [pools, setPools] = useState<string[]>([]);
   const [poolSymbols, setPoolSymbols] = useState<{ [key: string]: string }>({});
   const [poolData, setPoolData] = useState<any>({});
-  const [liquidityBalances, setLiquidityBalances] = useState<{ [key: string]: string }>({});
+  const [liquidityBalances, setLiquidityBalances] = useState<{
+    [key: string]: string;
+  }>({});
   const [tlvs, setTlvs] = useState<{ [key: string]: string }>({});
-  const [deviations, setDeviations] = useState<{ [key: string]: DeviationData[] }>({});
+  const [deviations, setDeviations] = useState<{
+    [key: string]: DeviationData[];
+  }>({});
   const [liquidityData, setLiquidityData] = useState<LiquidityData>({
     amounts: [],
     tokens: [],
@@ -176,12 +178,14 @@ const PoolsBox = () => {
     let token: any;
     let decimals: any;
 
-    if (tokenAddress == ethers.constants.AddressZero) {
+    console.log(poolAddress, tokenAddress, amount);
+
+    if (tokenAddress == ethers.constants.AddressZero || tokenAddress == "0x0000000000000000000000000000000000001010") {
       decimals = 18;
 
       const tx = await zapCtx.zapIn(
         poolAddress,
-        tokenAddress,
+        ethers.constants.AddressZero,
         ethers.utils.parseUnits(amount, decimals),
         0,
         signer.account.address,
@@ -195,20 +199,59 @@ const PoolsBox = () => {
       token = new Contract(tokenAddress, erc20Abi, clientToSigner(signer as any));
       decimals = await token.decimals();
 
-      const approveTx = await token.approve(poolZap, ethers.utils.parseUnits(amount, decimals));
-      await approveTx.wait();
+      const allowance = await token.allowance(signer.account.address, poolZap);
 
-      const tx = await zapCtx.zapIn(
-        poolAddress,
-        tokenAddress,
-        ethers.utils.parseUnits(amount, decimals),
-        0,
-        signer.account.address,
-      );
-      await tx.wait();
+      if (allowance.lt(ethers.utils.parseUnits(amount, decimals))) {
+        const approveTx = await token.approve(poolZap, ethers.utils.parseUnits(amount, decimals));
+        await approveTx.wait();
+
+        const tx = await zapCtx.zapIn(
+          poolAddress,
+          tokenAddress,
+          ethers.utils.parseUnits(amount, decimals),
+          0,
+          signer.account.address,
+        );
+        await tx.wait();
+      } else {
+        const tx = await zapCtx.zapIn(
+          poolAddress,
+          tokenAddress,
+          ethers.utils.parseUnits(amount, decimals),
+          0,
+          signer.account.address,
+        );
+        await tx.wait();
+      }
     }
 
     notification.success("Zap in successful!");
+  };
+
+  const zapOut = async (poolAddress: string, tokenAddress: string, amount: string) => {
+    if (!signer || !poolZap) return;
+    const zapCtx = new Contract(poolZap, poolZapAbi.abi, clientToSigner(signer as any));
+    const token = new Contract(poolAddress, erc20Abi, clientToSigner(signer as any));
+    const decimals = await token.decimals();
+    console.log(decimals);
+    console.log(amount);
+
+    const allowance = await token.allowance(signer.account.address, poolZap);
+    const parsedAmount = ethers.utils.parseUnits(amount, decimals);
+    console.log(parsedAmount, poolZap, decimals);
+    if (allowance.lt(parsedAmount)) {
+      const approveTx = await token.approve(poolZap, parsedAmount);
+
+      await approveTx.wait();
+
+      const tx = await zapCtx.zapOut(poolAddress, parsedAmount, tokenAddress, 0, signer.account.address);
+      await tx.wait();
+    } else {
+      const tx = await zapCtx.zapOut(poolAddress, parsedAmount, tokenAddress, 0, signer.account.address);
+      await tx.wait();
+    }
+
+    notification.success("Zap out successful!");
   };
 
   const fetchData = async () => {
@@ -256,6 +299,7 @@ const PoolsBox = () => {
       const poolAssets = await pool.getAssets();
       const poolSymbol = await pool.symbol();
       const poolName = await pool.name();
+      const poolUnitPrice = (await pool.unitPrice()) / 1e18;
 
       setPoolData((prevState: any) => ({
         ...prevState,
@@ -263,6 +307,7 @@ const PoolsBox = () => {
           name: poolName,
           symbol: poolSymbol,
           assets: poolAssets,
+          unitPrice: Number(poolUnitPrice),
         },
       }));
 
@@ -310,28 +355,7 @@ const PoolsBox = () => {
     const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, clientToSigner(signer as any));
     const balance = await tokenContract.balanceOf(account);
     const decimals = await tokenContract.decimals();
-    return ethers.utils.formatUnits(balance, decimals);
-  };
-
-  const handleInputChange = async (
-    e: React.ChangeEvent<HTMLSelectElement> | React.ChangeEvent<HTMLInputElement>,
-    setter: React.Dispatch<React.SetStateAction<any>>,
-  ) => {
-    if (!signer) return;
-    const { name, value } = e.target;
-    setter((prevState: any) => ({ ...prevState, [name]: value }));
-
-    if (name === "fromToken" || name === "toToken" || name === "token") {
-      const account = signer.account.address;
-
-      if ((name === "fromToken" || name === "token") && value) {
-        const balance = await fetchTokenBalance(value, account);
-        setTokenBalances(prevState => ({ ...prevState, fromTokenBalance: balance }));
-      } else if (name === "toToken" && value) {
-        const balance = await fetchTokenBalance(value, account);
-        setTokenBalances(prevState => ({ ...prevState, toTokenBalance: balance }));
-      }
-    }
+    setTokenBalance(ethers.utils.formatUnits(balance, decimals));
   };
 
   const handlePoolClick = async (poolAddress: string) => {
@@ -359,7 +383,10 @@ const PoolsBox = () => {
       const tokenContract = new ethers.Contract(token, erc20Abi, clientToSigner(signer as any));
       const balance = await tokenContract.balanceOf(signer.account.address);
       const decimals = await tokenContract.decimals();
-      balances.push({ token: token, balance: ethers.utils.formatUnits(balance, decimals) });
+      balances.push({
+        token: token,
+        balance: ethers.utils.formatUnits(balance, decimals),
+      });
     }
     setBalances(balances);
   };
@@ -531,6 +558,10 @@ const PoolsBox = () => {
   //   return token ? token.logoURI : "Unknown Token";
   // }
 
+  async function handleCustomToken(token: any) {
+    setCustomToken(token);
+  }
+
   return (
     <div className="container mx-auto p-6 mb-8">
       <button className="button btn-base rounded-none" onClick={fetchData}>
@@ -545,9 +576,10 @@ const PoolsBox = () => {
               <th>Name</th>
               <th>TLV</th>
               <th>Liquidity</th>
+              <th>Unit Price</th>
+
               <th>Deviations</th>
               <th>Weights</th>
-              <th>Daily Change</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -588,8 +620,45 @@ const PoolsBox = () => {
                         )}
                       </div>
                     </td>
-                    <td>{Number(tlvs[pool]).toFixed(4)}</td>
+                    <td>
+                      <div>
+                        {stats ? (
+                          <div>
+                            {Number(tlvs[pool]).toFixed(4)} USD
+                            {stats.valuation.daily ? (
+                              <span className={stats.valuation.daily > 0 ? "text-green-500" : "text-red-500"}>
+                                {/* Aggiunta di una freccia su o giù basata sul valore */}
+                                {stats.valuation.daily > 0 ? " ↑" : " ↓"} {stats.valuation.daily.toFixed(2)}
+                              </span>
+                            ) : (
+                              " : 0"
+                            )}
+                          </div>
+                        ) : (
+                          <div>0</div>
+                        )}
+                      </div>
+                    </td>{" "}
                     <td>{Number(liquidityBalances[pool]) || "0"}</td>
+                    <td>
+                      <div>
+                        {stats ? (
+                          <div>
+                            {Number(poolData[pool].unitPrice)}
+                            {stats.unitPrice.daily ? (
+                              <span className={stats.unitPrice.daily > 0 ? "text-green-500" : "text-red-500"}>
+                                {/* Aggiunta di una freccia su o giù basata sul valore */}
+                                {stats.unitPrice.daily > 0 ? " ↑" : " ↓"} {stats.unitPrice.daily.toFixed(2)}
+                              </span>
+                            ) : (
+                              " : 0"
+                            )}
+                          </div>
+                        ) : (
+                          <div>0</div>
+                        )}
+                      </div>
+                    </td>
                     <td>
                       {deviations[pool]
                         ? deviations[pool].map((deviation, index) => (
@@ -608,16 +677,6 @@ const PoolsBox = () => {
                               {Number(deviation.currentWeight) / 100}%{index < deviations[pool].length - 1 && " / "}
                             </span>
                           ))}
-                        </>
-                      ) : (
-                        "N/A"
-                      )}
-                    </td>
-                    <td>
-                      {stats ? (
-                        <>
-                          <div>Unit Price: {stats.unitPrice.daily ? stats.unitPrice.daily.toFixed(2) : 0}%</div>
-                          <div>Valuation: {stats.valuation.daily ? stats.valuation.daily.toFixed(2) : 0}%</div>
                         </>
                       ) : (
                         "N/A"
@@ -664,9 +723,9 @@ const PoolsBox = () => {
               <th>Name</th>
               <th>TLV</th>
               <th>Liquidity</th>
+              <th>Unit Price</th>
               <th>Deviations</th>
               <th>Weights</th>
-              <th>Daily Change</th>
               <th>Actions</th>
             </tr>
           </tfoot>
@@ -686,11 +745,11 @@ const PoolsBox = () => {
               </label>
               <h2 className="text-2xl mb-4 text-blue-700">Pool Info</h2>
               <p className="text-lg mb-2">
-                <strong className="text-gray-700">Address:</strong> {modalData.address}
+                <strong className="text-base">Address:</strong> {modalData.address}
               </p>
 
               <p className="text-xl mb-2">
-                <strong className="text-gray-700 text-xl">Total Liquidity:</strong>{" "}
+                <strong className="text-base text-xl">Total Liquidity:</strong>{" "}
                 {Number(ethers.utils.formatUnits(modalData.totalLiquidity, 6)).toFixed(4)} USD
               </p>
 
@@ -738,27 +797,26 @@ const PoolsBox = () => {
                           <img src={token.logoURI} alt={token.symbol} className="mask mask-circle w-10 h-10 mr-2" />
                         )}
                         <div>
-                          <strong className="text-gray-700"> {asset.symbol}: </strong>{" "}
-                          {Number(asset.reserve).toFixed(4)}
+                          <strong className="text-base"> {asset.symbol}: </strong> {Number(asset.reserve).toFixed(4)}
                         </div>
                       </div>
                       <div>
                         <p className="mb-1">
-                          <strong className="text-gray-700">Slippage:</strong> {Number(asset.slippage) / 100}%
+                          <strong className="text-base">Slippage:</strong> {Number(asset.slippage) / 100}%
                         </p>
                         <p className="mb-1">
-                          <strong className="text-gray-700">Weight:</strong> {Number(asset.weight).toFixed(4)}%
+                          <strong className="text-base">Weight:</strong> {Number(asset.weight).toFixed(4)}%
                         </p>
                         <p className="mb-1">
-                          <strong className="text-gray-700">Deviation:</strong> {asset.direction ? "" : "-"}
+                          <strong className="text-base">Deviation:</strong> {asset.direction ? "" : "-"}
                           {(Number(asset.deviation) / 100).toFixed(2)}%
                         </p>
                         <p className="mb-1">
-                          <strong className="text-gray-700">Target:</strong>
+                          <strong className="text-base">Target:</strong>
                           {(Number(asset.targetWeight) / 100).toFixed(2)}%
                         </p>
                         <p className="mb-1">
-                          <strong className="text-gray-700">Actual:</strong>
+                          <strong className="text-base">Actual:</strong>
                           {(Number(asset.currentWeight) / 100).toFixed(2)}%
                         </p>
                       </div>
@@ -767,7 +825,7 @@ const PoolsBox = () => {
                 },
               )}
               <p className="text-lg mb-4">
-                <strong className="text-gray-700">LP Price:</strong> {Number(modalData.unitPrice).toFixed(2)} USDC
+                <strong className="text-base">LP Price:</strong> {Number(modalData.unitPrice).toFixed(2)} USDC
               </p>
               <button className="btn btn-primary mt-4" onClick={() => handleRebalance(modalData.address)}>
                 Perform Rebalance
@@ -816,24 +874,43 @@ const PoolsBox = () => {
                 >
                   Max
                 </button>
-                <button
-                  className="btn btn-sm btn-primary my-2"
-                  onClick={async () => {
-                    await zapIn(liquidityData.poolAddress, token, liquidityData.amounts[index]);
-                  }}
-                >
-                  Zap In
-                </button>
-                <button
-                  className="btn btn-sm btn-primary my-2"
-                  onClick={async () => {
-                    await zapIn(liquidityData.poolAddress, ethers.constants.AddressZero, liquidityData.amounts[index]);
-                  }}
-                >
-                  Zap In ETH
-                </button>
               </div>
             ))}
+            <div className="my-2">Use Custom Token</div>
+            <select
+              className="select select-bordered w-full text-lg"
+              value={customToken}
+              onChange={async e => {
+                await handleCustomToken(e.target.value);
+                await fetchTokenBalance(String(e.target.value), signer?.account.address);
+              }}
+            >
+              <option value="">Select Token</option>
+              {(tokens as { address: string; symbol: string }[]).map(token => (
+                <option key={token.address} value={token.address} className="text-lg">
+                  {token.symbol}
+                </option>
+              ))}
+            </select>
+            <div className="mt-2"> {tokenBalance}</div>
+            <input
+              type="text"
+              className="input input-bordered w-full my-2"
+              placeholder={`Amount To Add`}
+              value={customAmount}
+              onChange={e => {
+                setCustomAmount(e.target.value);
+              }}
+            />
+
+            <button
+              className="btn btn-sm btn-primary my-2"
+              onClick={async () => {
+                await zapIn(liquidityData.poolAddress, customToken, customAmount);
+              }}
+            >
+              Zap In
+            </button>
             <button className="btn btn-primary w-full" onClick={handleAddLiquidity}>
               Add Liquidity
             </button>
@@ -857,12 +934,33 @@ const PoolsBox = () => {
               type="text"
               name="amount"
               className="input input-bordered w-full mb-4"
-              placeholder="Amount"
+              placeholder={liquidityBalances[removeLiquidityData.poolAddress]}
               value={removeLiquidityData.amount}
               onChange={e => handleInputChange(e, setRemoveLiquidityData)}
             />
-            <button className="btn btn-danger w-full" onClick={handleRemoveLiquidity}>
+            <select
+              className="select select-bordered w-full text-lg"
+              value={customToken}
+              onChange={async e => await handleCustomToken(e.target.value)}
+            >
+              <option value="">Select Token</option>
+              {(tokens as { address: string; symbol: string }[]).map(token => (
+                <option key={token.address} value={token.address} className="text-lg">
+                  {token.symbol}
+                </option>
+              ))}
+            </select>
+
+            <button className="btn btn-danger w-full my-2" onClick={handleRemoveLiquidity}>
               Remove Liquidity
+            </button>
+            <button
+              className="btn btn-danger w-full my-2"
+              onClick={async () => {
+                await zapOut(removeLiquidityData.poolAddress, customToken, removeLiquidityData.amount);
+              }}
+            >
+              Zap Out
             </button>
             <div className="modal-action">
               <button className="btn" onClick={closeRemoveLiquidityModal}>

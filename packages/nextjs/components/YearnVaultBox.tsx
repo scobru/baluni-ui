@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import type React from "react";
+import { useEffect, useState } from "react";
 import useTokenList from "../hooks/useTokenList";
 import { clientToSigner } from "../utils/ethers";
 import { notification } from "../utils/scaffold-eth";
@@ -106,7 +107,9 @@ const YearnVaultBox = () => {
 
   const [vaults, setVaults] = useState<string[]>([]);
   const [poolSymbols, setPoolSymbols] = useState<{ [key: string]: string }>({});
-  const [liquidityBalances, setLiquidityBalances] = useState<{ [key: string]: string }>({});
+  const [liquidityBalances, setLiquidityBalances] = useState<{
+    [key: string]: string;
+  }>({});
   const [tlvs, setTlvs] = useState<{ [key: string]: string }>({});
   const [addLiquidityData, setAddLiquidityData] = useState<AddLiquidityData>({
     vaultAddress: "",
@@ -116,7 +119,9 @@ const YearnVaultBox = () => {
     vaultAddress: "",
     amount: "",
   });
-  const [, /* activeForm */ setActiveForm] = useState<{ [key: string]: string }>({});
+  const [, /* activeForm */ setActiveForm] = useState<{
+    [key: string]: string;
+  }>({});
   const [vaultData, setVaultData] = useState<{ [key: string]: VaultData }>({});
   const [valuationData, setValuationData] = useState<ValuationData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -305,10 +310,16 @@ const YearnVaultBox = () => {
 
       if ((name === "fromToken" || name === "token") && value) {
         const balance = await fetchTokenBalance(value, account);
-        setTokenBalances(prevState => ({ ...prevState, fromTokenBalance: balance }));
+        setTokenBalances(prevState => ({
+          ...prevState,
+          fromTokenBalance: balance,
+        }));
       } else if (name === "toToken" && value) {
         const balance = await fetchTokenBalance(value, account);
-        setTokenBalances(prevState => ({ ...prevState, toTokenBalance: balance }));
+        setTokenBalances(prevState => ({
+          ...prevState,
+          toTokenBalance: balance,
+        }));
       }
     }
   };

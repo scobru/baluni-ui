@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import type React from "react";
+import { useEffect, useState } from "react";
 import useTokenList from "../hooks/useTokenList";
 import { clientToSigner } from "../utils/ethers";
 import { notification } from "../utils/scaffold-eth";
@@ -95,7 +96,9 @@ const DCAVaultBox = () => {
 
   const [vaults, setVaults] = useState<string[]>([]);
   const [poolSymbols, setPoolSymbols] = useState<{ [key: string]: string }>({});
-  const [liquidityBalances, setLiquidityBalances] = useState<{ [key: string]: string }>({});
+  const [liquidityBalances, setLiquidityBalances] = useState<{
+    [key: string]: string;
+  }>({});
   const [tlvs, setTlvs] = useState<{ [key: string]: string }>({});
   const [addLiquidityData, setAddLiquidityData] = useState<AddLiquidityData>({
     vaultAddress: "",
@@ -268,10 +271,16 @@ const DCAVaultBox = () => {
 
       if ((name === "fromToken" || name === "token") && value) {
         const balance = await fetchTokenBalance(value, account);
-        setTokenBalances(prevState => ({ ...prevState, fromTokenBalance: balance }));
+        setTokenBalances(prevState => ({
+          ...prevState,
+          fromTokenBalance: balance,
+        }));
       } else if (name === "toToken" && value) {
         const balance = await fetchTokenBalance(value, account);
-        setTokenBalances(prevState => ({ ...prevState, toTokenBalance: balance }));
+        setTokenBalances(prevState => ({
+          ...prevState,
+          toTokenBalance: balance,
+        }));
       }
     }
   };
@@ -490,9 +499,9 @@ const DCAVaultBox = () => {
             </div>
             <div className="p-4 rounded shadow mt-4">
               <span className="text-lg font-bold mt-2">Strategy Objective</span>
-              <div className="text-lg font-semibold text-gray-700">{getVaultDescription()?.objective}</div>
+              <div className="text-lg font-semibold text-base">{getVaultDescription()?.objective}</div>
               <span className="text-lg font-bold mt-2">Strategy Description</span>
-              <div className="mt-2 text-gray-600">{getVaultDescription()?.description}</div>
+              <div className="mt-2 text-base">{getVaultDescription()?.description}</div>
             </div>
             <div className="modal-action">
               <button className="btn" onClick={closeVaultInfoModal}>

@@ -103,7 +103,7 @@ const MintBox = () => {
 
   useEffect(() => {
     const calculateUsdAmount = () => {
-      const usdValue = parseFloat(amount) * parseFloat(formattedUnitPrice);
+      const usdValue = Number.parseFloat(amount) * Number.parseFloat(formattedUnitPrice);
       setUsdAmount(usdValue.toFixed(6)); // USDC has 6 decimals
     };
 

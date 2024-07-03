@@ -6,9 +6,9 @@ import useTokenList from "../hooks/useTokenList";
 import { clientToSigner } from "../utils/ethers";
 import { INFRA, RouterABI, buildSwapOdos } from "baluni/dist/api/";
 import { waitForTx } from "baluni/dist/core/utils/web3/networkUtils";
-import { BigNumber, Contract, ethers } from "ethers";
+import { type BigNumber, Contract, ethers } from "ethers";
 import { v4 as uuidv4 } from "uuid";
-import { UseClientReturnType, usePublicClient, useWalletClient } from "wagmi";
+import { type UseClientReturnType, usePublicClient, useWalletClient } from "wagmi";
 import { erc20Abi } from "viem";
 import Spinner from "~~/components/Spinner";
 import { notification } from "~~/utils/scaffold-eth";
@@ -156,7 +156,10 @@ const MultiSwapBox = () => {
     setOutputTokens(
       outputTokens.map((output, i) => {
         if (i === index) {
-          return { ...output, [type]: type === "proportion" ? Number(value) / 100 : value };
+          return {
+            ...output,
+            [type]: type === "proportion" ? Number(value) / 100 : value,
+          };
         }
         return output;
       }),
@@ -201,7 +204,10 @@ const MultiSwapBox = () => {
       setSwaps(
         swaps.map((swap, selIndex) => {
           if (index === selIndex) {
-            return { ...swap, [tokenField === "token0" ? "balance0" : "balance1"]: formattedBalance };
+            return {
+              ...swap,
+              [tokenField === "token0" ? "balance0" : "balance1"]: formattedBalance,
+            };
           }
           return swap;
         }),

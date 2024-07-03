@@ -3,8 +3,8 @@
 import { useEffect } from "react";
 import { InheritanceTooltip } from "./InheritanceTooltip";
 import { displayTxResult } from "./utilsDisplay";
-import { Abi, AbiFunction } from "abitype";
-import { Address } from "viem";
+import type { Abi, AbiFunction } from "abitype";
+import type { Address } from "viem";
 import { useReadContract } from "wagmi";
 import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { useAnimationConfig } from "~~/hooks/scaffold-eth";

@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import type React from "react";
+import { useEffect, useState } from "react";
 import useTokenList from "../hooks/useTokenList";
 import baluniPoolAbi from "baluni-contracts/artifacts/contracts/pools/BaluniV1Pool.sol/BaluniV1Pool.json";
 import poolPeripheryAbi from "baluni-contracts/artifacts/contracts/pools/BaluniV1PoolPeriphery.sol/BaluniV1PoolPeriphery.json";
 import poolRegistryAbi from "baluni-contracts/artifacts/contracts/registry/BaluniV1PoolRegistry.sol/BaluniV1PoolRegistry.json";
 import registryAbi from "baluni-contracts/artifacts/contracts/registry/BaluniV1Registry.sol/BaluniV1Registry.json";
-import { INFRA } from "baluni/dist/api/";
+import { INFRA, NATIVETOKENS } from "baluni/dist/api/";
 import { Contract, ethers } from "ethers";
 import { useWalletClient } from "wagmi";
 import { erc20Abi } from "viem";
@@ -32,6 +33,15 @@ interface Token {
   name: string;
 }
 
+const WETHAbi = [
+  "function deposit() public payable",
+  "function withdraw(uint wad) public",
+  "function balanceOf(address owner) public view returns (uint256)",
+  "function approve(address spender, uint256 amount) public returns (bool)",
+  "function transfer(address to, uint256 value) public returns (bool)",
+  "function transferFrom(address from, address to, uint256 value) public returns (bool)",
+];
+
 const SwapBox = () => {
   const { data: signer } = useWalletClient();
   const { tokens } = useTokenList();
@@ -54,6 +64,7 @@ const SwapBox = () => {
   const [poolExists, setPoolExists] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(true);
   const [toReserve, setToReserve] = useState<string>("");
+  const [chainID, setChainID] = useState<number>(0);
 
   useEffect(() => {
     if (!signer) return;
@@ -76,11 +87,14 @@ const SwapBox = () => {
   }, [signer, poolFactory]);
 
   const setContract = async () => {
+    if (!signer) return;
     const registry = new Contract(INFRA[137].REGISTRY, registryAbi.abi, clientToSigner(signer as any));
     const poolFactory = await registry.getBaluniPoolRegistry();
     const poolPeriphery = await registry.getBaluniPoolPeriphery();
     setPoolFactory(poolFactory);
     setPoolPeriphery(poolPeriphery);
+    const chaiId = signer.chain.id;
+    setChainID(chaiId);
   };
 
   if (loading) {
@@ -130,10 +144,16 @@ const SwapBox = () => {
       const account = signer.account.address;
       if ((name === "fromToken" || name === "token") && value) {
         const balance = await fetchTokenBalance(value, account);
-        setTokenBalances(prevState => ({ ...prevState, fromTokenBalance: balance }));
+        setTokenBalances(prevState => ({
+          ...prevState,
+          fromTokenBalance: balance,
+        }));
       } else if (name === "toToken" && value) {
         const balance = await fetchTokenBalance(value, account);
-        setTokenBalances(prevState => ({ ...prevState, toTokenBalance: balance }));
+        setTokenBalances(prevState => ({
+          ...prevState,
+          toTokenBalance: balance,
+        }));
       }
       checkPoolExists(value, name);
     }
@@ -185,7 +205,6 @@ const SwapBox = () => {
   const handleSwap = async () => {
     const { fromToken, toToken, fromAmount } = swapData;
     if (!signer || !fromToken || !toToken || !fromAmount || !poolPeriphery || !toReserve) return;
-
     const fromTokenContract = new ethers.Contract(fromToken, erc20Abi, clientToSigner(signer));
     const decimals = await fromTokenContract.decimals();
     const allowance = await fromTokenContract.allowance(signer.account.address, poolPeriphery);
@@ -197,20 +216,41 @@ const SwapBox = () => {
 
     const deadline = Math.floor(Date.now() / 1000) + 30; // 10 minutes from now
     const periphery = new ethers.Contract(poolPeriphery, poolPeripheryAbi.abi, clientToSigner(signer));
-    try {
-      const tx = await periphery.swapTokenForToken(
-        fromToken,
-        toToken,
-        ethers.utils.parseUnits(fromAmount, decimals),
-        0,
-        signer.account.address,
-        signer.account.address,
-        deadline,
-      );
-      await tx.wait();
-      notification.success("Swap completed successfully!");
-    } catch (error: any) {
-      notification.error(error && error.reason ? String(error.reason) : "An error occurred while swapping tokens.");
+
+    if (fromToken == NATIVETOKENS[chainID].WRAPPED && fromToken == NATIVETOKENS[chainID].NATIVE) {
+      try {
+        const token = new ethers.Contract(NATIVETOKENS[chainID].WRAPPED, WETHAbi, clientToSigner(signer));
+        const tx = await token.withdraw(ethers.utils.parseUnits(fromAmount, decimals));
+        await tx.wait();
+        notification.success("Swap completed successfully!");
+      } catch (error: any) {
+        notification.error(error && error.reason ? String(error.reason) : "An error occurred while swapping tokens.");
+      }
+    } else if (toToken == NATIVETOKENS[chainID].WRAPPED && toToken == NATIVETOKENS[chainID].NATIVE) {
+      try {
+        const token = new ethers.Contract(NATIVETOKENS[chainID].WRAPPED, WETHAbi, clientToSigner(signer));
+        const tx = await token.deposit({ value: ethers.utils.parseUnits(fromAmount, decimals) });
+        await tx.wait();
+        notification.success("Swap completed successfully!");
+      } catch (error: any) {
+        notification.error(error && error.reason ? String(error.reason) : "An error occurred while swapping tokens.");
+      }
+    } else {
+      try {
+        const tx = await periphery.swapTokenForToken(
+          fromToken,
+          toToken,
+          ethers.utils.parseUnits(fromAmount, decimals),
+          0,
+          signer.account.address,
+          signer.account.address,
+          deadline,
+        );
+        await tx.wait();
+        notification.success("Swap completed successfully!");
+      } catch (error: any) {
+        notification.error(error && error.reason ? String(error.reason) : "An error occurred while swapping tokens.");
+      }
     }
   };
 
@@ -234,6 +274,7 @@ const SwapBox = () => {
             <option disabled value="">
               Select From Token
             </option>
+            <option value={NATIVETOKENS[chainID].NATIVE}>NATIVE</option>
             {filteredTokens.map((token: Token) => (
               <option key={token.address} value={token.address}>
                 {token.symbol}
@@ -262,6 +303,8 @@ const SwapBox = () => {
             <option disabled value="">
               Select To Token
             </option>
+            <option value={NATIVETOKENS[chainID].NATIVE}>NATIVE</option>
+
             {filteredTokens.map((token: Token) => (
               <option key={token.address} value={token.address}>
                 {token.symbol}

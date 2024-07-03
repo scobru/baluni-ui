@@ -18,6 +18,13 @@ import yearnVaultABI from "baluni-contracts/artifacts/contracts/vaults/BaluniV1Y
 import contracts from "baluni-contracts/deployments/deployedContracts.json";
 import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 import poolZapABI from "baluni-contracts/artifacts/contracts/managers/BaluniV1PoolZap.sol/BaluniV1PoolZap.json";
+import hyperContracts from "baluni-hypervisor-contracts/deployments/deployedContracts.json";
+import uniProxyAbi from "baluni-hypervisor-contracts/artifacts/contracts/UniProxy.sol/UniProxy.json";
+import HypervisorFactoryAbi from "baluni-hypervisor-contracts/artifacts/contracts/HypervisorFactory.sol/HypervisorFactory.json";
+import HypervisorAbi from "baluni-hypervisor-contracts/artifacts/contracts/Hypervisor.sol/Hypervisor.json";
+import HyperAutoRebalAbi from "baluni-hypervisor-contracts/artifacts/contracts/proxy/AutoRebal.sol/AutoRebal.json";
+import HyperAdminAbi from "baluni-hypervisor-contracts/artifacts/contracts/proxy/Admin.sol/Admin.json";
+import HyperClearingAbi from "baluni-hypervisor-contracts/artifacts/contracts/ClearingV2.sol/ClearingV2.json";
 
 const deployedContracts = {
   137: {
@@ -88,6 +95,30 @@ const deployedContracts = {
     BaluniDCAVault_USDCxWBTC: {
       address: contracts[137].BaluniDCAVault_USDCxWBTC,
       abi: dcaVaultABI.abi,
+    },
+    BaluniHypervisorFactory: {
+      address: hyperContracts[137].BaluniV1HyperFactory,
+      abi: HypervisorFactoryAbi.abi,
+    },
+    BaluniHyperPool_WMATICxUSDC: {
+      address: hyperContracts[137].BaluniHyperPool_WMATICxUSDC,
+      abi: HypervisorAbi.abi,
+    },
+    BaluniHypeAdmin: {
+      address: hyperContracts[137].BaluniV1HyperAdmin,
+      abi: HyperAdminAbi.abi,
+    },
+    BaluniHyperAutoRebal: {
+      address: hyperContracts[137].BaluniV1HyperAutoRebal,
+      abi: HyperAutoRebalAbi.abi,
+    },
+    BaluniHyperClearingV2: {
+      address: hyperContracts[137].BaluniV1HyperClearingV2,
+      abi: HyperClearingAbi.abi,
+    },
+    BaluniUniProxy: {
+      address: hyperContracts[137].BaluniV1HyperUniProxy,
+      abi: uniProxyAbi.abi,
     },
   },
 } as GenericContractsDeclaration;

@@ -4,7 +4,7 @@ import path from "path";
 
 const dbPath = path.join(__dirname, "..", "baluniData.db");
 
-async function deleteOldRecords() {
+export async function deleteOldRecords() {
   try {
     const db = await open({
       filename: dbPath,
@@ -18,12 +18,10 @@ async function deleteOldRecords() {
     await db.run("DELETE FROM totalValuations WHERE timestamp < ?", timestampLimit);
     await db.run("DELETE FROM totalInterestEarned WHERE timestamp < ?", timestampLimit);
     await db.run("DELETE FROM unitPrices WHERE timestamp < ?", timestampLimit);
+    await db.run("DELETE FROM hyperPoolsData WHERE timestamp < ?", timestampLimit);
 
     console.log("Old records deleted successfully");
   } catch (error) {
     console.error("Failed to delete old records:", error);
   }
 }
-
-deleteOldRecords();
-setInterval(deleteOldRecords, Number(process.env.INTERVAL)); // Fetch every interval

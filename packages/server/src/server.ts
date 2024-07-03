@@ -24,6 +24,17 @@ const dbPromise = open({
   driver: sqlite3.Database,
 });
 
+// Endpoint per ottenere tutti i dati da hyperPoolsData
+app.get("/api/hyperpools-data", async (req, res) => {
+  try {
+    const db = await dbPromise;
+    const hyperpoolsData = await db.all("SELECT * FROM hyperPoolsData");
+    res.json(hyperpoolsData);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch hyper pools data" });
+  }
+});
+
 app.get("/api/valuation-data", async (req, res) => {
   try {
     const db = await dbPromise;

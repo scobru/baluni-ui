@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { InheritanceTooltip } from "./InheritanceTooltip";
-import { Abi, AbiFunction } from "abitype";
-import { Address, TransactionReceipt } from "viem";
+import type { Abi, AbiFunction } from "abitype";
+import type { Address, TransactionReceipt } from "viem";
 import { useAccount, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import {
   ContractInput,

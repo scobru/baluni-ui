@@ -1,6 +1,6 @@
 import React from "react";
 import PoolsBox from "../../components/PoolsBox";
-import { NextPage } from "next";
+import type { NextPage } from "next";
 
 /* eslint-disable @next/next/no-img-element */
 

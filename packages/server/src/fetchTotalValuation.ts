@@ -9,26 +9,14 @@ import sqlite3 from "sqlite3";
 import baluniPoolAbi from "baluni-contracts/artifacts/contracts/pools/BaluniV1Pool.sol/BaluniV1Pool.json";
 import baluniPoolRegistryAbi from "baluni-contracts/artifacts/contracts/registry/BaluniV1PoolRegistry.sol/BaluniV1PoolRegistry.json";
 import baluniDCAVaultRegistryAbi from "baluni-contracts/artifacts/contracts/registry/BaluniV1DCAVaultRegistry.sol/BaluniV1DCAVaultRegistry.json";
-import contracts from "baluni-contracts/deployments/deployedContracts.json";
-import baluniRegistryAbi from "baluni-contracts/artifacts/contracts/registry/BaluniV1Registry.sol/BaluniV1Registry.json";
+import { setupRegistry } from "./setupRegistry";
 
 dotenv.config();
 
 const provider = new ethers.providers.JsonRpcProvider(String(process.env.RPC_URL));
+const signer = new ethers.Wallet(String(process.env.PRIVATE_KEY), provider);
 
-let registryCtx: Contract;
-
-async function setup() {
-  const chainId = await provider.getNetwork().then(network => network.chainId);
-  if (chainId === 137) {
-    const registryAddress = contracts[137].BaluniV1Registry;
-    if (!registryAddress) {
-      console.error(`Address not found for chainId: ${chainId}`);
-      return;
-    }
-    registryCtx = new ethers.Contract(registryAddress, baluniRegistryAbi.abi, provider);
-  }
-}
+let registryCtx: Contract | null | undefined = null;
 
 async function fetchAndStoreValuation(vaultContract: Contract, address: string, db: any) {
   try {
@@ -52,8 +40,8 @@ async function fetchAndStoreValuation(vaultContract: Contract, address: string, 
   }
 }
 
-const fetchTotalValuation = async () => {
-  await setup();
+export async function fetchTotalValuation() {
+  registryCtx = await setupRegistry(provider, signer);
 
   if (!registryCtx) {
     return;
@@ -117,14 +105,4 @@ const fetchTotalValuation = async () => {
   }
 
   await db.close();
-};
-
-async function main() {
-  await setup();
-  if (registryCtx) {
-    fetchTotalValuation(); // Initial fetch
-    setInterval(fetchTotalValuation, Number(process.env.INTERVAL)); // Fetch every interval
-  }
 }
-
-main().catch(error => console.error("Error in main execution:", error));

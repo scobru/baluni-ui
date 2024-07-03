@@ -11,9 +11,9 @@ import useTokenList from "../hooks/useTokenList";
 import { clientToSigner } from "../utils/ethers";
 import { USDC } from "baluni/dist/api/constants";
 import { PrettyConsole } from "baluni/dist/api/utils/prettyConsole";
-import { BigNumber, ethers } from "ethers";
+import { type BigNumber, ethers } from "ethers";
 import { usePublicClient, useWalletClient } from "wagmi";
-import { WalletClient } from "wagmi";
+import type { WalletClient } from "wagmi";
 import { notification } from "~~/utils/scaffold-eth";
 
 const prettyConsole = new PrettyConsole();
@@ -221,7 +221,7 @@ const RebalanceBox = () => {
 
     const tokenPercentages = tokenSelections.reduce<TokenPercentages>((acc, selection) => {
       if (selection.token && selection.percentage) {
-        acc[selection.token] = parseFloat((selection.percentage * 100).toFixed(2));
+        acc[selection.token] = Number.parseFloat((selection.percentage * 100).toFixed(2));
       }
       return acc;
     }, {});
@@ -300,7 +300,7 @@ const RebalanceBox = () => {
 
     const tokenPercentages = tokenSelections.reduce<TokenPercentages>((acc, selection) => {
       if (selection.token && selection.percentage) {
-        acc[selection.token] = parseFloat((selection.percentage * 100).toFixed(2));
+        acc[selection.token] = Number.parseFloat((selection.percentage * 100).toFixed(2));
       }
       return acc;
     }, {});

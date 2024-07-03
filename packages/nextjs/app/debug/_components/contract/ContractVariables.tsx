@@ -1,6 +1,6 @@
 import { DisplayVariable } from "./DisplayVariable";
-import { Abi, AbiFunction } from "abitype";
-import { Contract, ContractName, GenericContract, InheritedFunctions } from "~~/utils/scaffold-eth/contract";
+import type { Abi, AbiFunction } from "abitype";
+import type { Contract, ContractName, GenericContract, InheritedFunctions } from "~~/utils/scaffold-eth/contract";
 
 export const ContractVariables = ({
   refreshDisplayVariables,

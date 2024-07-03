@@ -1,5 +1,5 @@
-import { AbiFunction, AbiParameter } from "abitype";
-import { AbiParameterTuple } from "~~/utils/scaffold-eth/contract";
+import type { AbiFunction, AbiParameter } from "abitype";
+import type { AbiParameterTuple } from "~~/utils/scaffold-eth/contract";
 
 /**
  * Generates a key based on function metadata

@@ -9,26 +9,14 @@ import { open } from "sqlite";
 import sqlite3 from "sqlite3";
 import baluniDCAVaultAbi from "baluni-contracts/artifacts/contracts/vaults/BaluniV1DCAVault.sol/BaluniV1DCAVault.json";
 import baluniDCAVaultRegistryAbi from "baluni-contracts/artifacts/contracts/registry/BaluniV1DCAVaultRegistry.sol/BaluniV1DCAVaultRegistry.json";
-import contracts from "baluni-contracts/deployments/deployedContracts.json";
-import baluniRegistryAbi from "baluni-contracts/artifacts/contracts/registry/BaluniV1Registry.sol/BaluniV1Registry.json";
+import { setupRegistry } from "./setupRegistry";
 
 dotenv.config();
 
 const provider = new ethers.providers.JsonRpcProvider(String(process.env.RPC_URL));
+const signer = new ethers.Wallet(String(process.env.PRIVATE_KEY), provider);
 
-let registryCtx: Contract;
-
-async function setup() {
-  const chainId = await provider.getNetwork().then(network => network.chainId);
-  if (chainId === 137) {
-    const registryAddress = contracts[137].BaluniV1Registry;
-    if (!registryAddress) {
-      console.error(`Address not found for chainId: ${chainId}`);
-      return;
-    }
-    registryCtx = new ethers.Contract(registryAddress, baluniRegistryAbi.abi, provider);
-  }
-}
+let registryCtx: Contract | null | undefined = null;
 
 async function fetchAndStoreUnitPrice(contract: Contract, address: string, db: any) {
   try {
@@ -52,8 +40,8 @@ async function fetchAndStoreUnitPrice(contract: Contract, address: string, db: a
   }
 }
 
-const fetchUnitPrices = async () => {
-  await setup();
+export async function fetchUnitPrices() {
+  registryCtx = await setupRegistry(provider, signer);
 
   if (!registryCtx) {
     return;
@@ -117,14 +105,4 @@ const fetchUnitPrices = async () => {
   }
 
   await db.close();
-};
-
-async function main() {
-  await setup();
-  if (registryCtx) {
-    fetchUnitPrices(); // Initial fetch
-    setInterval(fetchUnitPrices, Number(process.env.INTERVAL)); // Fetch every interval
-  }
 }
-
-main().catch(error => console.error("Error in main execution:", error));

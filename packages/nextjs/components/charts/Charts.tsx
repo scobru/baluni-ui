@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import {
   CategoryScale,
   Chart as ChartJS,
@@ -97,7 +97,7 @@ export const InterestChart: React.FC<InterestChartProps> = ({ interestData }) =>
           family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
         },
         callbacks: {
-          label: function (context: any) {
+          label: (context: any) => {
             let label = context.dataset.label || "";
             if (label) {
               label += ": ";
@@ -158,9 +158,7 @@ export const InterestChart: React.FC<InterestChartProps> = ({ interestData }) =>
             size: 12,
             family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
           },
-          callback: function (value: any) {
-            return "$" + value;
-          },
+          callback: (value: any) => "$" + value,
         },
       },
     },
@@ -210,7 +208,7 @@ export const ValuationChart: React.FC<ValuationChartProps> = ({ valuationData })
         enabled: true,
         backgroundColor: "rgba(0, 0, 0, 0.7)",
         callbacks: {
-          label: function (context: any) {
+          label: (context: any) => {
             let label = context.dataset.label || "";
             if (label) {
               label += ": ";
@@ -253,9 +251,7 @@ export const ValuationChart: React.FC<ValuationChartProps> = ({ valuationData })
         },
         ticks: {
           color: "white",
-          callback: function (value: any) {
-            return "$" + value;
-          },
+          callback: (value: any) => "$" + value,
         },
       },
     },
@@ -303,7 +299,7 @@ export const UnitPriceChart: React.FC<UnitPriceChartProps> = ({ unitPriceData })
         backgroundColor: "rgba(0, 0, 0, 0.7)",
 
         callbacks: {
-          label: function (context: any) {
+          label: (context: any) => {
             let label = context.dataset.label || "";
             if (label) {
               label += ": ";
@@ -340,9 +336,7 @@ export const UnitPriceChart: React.FC<UnitPriceChartProps> = ({ unitPriceData })
           text: "Unit Price (USDC)",
         },
         ticks: {
-          callback: function (value: any) {
-            return "$" + value;
-          },
+          callback: (value: any) => "$" + value,
         },
       },
     },

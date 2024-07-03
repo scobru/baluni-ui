@@ -2,30 +2,18 @@ import baluniPoolsRegistryAbi from "baluni-contracts/artifacts/contracts/registr
 import baluniPoolAbi from "baluni-contracts/artifacts/contracts/pools/BaluniV1Pool.sol/BaluniV1Pool.json";
 import dotenv from "dotenv";
 import { Contract, ethers } from "ethers";
-import baluniRegistryAbi from "baluni-contracts/artifacts/contracts/registry/BaluniV1Registry.sol/BaluniV1Registry.json";
-import contracts from "baluni-contracts/deployments/deployedContracts.json";
-import erc20Abi from "baluni-contracts/abis/common/ERC20.json";
+import { setupRegistry } from "./setupRegistry";
 
 dotenv.config();
 
 const provider = new ethers.providers.JsonRpcProvider(String(process.env.RPC_URL));
 const signer = new ethers.Wallet(String(process.env.PRIVATE_KEY), provider);
 
-let registryCtx: Contract | null = null;
+let registryCtx: Contract | null | undefined = null;
 
-async function setup() {
-  const chainId = await provider.getNetwork().then(network => network.chainId);
-  if (chainId === 137) {
-    const registryAddress = contracts[137].BaluniV1Registry;
-    if (!registryAddress) {
-      console.error(`Address not found for chainId: ${chainId}`);
-      return;
-    }
-    registryCtx = new ethers.Contract(registryAddress, baluniRegistryAbi.abi, signer);
-  }
-}
+export async function rebalancePools() {
+  registryCtx = await setupRegistry(provider, signer);
 
-async function rebalance() {
   if (!registryCtx) {
     console.error("Registry context not initialized");
     return;
@@ -41,7 +29,7 @@ async function rebalance() {
 
       try {
         const canRebalance = await poolContract.isRebalanceNeeded();
-        console.log("IsRebalanceNeeded:", canRebalance);
+        console.log("IsRebalanceNeeded:", canRebalance, pool);
 
         if (canRebalance) {
           const gasEstimate = await poolContract.estimateGas.rebalance();
@@ -70,12 +58,3 @@ async function rebalance() {
     console.error("Error fetching pool or  pool registry:", error);
   }
 }
-
-// Initial setup and execution
-(async () => {
-  await setup();
-  if (registryCtx) {
-    setInterval(rebalance, Number(process.env.INTERVAL)); // Fetch every interval
-    await rebalance();
-  }
-})();

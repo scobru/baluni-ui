@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import React from "react";
 import MultiSwapBox from "../../components/MultiSwapBox";
-import { NextPage } from "next";
+import type { NextPage } from "next";
 
 const Swap: NextPage = () => {
   return (

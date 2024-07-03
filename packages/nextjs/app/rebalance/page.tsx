@@ -1,6 +1,6 @@
 import React from "react";
 import RebalanceBox from "../../components/RebalanceBox";
-import { NextPage } from "next";
+import type { NextPage } from "next";
 
 if (typeof window !== "undefined") {
   // @ts-ignore
