@@ -120,7 +120,7 @@ const setupDatabase = async () => {
         currentPrice REAL,
         formattedPrice REAL,
         totalValuation REAL,
-        unitPrice REAL,
+        unitPrice REAL
       );
     `);
 
@@ -301,7 +301,7 @@ export async function fetchHyperPools() {
 
           await db.run(
             `INSERT INTO hyperPoolsData 
-                       (timestamp, id, apy, totalValueLockedUSD, volumeUSD, feesUSD, token0Symbol, token1Symbol, baseLower, baseUpper, limitLower, limitUpper, currentTick, basePosition, totalAmounts, limitPosition, totalSupply, baseLowerPrice, baseUpperPrice, limitLowerPrice, limitUpperPrice, currentPrice, formattedPrice, totalValuation, unitPrice) 
+                       (timestamp, id, apy, totalValueLockedUSD, volumeUSD, feesUSD, token0Symbol, token1Symbol, baseLower, baseUpper, limitLower, limitUpper, currentTick, basePosition, totalAmounts, limitPosition, totalSupply, baseLowerPrice, baseUpperPrice, limitLowerPrice, limitUpperPrice, currentPrice, formattedPrice, totalValuation, unitPrice ) 
                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             new Date().toISOString(),
             pool.id,
