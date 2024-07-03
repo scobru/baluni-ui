@@ -60,20 +60,8 @@ interface HyperPoolChartProps {
   hyperPoolData: HyperPoolData[];
 }
 
-function formatUnitPrice(unitPrice) {
-  if (!isNaN(Number(unitPrice))) {
-    // unitPrice è un numero
-    return Number(unitPrice);
-  } else {
-    try {
-      // Prova a convertirlo in BigInt
-      let bigIntValue = BigInt(unitPrice);
-      return ethers.utils.formatUnits(bigIntValue.toString(), 6);
-    } catch (e) {
-      // unitPrice non è né un numero né un BigInt valido
-      throw new Error("unitPrice non è un numero valido o BigInt");
-    }
-  }
+function formatUnitPrice(unitPrice: string) {
+  return Number(unitPrice);
 }
 
 export const InterestChart: React.FC<InterestChartProps> = ({ interestData }) => {
@@ -84,7 +72,7 @@ export const InterestChart: React.FC<InterestChartProps> = ({ interestData }) =>
     datasets: [
       {
         label: "Interest Earned",
-        data: interestData.map(data => ethers.utils.formatUnits(data.interestEarned, 6)),
+        data: interestData.map(data => formatUnitPrice(data.interestEarned)),
         fill: true,
         backgroundColor: "rgba(75, 192, 192, 0.2)",
         borderColor: "rgba(75, 192, 192, 1)",

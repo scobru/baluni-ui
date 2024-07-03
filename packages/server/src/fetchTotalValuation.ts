@@ -27,12 +27,11 @@ async function fetchAndStoreValuation(vaultContract: Contract, address: string, 
       totalValuation: Array.isArray(totalValuation) ? totalValuation[0].toString() : totalValuation.toString(),
       address: address,
     };
-    const decimal = await vaultContract.decimals();
 
     await db.run(
       "INSERT INTO totalValuations (timestamp, totalValuation, address) VALUES (?, ?, ?)",
       valuationData.timestamp,
-      formatUnits(valuationData.totalValuation, decimal),
+      formatUnits(valuationData.totalValuation, 6),
       valuationData.address,
     );
 
