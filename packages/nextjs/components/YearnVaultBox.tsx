@@ -163,10 +163,10 @@ const YearnVaultBox = () => {
   const fetchAllData = async () => {
     try {
       const [valuationResponse, interestResponse, unitPriceResponse, statisticsResponse] = await Promise.all([
-        fetch(serverUrl + "/api/valuation-data"),
-        fetch(serverUrl + "/api/totalInterestEarned-data"),
-        fetch(serverUrl + "/api/unitPrices-data"),
-        fetch(serverUrl + "/api/statistics"),
+        await fetch(serverUrl + "/api/valuation-data"),
+        await fetch(serverUrl + "/api/totalInterestEarned-data"),
+        await fetch(serverUrl + "/api/unitPrices-data"),
+        await fetch(serverUrl + "/api/statistics"),
       ]);
 
       const [valuationData, interestData, unitPriceData, statisticsData] = await Promise.all([
@@ -179,6 +179,8 @@ const YearnVaultBox = () => {
       setAllValuationData(valuationData);
       setAllInterestData(interestData);
       setAllUnitPriceData(unitPriceData);
+
+      if (!statisticsData) return console.error("Error fetching statistics data");
       setStatisticsData(statisticsData);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -442,7 +444,12 @@ const YearnVaultBox = () => {
           </thead>
           <tbody className="text-xl">
             {vaults.map((vault, index) => {
-              const stats = statisticsData.find(stat => stat.address === vault);
+              let stats;
+              if (statisticsData.length > 0) {
+                stats = statisticsData.find(stat => stat.address === vault);
+              } else {
+                stats = null;
+              }
               return (
                 <tr
                   key={index}

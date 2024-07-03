@@ -300,7 +300,7 @@ export async function fetchHyperPools() {
           });
 
           await db.run(
-            `INSERT OR REPLACE INTO hyperPoolsData 
+            `INSERT INTO hyperPoolsData 
                        (id, apy, totalValueLockedUSD, volumeUSD, feesUSD, token0Symbol, token1Symbol, baseLower, baseUpper, limitLower, limitUpper, currentTick, basePosition, totalAmounts, limitPosition, totalSupply, baseLowerPrice, baseUpperPrice, limitLowerPrice, limitUpperPrice, currentPrice, formattedPrice, totalValuation, unitPrice, timestamp ) 
                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             pool.id,

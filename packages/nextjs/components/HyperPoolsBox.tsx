@@ -5,7 +5,7 @@ import { Contract, ethers } from "ethers";
 import { useWalletClient } from "wagmi";
 import { notification } from "../utils/scaffold-eth";
 import Spinner from "./Spinner";
-import { UnitPriceChart, ValuationChart } from "./charts/Charts";
+import { UnitPriceChart, ValuationChart, HyperPoolChart } from "./charts/Charts";
 import hyperContracts from "baluni-hypervisor-contracts/deployments/deployedContracts.json";
 import uniProxyAbi from "baluni-hypervisor-contracts/artifacts/contracts/UniProxy.sol/UniProxy.json";
 import HypervisorFactoryAbi from "baluni-hypervisor-contracts/artifacts/contracts/HypervisorFactory.sol/HypervisorFactory.json";
@@ -15,7 +15,20 @@ import { clientToSigner } from "../utils/ethers";
 import useTokenList from "../hooks/useTokenList";
 import { erc20Abi } from "viem";
 
+interface UnitPriceData {
+  timestamp: string;
+  address: string;
+  unitPrice: string;
+}
+
+interface ValuationData {
+  timestamp: string;
+  totalValuation: string;
+  address: string;
+}
+
 interface HypervisorData {
+  address: string;
   tokenA: string;
   tokenB: string;
   tokenABalance: string;
@@ -35,18 +48,25 @@ interface HypervisorData {
   limitUpperPrice: number;
   currentPrice: number;
   formattedPrice: number;
+  unitPriceData: UnitPriceData[];
+  valuationData: ValuationData[];
+  poolData: any;
 }
 
-const HyperPoolsBox = () => {
+const HypervisorPage = () => {
   const { data: signer } = useWalletClient();
   const { tokens } = useTokenList();
 
-  const [factory, setFactory] = useState(null);
+  const [factory, setFactory] = useState<Contract | null>(null);
   const [hypervisors, setHypervisors] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [hypervisorData, setHypervisorData] = useState<HypervisorData[]>([]);
-  const [modalData, setModalData] = useState<any>(null);
+  const [modalData, setModalData] = useState<HypervisorData>(null);
   const [isModalDataModalOpen, setIsModalDataModalOpen] = useState(false);
+  const [isAddLiquidityModalOpen, setIsAddLiquidityModalOpen] = useState(false);
+  const [isRemoveLiquidityModalOpen, setIsRemoveLiquidityModalOpen] = useState(false);
+  const [liquidityData, setLiquidityData] = useState({ amount0: "", amount1: "", hypervisorAddress: "" });
+  const [removeLiquidityData, setRemoveLiquidityData] = useState({ hypervisorAddress: "", amount: "" });
 
   useEffect(() => {
     if (!signer) return;
@@ -73,29 +93,32 @@ const HyperPoolsBox = () => {
     return token ? token.logoURI : "Unknown Token";
   }
 
-  const fetchHyperPoolsData = async () => {
-    try {
-      const url = process.env.NEXT_PUBLIC_SERVER_URL + "/api/hyperpools-data";
-      const response = await fetch(url);
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error("Error fetching statistics data:", error);
-    }
-  };
-
   const loadHypervisors = async (factory: Contract, etherSigner: any) => {
     try {
       setLoading(true);
       const addresses = await factory.getHypervisors();
       setHypervisors(addresses);
-      const hypervisorDataPromises = addresses.map(async (address: string) => {
+
+      const urlHyperPool = process.env.NEXT_PUBLIC_SERVER_URL + "/api/hyperpools-data";
+      const responseHyperPool = await fetch(urlHyperPool);
+      const poolData = await responseHyperPool.json();
+
+      const urlValuation = process.env.NEXT_PUBLIC_SERVER_URL + "/api/valuation-data";
+      const responseValuation = await fetch(urlValuation);
+      const dataValuation = await responseValuation.json();
+
+      const urlUnitPrice = process.env.NEXT_PUBLIC_SERVER_URL + "/api/unitPrices-data";
+      const responseUnitPrice = await fetch(urlUnitPrice);
+      const dataUnitPrice = await responseUnitPrice.json();
+
+      const hypervisorDataPromises = addresses.map(async (address: string, index: number) => {
         const hypervisor = new ethers.Contract(address, HypervisorAbi.abi, etherSigner);
         const tokenA = await hypervisor.token0();
         const tokenB = await hypervisor.token1();
         const fee = await hypervisor.fee();
         const name = await hypervisor.name();
         const symbol = await hypervisor.symbol();
+        const pool = await hypervisor.pool();
         const balances = await hypervisor.getTotalAmounts();
         const tokenAContract = new ethers.Contract(tokenA, erc20Abi, etherSigner);
         const tokenBContract = new ethers.Contract(tokenB, erc20Abi, etherSigner);
@@ -105,19 +128,22 @@ const HyperPoolsBox = () => {
         const tokenBBalance = ethers.utils.formatUnits(balances[1], tokenBDecimals);
         const totalSupply = await hypervisor.totalSupply();
         const liquidity = await hypervisor.balanceOf(signer?.account.address);
-        const poolData = await fetchHyperPoolsData();
-        const baseLowerPrice = poolData.baseLowerPrice;
-        const baseUpperPrice = poolData.baseUpperPrice;
-        const limitLowerPrice = poolData.limitLowerPrice;
-        const limitUpperPrice = poolData.limitUpperPrice;
-        const currentPrice = poolData.currentPrice;
-        const formattedPrice = poolData.formattedPrice;
-        const apy = poolData.apy;
-        const unitPrice = poolData.unitPrice;
-        const totalValuation = poolData.totalValuation;
-        const timestamp = poolData.timestamp;
+        const baseLowerPrice = poolData[index].baseLowerPrice;
+        const baseUpperPrice = poolData[index].baseUpperPrice;
+        const limitLowerPrice = poolData[index].limitLowerPrice;
+        const limitUpperPrice = poolData[index].limitUpperPrice;
+        const currentPrice = poolData[index].currentPrice;
+        const formattedPrice = poolData[index].formattedPrice;
+        const apy = poolData[index].apy;
+        const unitPrice = poolData[index].unitPrice;
+        const totalValuation = poolData[index].totalValuation;
+        const timestamp = poolData[index].timestamp;
+
+        console.log(pool);
+        console.log(poolData);
 
         return {
+          address: hypervisor.address,
           tokenA,
           tokenB,
           tokenABalance,
@@ -126,7 +152,7 @@ const HyperPoolsBox = () => {
           name,
           symbol,
           totalSupply: ethers.utils.formatUnits(totalSupply, 18),
-          liquidity: ethers.utils.formatUnits(liquidity, 18),
+          liquidity: ethers.utils.formatUnits(liquidity, 6),
           apy,
           unitPrice,
           totalValuation,
@@ -137,6 +163,9 @@ const HyperPoolsBox = () => {
           limitUpperPrice,
           currentPrice,
           formattedPrice,
+          unitPriceData: dataUnitPrice.filter((item: UnitPriceData) => item.address === hypervisor.address),
+          valuationData: dataValuation.filter((item: ValuationData) => item.address === hypervisor.address),
+          poolData: poolData.filter((item: any) => item.id === pool),
         };
       });
       const resolvedHypervisorData = await Promise.all(hypervisorDataPromises);
@@ -148,7 +177,8 @@ const HyperPoolsBox = () => {
     }
   };
 
-  const handleDeposit = async (hypervisorAddress: string, amount0: string | number, amount1: string | number) => {
+  const handleDeposit = async (hypervisorAddress: string) => {
+    const { amount0, amount1 } = liquidityData;
     try {
       setLoading(true);
 
@@ -165,19 +195,25 @@ const HyperPoolsBox = () => {
       // check allowance
       const allowance0 = await token0.allowance(signer?.account.address, uniProxy.address);
 
-      if (allowance0 < amount0) {
-        const tx = await token0.approve(uniProxy.address, amount0);
+      if (allowance0.lt(ethers.utils.parseUnits(amount0, await token0.decimals()))) {
+        const tx = await token0.approve(uniProxy.address, ethers.utils.parseUnits(amount0, await token0.decimals()));
         await tx.wait();
       }
 
       const allowance1 = await token1.allowance(signer?.account.address, uniProxy.address);
 
-      if (allowance1 < amount1) {
-        const tx = await token1.approve(uniProxy.address, amount1);
+      if (allowance1.lt(ethers.utils.parseUnits(amount1, await token1.decimals()))) {
+        const tx = await token1.approve(uniProxy.address, ethers.utils.parseUnits(amount1, await token1.decimals()));
         await tx.wait();
       }
 
-      const tx = await uniProxy.deposit(amount0, amount1, signer?.account.address, hypervisor.address, [0, 0, 0, 0]);
+      const tx = await uniProxy.deposit(
+        ethers.utils.parseUnits(amount0, await token0.decimals()),
+        ethers.utils.parseUnits(amount1, await token1.decimals()),
+        signer?.account.address,
+        hypervisor.address,
+        [0, 0, 0, 0],
+      );
       await tx.wait();
       notification.success("Deposit successful!");
     } catch (error) {
@@ -188,7 +224,8 @@ const HyperPoolsBox = () => {
     }
   };
 
-  const handleWithdraw = async (hypervisorAddress: string, shares: string) => {
+  const handleWithdraw = async (hypervisorAddress: string) => {
+    const { amount } = removeLiquidityData;
     if (!signer) return;
     try {
       setLoading(true);
@@ -196,12 +233,17 @@ const HyperPoolsBox = () => {
       const hypervisor = new ethers.Contract(hypervisorAddress, HypervisorAbi.abi, etherSigner as any);
       const allowance0 = await hypervisor.allowance(signer?.account.address, hypervisor.address);
 
-      if (allowance0 < shares) {
-        const tx = await hypervisor.approve(hypervisor.address, shares);
+      if (allowance0.lt(ethers.utils.parseUnits(amount, 18))) {
+        const tx = await hypervisor.approve(hypervisor.address, ethers.utils.parseUnits(amount, 18));
         await tx.wait();
       }
 
-      const tx = await hypervisor.withdraw(shares, signer?.account.address, signer?.account.address, [0, 0, 0, 0]);
+      const tx = await hypervisor.withdraw(
+        ethers.utils.parseUnits(amount, 18),
+        signer?.account.address,
+        signer?.account.address,
+        [0, 0, 0, 0],
+      );
 
       await tx.wait();
       notification.success("Withdraw successful!");
@@ -221,15 +263,35 @@ const HyperPoolsBox = () => {
     setter(prevState => ({ ...prevState, [name]: value }));
   };
 
-  const openModal = (pool: string) => {
-    const poolData = hypervisorData.find(data => data.tokenA === pool || data.tokenB === pool);
-    setModalData(poolData);
+  const openModal = async (hypervisorAddress: string) => {
+    const hypervisor = hypervisorData.find(data => data.address === hypervisorAddress);
+    setModalData(hypervisor);
     setIsModalDataModalOpen(true);
   };
 
   const closeModalDataModal = () => {
     setIsModalDataModalOpen(false);
     setModalData(null);
+  };
+
+  const openAddLiquidityModal = (hypervisorAddress: string) => {
+    setLiquidityData({ ...liquidityData, hypervisorAddress });
+    const hypervisor = hypervisorData.find(data => data.address === hypervisorAddress);
+    setModalData(hypervisor);
+    setIsAddLiquidityModalOpen(true);
+  };
+
+  const closeAddLiquidityModal = () => {
+    setIsAddLiquidityModalOpen(false);
+  };
+
+  const openRemoveLiquidityModal = (hypervisorAddress: string) => {
+    setRemoveLiquidityData({ ...removeLiquidityData, hypervisorAddress });
+    setIsRemoveLiquidityModalOpen(true);
+  };
+
+  const closeRemoveLiquidityModal = () => {
+    setIsRemoveLiquidityModalOpen(false);
   };
 
   if (loading) {
@@ -239,7 +301,6 @@ const HyperPoolsBox = () => {
   return (
     <div className="container mx-auto p-6 mb-8">
       <button className="button btn-base rounded-none" onClick={() => loadHypervisors(factory, clientToSigner(signer))}>
-        {" "}
         <img src="https://www.svgrepo.com/download/470882/refresh.svg" alt="" className="mask mask-circle h-10 w-10" />
       </button>
       <div className="overflow-x-auto">
@@ -255,7 +316,7 @@ const HyperPoolsBox = () => {
             </tr>
           </thead>
           <tbody className="text-xl">
-            {hypervisorData.length > 0 &&
+            {hypervisorData &&
               hypervisors.map((hypervisor, index) => {
                 const pool = hypervisor;
                 return (
@@ -283,8 +344,6 @@ const HyperPoolsBox = () => {
                       <div className="flex items-center gap-3">
                         {hypervisorData[index]?.name && (
                           <div>
-                            {/*                             <div className="font-bold">{hypervisorData[index]?.name}</div>
-                             */}{" "}
                             <div className="font-semibold text-lg opacity-80">{hypervisorData[index]?.symbol}</div>
                           </div>
                         )}
@@ -320,23 +379,20 @@ const HyperPoolsBox = () => {
                     </td>
 
                     <td className="hover:text-info-content">
-                      <button
-                        className="label label-text text-xl font-semibold mr-4"
-                        onClick={() => {
-                          openModal(pool);
-                        }}
-                      >
+                      <button className="label label-text text-xl font-semibold mr-4" onClick={() => openModal(pool)}>
                         Details
                       </button>
                       <button
                         className="label label-text text-xl font-semibold mr-4"
-                        onClick={() => handleDeposit(hypervisor, "1000000000000000000", "1000000")}
+                        onClick={() => {
+                          openAddLiquidityModal(hypervisor);
+                        }}
                       >
                         Deposit
                       </button>
                       <button
                         className="label label-text text-xl font-semibold"
-                        onClick={() => handleWithdraw(hypervisor, "1000000000000000000")}
+                        onClick={() => openRemoveLiquidityModal(hypervisor)}
                       >
                         Withdraw
                       </button>
@@ -357,8 +413,137 @@ const HyperPoolsBox = () => {
           </tfoot>
         </table>
       </div>
+
+      {isModalDataModalOpen &&
+        modalData &&
+        modalData.poolData &&
+        modalData.valuationData &&
+        modalData.unitPriceData && (
+          <div className="p-4 shadow rounded">
+            <input type="checkbox" id="hypervisor-info-modal" className="modal-toggle" />
+            <div className="modal modal-open bg-blend-exclusion">
+              <div className="modal-box w-11/12 max-w-5xl md:9/12 relative">
+                <label
+                  htmlFor="hypervisor-info-modal"
+                  className="btn btn-sm btn-circle absolute right-2 top-2 text-red-500"
+                  onClick={closeModalDataModal}
+                >
+                  ✕
+                </label>
+                <h2 className="text-2xl mb-4 text-blue-700">Hypervisor Info</h2>
+                <p className="text-lg mb-2">
+                  <strong className="text-base">Address:</strong> {modalData.tokenA} / {modalData.tokenB}
+                </p>
+
+                <p className="text-xl mb-2">
+                  <strong className="text-base text-xl">Total Liquidity:</strong>{" "}
+                  {Number(modalData.tokenABalance).toFixed(4)} {getTokenSymbol(modalData.tokenA)} /{" "}
+                  {Number(modalData.tokenBBalance).toFixed(4)} {getTokenSymbol(modalData.tokenB)}
+                </p>
+
+                <HyperPoolChart hyperPoolData={modalData.poolData} />
+                <UnitPriceChart unitPriceData={modalData.unitPriceData} />
+                <ValuationChart valuationData={modalData.valuationData} />
+
+                <p className="text-lg mb-4">
+                  <strong className="text-base">APY:</strong> {Number(modalData.apy).toFixed(4)}%
+                </p>
+                <p className="text-lg mb-4">
+                  <strong className="text-base">LP Price:</strong> {Number(modalData.unitPrice).toFixed(2)} USDC
+                </p>
+                <p className="text-lg mb-4">
+                  <strong className="text-base">Base Lower Price:</strong> {modalData.baseLowerPrice}
+                </p>
+                <p className="text-lg mb-4">
+                  <strong className="text-base">Base Upper Price:</strong> {modalData.baseUpperPrice}
+                </p>
+                <p className="text-lg mb-4">
+                  <strong className="text-base">Limit Lower Price:</strong> {modalData.limitLowerPrice}
+                </p>
+                <p className="text-lg mb-4">
+                  <strong className="text-base">Limit Upper Price:</strong> {modalData.limitUpperPrice}
+                </p>
+                <p className="text-lg mb-4">
+                  <strong className="text-base">Current Price:</strong> {modalData.currentPrice}
+                </p>
+
+                <div className="modal-action">
+                  <button className="btn" onClick={closeModalDataModal}>
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+      {isAddLiquidityModalOpen && (
+        <div className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg">Add Liquidity</h3>
+            <div>
+              <div className="mt-2">{getTokenSymbol(modalData.tokenA)}</div>
+              <input
+                type="text"
+                name="amount0"
+                className="input input-bordered w-full my-2"
+                placeholder={`Amount ${getTokenSymbol(modalData.tokenA)}`}
+                value={liquidityData.amount0}
+                onChange={e => handleInputChange(e, setLiquidityData)}
+              />
+              <div className="mt-2">{getTokenSymbol(modalData.tokenB)}</div>
+              <input
+                type="text"
+                name="amount1"
+                className="input input-bordered w-full my-2"
+                placeholder={`Amount ${getTokenSymbol(modalData.tokenB)}`}
+                value={liquidityData.amount1}
+                onChange={e => handleInputChange(e, setLiquidityData)}
+              />
+              <button
+                className="btn btn-primary w-full my-2"
+                onClick={() => handleDeposit(liquidityData.hypervisorAddress)}
+              >
+                Add Liquidity
+              </button>
+            </div>
+            <div className="modal-action">
+              <button className="btn" onClick={closeAddLiquidityModal}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isRemoveLiquidityModalOpen && (
+        <div className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg">Remove Liquidity</h3>
+            <input
+              type="text"
+              name="amount"
+              className="input input-bordered w-full mb-4"
+              placeholder="Amount to Withdraw"
+              value={removeLiquidityData.amount}
+              onChange={e => handleInputChange(e, setRemoveLiquidityData)}
+            />
+            <button
+              className="btn btn-danger w-full my-2"
+              onClick={() => handleWithdraw(removeLiquidityData.hypervisorAddress)}
+            >
+              Withdraw
+            </button>
+            <div className="modal-action">
+              <button className="btn" onClick={closeRemoveLiquidityModal}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default HyperPoolsBox;
+export default HypervisorPage;
