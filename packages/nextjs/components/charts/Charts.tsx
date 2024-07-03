@@ -68,7 +68,7 @@ function formatUnitPrice(unitPrice) {
     try {
       // Prova a convertirlo in BigInt
       let bigIntValue = BigInt(unitPrice);
-      return ethers.utils.formatUnits(bigIntValue.toString(), 18);
+      return ethers.utils.formatUnits(bigIntValue.toString(), 6);
     } catch (e) {
       // unitPrice non è né un numero né un BigInt valido
       throw new Error("unitPrice non è un numero valido o BigInt");
@@ -105,7 +105,6 @@ export const InterestChart: React.FC<InterestChartProps> = ({ interestData }) =>
       legend: {
         display: true,
         labels: {
-          color: "white",
           font: {
             size: 14,
             family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
@@ -154,7 +153,7 @@ export const InterestChart: React.FC<InterestChartProps> = ({ interestData }) =>
         title: {
           display: true,
           text: "Timestamp",
-          color: "white",
+
           font: {
             size: 16,
             family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
@@ -162,7 +161,6 @@ export const InterestChart: React.FC<InterestChartProps> = ({ interestData }) =>
           },
         },
         ticks: {
-          color: "white",
           font: {
             size: 12,
             family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
@@ -174,7 +172,7 @@ export const InterestChart: React.FC<InterestChartProps> = ({ interestData }) =>
         title: {
           display: true,
           text: "Interest Earned (USDC)",
-          color: "white",
+
           font: {
             size: 16,
             family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
@@ -182,7 +180,6 @@ export const InterestChart: React.FC<InterestChartProps> = ({ interestData }) =>
           },
         },
         ticks: {
-          color: "white",
           font: {
             size: 12,
             family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
@@ -229,9 +226,7 @@ export const ValuationChart: React.FC<ValuationChartProps> = ({ valuationData })
     plugins: {
       legend: {
         display: true,
-        labels: {
-          color: "white",
-        },
+        labels: {},
       },
       tooltip: {
         enabled: true,

@@ -10,6 +10,7 @@ import sqlite3 from "sqlite3";
 import baluniDCAVaultAbi from "baluni-contracts/artifacts/contracts/vaults/BaluniV1DCAVault.sol/BaluniV1DCAVault.json";
 import baluniDCAVaultRegistryAbi from "baluni-contracts/artifacts/contracts/registry/BaluniV1DCAVaultRegistry.sol/BaluniV1DCAVaultRegistry.json";
 import { setupRegistry } from "./setupRegistry";
+import { formatUnits } from "ethers/lib/utils";
 
 dotenv.config();
 
@@ -30,7 +31,7 @@ async function fetchAndStoreUnitPrice(contract: Contract, address: string, db: a
     await db.run(
       "INSERT INTO unitPrices (timestamp, unitPrice, address) VALUES (?, ?, ?)",
       unitPriceData.timestamp,
-      unitPriceData.unitPrice,
+      formatUnits(unitPriceData.unitPrice, 18),
       unitPriceData.address,
     );
 

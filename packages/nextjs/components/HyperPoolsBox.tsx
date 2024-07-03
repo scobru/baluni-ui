@@ -11,7 +11,6 @@ import uniProxyAbi from "baluni-hypervisor-contracts/artifacts/contracts/UniProx
 import HypervisorFactoryAbi from "baluni-hypervisor-contracts/artifacts/contracts/HypervisorFactory.sol/HypervisorFactory.json";
 import HypervisorAbi from "baluni-hypervisor-contracts/artifacts/contracts/Hypervisor.sol/Hypervisor.json";
 import { clientToSigner } from "../utils/ethers";
-
 import useTokenList from "../hooks/useTokenList";
 import { erc20Abi } from "viem";
 
@@ -61,11 +60,15 @@ const HypervisorPage = () => {
   const [hypervisors, setHypervisors] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [hypervisorData, setHypervisorData] = useState<HypervisorData[]>([]);
-  const [modalData, setModalData] = useState<HypervisorData>(null);
+  const [modalData, setModalData] = useState<HypervisorData | null>(null);
   const [isModalDataModalOpen, setIsModalDataModalOpen] = useState(false);
   const [isAddLiquidityModalOpen, setIsAddLiquidityModalOpen] = useState(false);
   const [isRemoveLiquidityModalOpen, setIsRemoveLiquidityModalOpen] = useState(false);
-  const [liquidityData, setLiquidityData] = useState({ amount0: "", amount1: "", hypervisorAddress: "" });
+  const [liquidityData, setLiquidityData] = useState({
+    amount0: "",
+    amount1: "",
+    hypervisorAddress: "",
+  });
   const [removeLiquidityData, setRemoveLiquidityData] = useState({ hypervisorAddress: "", amount: "" });
 
   useEffect(() => {
@@ -86,6 +89,35 @@ const HypervisorPage = () => {
   function getTokenSymbol(tokenAddress: string) {
     const token = (tokens as Token[]).find(token => token.address === tokenAddress) as Token | undefined;
     return token ? token.symbol : "Unknown Token";
+  }
+
+  async function getMaxBalance(address, action, isAmount0) {
+    const etherSigner = clientToSigner(signer);
+    const token = new Contract(address, erc20Abi, etherSigner); // Removed extra .abi
+    const balance = await token.balanceOf(signer?.account.address);
+    const decimals = await token.decimals();
+    const balanceFormatted = ethers.utils.formatUnits(balance, decimals);
+
+    if (action === "add" && isAmount0) {
+      setLiquidityData(prevState => ({
+        ...prevState,
+        amount0: balanceFormatted, // Format balance to the appropriate decimal
+      }));
+    } else {
+      setLiquidityData(prevState => ({
+        ...prevState,
+        amount1: balanceFormatted, // Format balance to the appropriate decimal
+      }));
+    }
+
+    if (action === "remove") {
+      setRemoveLiquidityData(prevState => ({
+        ...prevState,
+        amount: balanceFormatted, // Format balance to the appropriate decimal
+      }));
+    }
+
+    return balance;
   }
 
   function getTokenIcon(tokenAddress: string) {
@@ -139,9 +171,6 @@ const HypervisorPage = () => {
         const totalValuation = poolData[index].totalValuation;
         const timestamp = poolData[index].timestamp;
 
-        console.log(pool);
-        console.log(poolData);
-
         return {
           address: hypervisor.address,
           tokenA,
@@ -151,7 +180,7 @@ const HypervisorPage = () => {
           fee,
           name,
           symbol,
-          totalSupply: ethers.utils.formatUnits(totalSupply, 18),
+          totalSupply: Number(ethers.utils.formatUnits(totalSupply, 18)),
           liquidity: ethers.utils.formatUnits(liquidity, 6),
           apy,
           unitPrice,
@@ -165,9 +194,10 @@ const HypervisorPage = () => {
           formattedPrice,
           unitPriceData: dataUnitPrice.filter((item: UnitPriceData) => item.address === hypervisor.address),
           valuationData: dataValuation.filter((item: ValuationData) => item.address === hypervisor.address),
-          poolData: poolData.filter((item: any) => item.id === pool),
+          poolData: poolData,
         };
       });
+
       const resolvedHypervisorData = await Promise.all(hypervisorDataPromises);
       setHypervisorData(resolvedHypervisorData);
     } catch (error) {
@@ -180,8 +210,6 @@ const HypervisorPage = () => {
   const handleDeposit = async (hypervisorAddress: string) => {
     const { amount0, amount1 } = liquidityData;
     try {
-      setLoading(true);
-
       const etherSigner = clientToSigner(signer);
       const uniProxy = new ethers.Contract(hyperContracts[137].BaluniV1HyperUniProxy, uniProxyAbi.abi, etherSigner);
       const hypervisor = new ethers.Contract(hypervisorAddress, HypervisorAbi.abi, etherSigner);
@@ -225,10 +253,11 @@ const HypervisorPage = () => {
   };
 
   const handleWithdraw = async (hypervisorAddress: string) => {
-    const { amount } = removeLiquidityData;
     if (!signer) return;
+
+    const { amount } = removeLiquidityData;
+
     try {
-      setLoading(true);
       const etherSigner = clientToSigner(signer);
       const hypervisor = new ethers.Contract(hypervisorAddress, HypervisorAbi.abi, etherSigner as any);
       const allowance0 = await hypervisor.allowance(signer?.account.address, hypervisor.address);
@@ -260,12 +289,12 @@ const HypervisorPage = () => {
     setter: React.Dispatch<React.SetStateAction<any>>,
   ) => {
     const { name, value } = e.target;
-    setter(prevState => ({ ...prevState, [name]: value }));
+    setter((prevState: any) => ({ ...prevState, [name]: value }));
   };
 
-  const openModal = async (hypervisorAddress: string) => {
+  const openModal = (hypervisorAddress: string) => {
     const hypervisor = hypervisorData.find(data => data.address === hypervisorAddress);
-    setModalData(hypervisor);
+    setModalData(hypervisor || null);
     setIsModalDataModalOpen(true);
   };
 
@@ -277,7 +306,7 @@ const HypervisorPage = () => {
   const openAddLiquidityModal = (hypervisorAddress: string) => {
     setLiquidityData({ ...liquidityData, hypervisorAddress });
     const hypervisor = hypervisorData.find(data => data.address === hypervisorAddress);
-    setModalData(hypervisor);
+    setModalData(hypervisor || null);
     setIsAddLiquidityModalOpen(true);
   };
 
@@ -309,8 +338,10 @@ const HypervisorPage = () => {
             <tr className="my-4 p-4 rounded-2xl bg-base-100 mx-auto items-center">
               <th>Assets</th>
               <th>Name</th>
+              <th>Reserves</th>
               <th>TLV</th>
               <th>Liquidity</th>
+              <th>Apy(24h)</th>
               <th>Total Supply</th>
               <th>Actions</th>
             </tr>
@@ -367,7 +398,9 @@ const HypervisorPage = () => {
                         )}
                       </div>
                     </td>
-                    <td>{Number(hypervisorData[index]?.liquidity) || "0"}</td>
+                    <td className="">${Number(hypervisorData[index]?.totalValuation) || "0"}</td>
+                    <td className="">${Number(hypervisorData[index]?.liquidity) || "0"}</td>
+                    <td className="">{Number(hypervisorData[index]?.apy).toFixed(4) || "0"}</td>
                     <td>
                       <div>
                         {hypervisorData[index]?.totalSupply ? (
@@ -405,8 +438,10 @@ const HypervisorPage = () => {
             <tr className="my-4 p-4 rounded-2xl bg-base-100 mx-auto items-center">
               <th>Assets</th>
               <th>Name</th>
+              <th>Reserves</th>
               <th>TLV</th>
               <th>Liquidity</th>
+              <th>Apy(24h)</th>
               <th>Total Supply</th>
               <th>Actions</th>
             </tr>
@@ -482,24 +517,40 @@ const HypervisorPage = () => {
           <div className="modal-box">
             <h3 className="font-bold text-lg">Add Liquidity</h3>
             <div>
-              <div className="mt-2">{getTokenSymbol(modalData.tokenA)}</div>
+              <div className="mt-2">{getTokenSymbol(modalData?.tokenA)}</div>
               <input
                 type="text"
                 name="amount0"
                 className="input input-bordered w-full my-2"
-                placeholder={`Amount ${getTokenSymbol(modalData.tokenA)}`}
+                placeholder={`Amount ${getTokenSymbol(modalData?.tokenA)}`}
                 value={liquidityData.amount0}
                 onChange={e => handleInputChange(e, setLiquidityData)}
               />
-              <div className="mt-2">{getTokenSymbol(modalData.tokenB)}</div>
+              <button
+                className="btn btn-sm btn-primary my-2"
+                onClick={async () => {
+                  await getMaxBalance(modalData?.tokenA, "add", true);
+                }}
+              >
+                Max
+              </button>
+              <div className="mt-2">{getTokenSymbol(modalData?.tokenB)}</div>
               <input
                 type="text"
                 name="amount1"
                 className="input input-bordered w-full my-2"
-                placeholder={`Amount ${getTokenSymbol(modalData.tokenB)}`}
+                placeholder={`Amount ${getTokenSymbol(modalData?.tokenB)}`}
                 value={liquidityData.amount1}
                 onChange={e => handleInputChange(e, setLiquidityData)}
               />
+              <button
+                className="btn btn-sm btn-primary my-2"
+                onClick={async () => {
+                  await getMaxBalance(modalData?.tokenB, "add", false);
+                }}
+              >
+                Max
+              </button>
               <button
                 className="btn btn-primary w-full my-2"
                 onClick={() => handleDeposit(liquidityData.hypervisorAddress)}
@@ -528,6 +579,14 @@ const HypervisorPage = () => {
               value={removeLiquidityData.amount}
               onChange={e => handleInputChange(e, setRemoveLiquidityData)}
             />
+            <button
+              className="btn btn-sm btn-primary my-2"
+              onClick={async () => {
+                await getMaxBalance(removeLiquidityData.hypervisorAddress, "remove", null);
+              }}
+            >
+              Max
+            </button>
             <button
               className="btn btn-danger w-full my-2"
               onClick={() => handleWithdraw(removeLiquidityData.hypervisorAddress)}

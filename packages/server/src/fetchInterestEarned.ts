@@ -5,9 +5,9 @@ import { Contract, ethers } from "ethers";
 import path from "path";
 import { open } from "sqlite";
 import sqlite3 from "sqlite3";
-import baluniRegistryAbi from "baluni-contracts/artifacts/contracts/registry/BaluniV1Registry.sol/BaluniV1Registry.json";
-import contracts from "baluni-contracts/deployments/deployedContracts.json";
 import { setupRegistry } from "./setupRegistry";
+import { erc20Abi } from "viem";
+import { formatUnits } from "ethers/lib/utils";
 
 dotenv.config();
 
@@ -53,11 +53,14 @@ export async function fetchInterestEarned() {
         interestEarned: interestEarned.toString(),
         address: vault,
       };
+      const baseToken = await vaultContract.baseAsset();
+      const baseCtx = new ethers.Contract(String(baseToken), erc20Abi, provider);
+      const decimals = await baseCtx.decimals();
 
       await db.run(
         "INSERT INTO totalInterestEarned (timestamp, interestEarned, address) VALUES (?, ?, ?)",
         interestData.timestamp,
-        interestData.interestEarned,
+        formatUnits(interestData.interestEarned, decimals),
         interestData.address,
       );
 

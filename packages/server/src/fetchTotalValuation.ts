@@ -10,6 +10,7 @@ import baluniPoolAbi from "baluni-contracts/artifacts/contracts/pools/BaluniV1Po
 import baluniPoolRegistryAbi from "baluni-contracts/artifacts/contracts/registry/BaluniV1PoolRegistry.sol/BaluniV1PoolRegistry.json";
 import baluniDCAVaultRegistryAbi from "baluni-contracts/artifacts/contracts/registry/BaluniV1DCAVaultRegistry.sol/BaluniV1DCAVaultRegistry.json";
 import { setupRegistry } from "./setupRegistry";
+import { formatUnits } from "ethers/lib/utils";
 
 dotenv.config();
 
@@ -26,11 +27,12 @@ async function fetchAndStoreValuation(vaultContract: Contract, address: string, 
       totalValuation: Array.isArray(totalValuation) ? totalValuation[0].toString() : totalValuation.toString(),
       address: address,
     };
+    const decimal = await vaultContract.decimals();
 
     await db.run(
       "INSERT INTO totalValuations (timestamp, totalValuation, address) VALUES (?, ?, ?)",
       valuationData.timestamp,
-      valuationData.totalValuation,
+      formatUnits(valuationData.totalValuation, decimal),
       valuationData.address,
     );
 
