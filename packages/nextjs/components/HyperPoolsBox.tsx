@@ -1,18 +1,22 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Contract, ethers } from "ethers";
-import { useWalletClient } from "wagmi";
+import useTokenList from "../hooks/useTokenList";
+import { clientToSigner } from "../utils/ethers";
 import { notification } from "../utils/scaffold-eth";
 import Spinner from "./Spinner";
-import { UnitPriceChart, ValuationChart, HyperPoolChart } from "./charts/Charts";
-import hyperContracts from "baluni-hypervisor-contracts/deployments/deployedContracts.json";
-import uniProxyAbi from "baluni-hypervisor-contracts/artifacts/contracts/UniProxy.sol/UniProxy.json";
-import HypervisorFactoryAbi from "baluni-hypervisor-contracts/artifacts/contracts/HypervisorFactory.sol/HypervisorFactory.json";
+import { HyperPoolChart, UnitPriceChart, ValuationChart } from "./charts/Charts";
+import hyperPoolZapAbi from "baluni-contracts/artifacts/contracts/managers/BaluniV1HyperPoolZap.sol/BaluniV1HyperPoolZap.json";
+import registryAbi from "baluni-contracts/artifacts/contracts/registry/BaluniV1Registry.sol/BaluniV1Registry.json";
+import clearingAbi from "baluni-hypervisor-contracts/artifacts/contracts/ClearingV2.sol/ClearingV2.json";
 import HypervisorAbi from "baluni-hypervisor-contracts/artifacts/contracts/Hypervisor.sol/Hypervisor.json";
-import { clientToSigner } from "../utils/ethers";
-import useTokenList from "../hooks/useTokenList";
-import { erc20Abi } from "viem";
+import HypervisorFactoryAbi from "baluni-hypervisor-contracts/artifacts/contracts/HypervisorFactory.sol/HypervisorFactory.json";
+import uniProxyAbi from "baluni-hypervisor-contracts/artifacts/contracts/UniProxy.sol/UniProxy.json";
+import hyperContracts from "baluni-hypervisor-contracts/deployments/deployedContracts.json";
+import { INFRA } from "baluni/dist/api/";
+import { Contract, ethers } from "ethers";
+import { erc20Abi, formatUnits } from "viem";
+import { useWalletClient } from "wagmi";
 
 interface UnitPriceData {
   timestamp: string;
@@ -52,6 +56,12 @@ interface HypervisorData {
   poolData: any;
 }
 
+interface Token {
+  address: string;
+  symbol: string;
+  logoURI: string;
+}
+
 const HypervisorPage = () => {
   const { data: signer } = useWalletClient();
   const { tokens } = useTokenList();
@@ -70,6 +80,10 @@ const HypervisorPage = () => {
     hypervisorAddress: "",
   });
   const [removeLiquidityData, setRemoveLiquidityData] = useState({ hypervisorAddress: "", amount: "" });
+  const [customToken, setCustomToken] = useState<string | undefined>();
+
+  // const [customAmount, setCustomAmount] = useState<string | undefined>();
+  // const [ tokenBalance , setTokenBalance] = useState<string | undefined>();
 
   useEffect(() => {
     if (!signer) return;
@@ -86,12 +100,19 @@ const HypervisorPage = () => {
     init();
   }, [signer]);
 
+  // const fetchTokenBalance = async (tokenAddress: string, account: string) => {
+  //   const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, clientToSigner(signer as any));
+  //   const balance = await tokenContract.balanceOf(account);
+  //   const decimals = await tokenContract.decimals();
+  //   setTokenBalance(ethers.utils.formatUnits(balance, decimals));
+  // };
+
   function getTokenSymbol(tokenAddress: string) {
     const token = (tokens as Token[]).find(token => token.address === tokenAddress) as Token | undefined;
     return token ? token.symbol : "Unknown Token";
   }
 
-  async function getMaxBalance(address, action, isAmount0) {
+  async function getMaxBalance(address: string, action: string, isAmount0: boolean | null) {
     const etherSigner = clientToSigner(signer);
     const token = new Contract(address, erc20Abi, etherSigner); // Removed extra .abi
     const balance = await token.balanceOf(signer?.account.address);
@@ -150,7 +171,7 @@ const HypervisorPage = () => {
         const fee = await hypervisor.fee();
         const name = await hypervisor.name();
         const symbol = await hypervisor.symbol();
-        const pool = await hypervisor.pool();
+        //const pool = await hypervisor.pool();
         const balances = await hypervisor.getTotalAmounts();
         const tokenAContract = new ethers.Contract(tokenA, erc20Abi, etherSigner);
         const tokenBContract = new ethers.Contract(tokenB, erc20Abi, etherSigner);
@@ -180,8 +201,8 @@ const HypervisorPage = () => {
           fee,
           name,
           symbol,
-          totalSupply: Number(ethers.utils.formatUnits(totalSupply, 18)),
-          liquidity: ethers.utils.formatUnits(liquidity, 6),
+          totalSupply: ethers.utils.formatUnits(totalSupply, 18),
+          liquidity: ethers.utils.formatUnits(liquidity, 18),
           apy,
           unitPrice,
           totalValuation,
@@ -327,9 +348,128 @@ const HypervisorPage = () => {
     return <Spinner />;
   }
 
+  const getDepositAmount = async (hypervisor: string, token0: string, token1: string, amount: string) => {
+    if (!signer) return;
+    const clearing = new Contract(
+      hyperContracts[137].BaluniV1HyperClearingV2,
+      clearingAbi.abi,
+      clientToSigner(signer as any),
+    );
+    const tokenCtx = new Contract(token0, erc20Abi, clientToSigner(signer as any));
+    const decimals = await tokenCtx.decimals();
+
+    const token1Ctx = new Contract(token1, erc20Abi, clientToSigner(signer as any));
+    const decimals1 = await token1Ctx.decimals();
+
+    const depositAmount = await clearing.getDepositAmount(
+      hypervisor,
+      token0,
+      ethers.utils.parseUnits(amount, decimals),
+    );
+
+    setLiquidityData(prevState => ({
+      ...prevState,
+      amount1: formatUnits(depositAmount[1], decimals1),
+    }));
+  };
+
+  // const zapIn = async (hypervisor: string, tokenAddress: string, amount: string) => {
+  //   if (!signer) return;
+  //   const registry = new Contract(INFRA[137].REGISTRY, registryAbi.abi, clientToSigner(signer as any));
+  //   const poolZap = await registry.getBaluniHyperPoolZap();
+  //   const zapCtx = new Contract(poolZap, hyperPoolZapAbi.abi, clientToSigner(signer as any));
+
+  //   let token: any;
+  //   let decimals: any;
+
+  //   console.log(hypervisor, tokenAddress, amount);
+
+  //   if (tokenAddress == ethers.constants.AddressZero || tokenAddress == "0x0000000000000000000000000000000000001010") {
+  //     decimals = 18;
+
+  //     const tx = await zapCtx.zapIn(
+  //       hypervisor,
+  //       ethers.constants.AddressZero,
+  //       ethers.utils.parseUnits(amount, decimals),
+  //       0,
+  //       signer.account.address,
+  //       {
+  //         value: ethers.utils.parseUnits(amount, decimals),
+  //       },
+  //     );
+
+  //     await tx.wait();
+  //   } else {
+  //     token = new Contract(tokenAddress, erc20Abi, clientToSigner(signer as any));
+  //     decimals = await token.decimals();
+
+  //     const allowance = await token.allowance(signer.account.address, poolZap);
+
+  //     if (allowance.lt(ethers.utils.parseUnits(amount, decimals))) {
+  //       const approveTx = await token.approve(poolZap, ethers.utils.parseUnits(amount, decimals));
+  //       await approveTx.wait();
+
+  //       const tx = await zapCtx.zapIn(
+  //         hypervisor,
+  //         tokenAddress,
+  //         ethers.utils.parseUnits(amount, decimals),
+  //         0,
+  //         signer.account.address,
+  //       );
+  //       await tx.wait();
+  //     } else {
+  //       const tx = await zapCtx.zapIn(
+  //         hypervisor,
+  //         tokenAddress,
+  //         ethers.utils.parseUnits(amount, decimals),
+  //         0,
+  //         signer.account.address,
+  //       );
+  //       await tx.wait();
+  //     }
+  //   }
+
+  //   notification.success("Zap in successful!");
+  // };
+
+  const zapOut = async (poolAddress: string, tokenAddress: string, amount: string) => {
+    if (!signer) return;
+    const registry = new Contract(INFRA[137].REGISTRY, registryAbi.abi, clientToSigner(signer as any));
+    const poolZap = await registry.getBaluniHyperPoolZap();
+    const zapCtx = new Contract(poolZap, hyperPoolZapAbi.abi, clientToSigner(signer as any));
+    const token = new Contract(poolAddress, erc20Abi, clientToSigner(signer as any));
+    const decimals = await token.decimals();
+    console.log(decimals);
+    console.log(amount);
+
+    const allowance = await token.allowance(signer.account.address, poolZap);
+    const parsedAmount = ethers.utils.parseUnits(amount, decimals);
+    console.log(parsedAmount, poolZap, decimals);
+    if (allowance.lt(parsedAmount)) {
+      const approveTx = await token.approve(poolZap, parsedAmount);
+
+      await approveTx.wait();
+
+      const tx = await zapCtx.zapOut(poolAddress, parsedAmount, tokenAddress, 0, signer.account.address);
+      await tx.wait();
+    } else {
+      const tx = await zapCtx.zapOut(poolAddress, parsedAmount, tokenAddress, 0, signer.account.address);
+      await tx.wait();
+    }
+
+    notification.success("Zap out successful!");
+  };
+
+  async function handleCustomToken(token: any) {
+    setCustomToken(token);
+  }
+
   return (
     <div className="container mx-auto p-6 mb-8">
-      <button className="button btn-base rounded-none" onClick={() => loadHypervisors(factory, clientToSigner(signer))}>
+      <button
+        className="button btn-base rounded-none"
+        onClick={() => loadHypervisors(factory as unknown as Contract, clientToSigner(signer))}
+      >
         <img src="https://www.svgrepo.com/download/470882/refresh.svg" alt="" className="mask mask-circle h-10 w-10" />
       </button>
       <div className="overflow-x-auto">
@@ -399,7 +539,7 @@ const HypervisorPage = () => {
                       </div>
                     </td>
                     <td className="">${Number(hypervisorData[index]?.totalValuation) || "0"}</td>
-                    <td className="">${Number(hypervisorData[index]?.liquidity) || "0"}</td>
+                    <td className="">{Number(hypervisorData[index]?.liquidity).toPrecision(10) || "0"}</td>
                     <td className="">{Number(hypervisorData[index]?.apy).toFixed(4) || "0"}</td>
                     <td>
                       <div>
@@ -457,50 +597,62 @@ const HypervisorPage = () => {
           <div className="p-4 shadow rounded">
             <input type="checkbox" id="hypervisor-info-modal" className="modal-toggle" />
             <div className="modal modal-open bg-blend-exclusion">
-              <div className="modal-box w-11/12 max-w-5xl md:9/12 relative">
-                <label
+              <div className="modal-box w-11/12 max-w-5xl md:w-9/12 bg-base-300">
+                {/* <label
                   htmlFor="hypervisor-info-modal"
                   className="btn btn-sm btn-circle absolute right-2 top-2 text-red-500"
                   onClick={closeModalDataModal}
                 >
                   ✕
-                </label>
+                </label> */}
+
                 <h2 className="text-2xl mb-4 text-blue-700">Hypervisor Info</h2>
+
                 <p className="text-lg mb-2">
-                  <strong className="text-base">Address:</strong> {modalData.tokenA} / {modalData.tokenB}
+                  <strong className="text-base">Address:</strong> {modalData.address}
                 </p>
 
-                <p className="text-xl mb-2">
-                  <strong className="text-base text-xl">Total Liquidity:</strong>{" "}
-                  {Number(modalData.tokenABalance).toFixed(4)} {getTokenSymbol(modalData.tokenA)} /{" "}
-                  {Number(modalData.tokenBBalance).toFixed(4)} {getTokenSymbol(modalData.tokenB)}
-                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 text-center">
+                  <div className="stat">
+                    <div className="stat-title">Unit Price</div>
+                    <div className="stat-value">${Number(modalData.unitPrice).toFixed(2)}</div>
+                  </div>
+                  <div className="stat">
+                    <div className="stat-title">APY</div>
+                    <div className="stat-value">{Number(modalData.apy).toFixed(4)}% </div>
+                  </div>
+                  <div className="stat">
+                    <div className="stat-title">Your Liquidity</div>
+                    <div className="stat-value"> ${Number(modalData.liquidity).toFixed(9) || "0"}</div>
+                  </div>
+                  <div className="stat">
+                    <div className="stat-title">Total Reserve</div>
+                    <div className="flex flex-wrap justify-center text-base items-left">
+                      <div className="stat-value">
+                        <div className="flex items-left">
+                          <img src={getTokenIcon(modalData.tokenA)} alt="" className="mask mask-circle h-8 w-8 ml-2" />
+                          {Number(modalData.tokenABalance).toFixed(4)}
+                        </div>
+                        <div className="flex items-left ml-4">
+                          <img src={getTokenIcon(modalData.tokenB)} alt="" className="mask mask-circle h-8 w-8 ml-2" />
+                          {Number(modalData.tokenBBalance).toFixed(4)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="stat">
+                    <div className="stat-title">TVL</div>
+                    <div className="stat-value"> ${Number(modalData?.totalValuation) || "0"}</div>
+                  </div>
+                  <div className="stat">
+                    <div className="stat-title">Total Supply</div>
+                    <div className="stat-value"> {Number(modalData.totalSupply) || "0"}</div>
+                  </div>
+                </div>
 
                 <HyperPoolChart hyperPoolData={modalData.poolData} />
                 <UnitPriceChart unitPriceData={modalData.unitPriceData} />
                 <ValuationChart valuationData={modalData.valuationData} />
-
-                <p className="text-lg mb-4">
-                  <strong className="text-base">APY:</strong> {Number(modalData.apy).toFixed(4)}%
-                </p>
-                <p className="text-lg mb-4">
-                  <strong className="text-base">LP Price:</strong> {Number(modalData.unitPrice).toFixed(2)} USDC
-                </p>
-                <p className="text-lg mb-4">
-                  <strong className="text-base">Base Lower Price:</strong> {modalData.baseLowerPrice}
-                </p>
-                <p className="text-lg mb-4">
-                  <strong className="text-base">Base Upper Price:</strong> {modalData.baseUpperPrice}
-                </p>
-                <p className="text-lg mb-4">
-                  <strong className="text-base">Limit Lower Price:</strong> {modalData.limitLowerPrice}
-                </p>
-                <p className="text-lg mb-4">
-                  <strong className="text-base">Limit Upper Price:</strong> {modalData.limitUpperPrice}
-                </p>
-                <p className="text-lg mb-4">
-                  <strong className="text-base">Current Price:</strong> {modalData.currentPrice}
-                </p>
 
                 <div className="modal-action">
                   <button className="btn" onClick={closeModalDataModal}>
@@ -512,19 +664,22 @@ const HypervisorPage = () => {
           </div>
         )}
 
-      {isAddLiquidityModalOpen && (
+      {modalData && isAddLiquidityModalOpen && (
         <div className="modal modal-open">
           <div className="modal-box">
             <h3 className="font-bold text-lg">Add Liquidity</h3>
             <div>
-              <div className="mt-2">{getTokenSymbol(modalData?.tokenA)}</div>
+              <div className="mt-2">{getTokenSymbol(String(modalData?.tokenA))}</div>
               <input
                 type="text"
                 name="amount0"
                 className="input input-bordered w-full my-2"
-                placeholder={`Amount ${getTokenSymbol(modalData?.tokenA)}`}
+                placeholder={`Amount ${getTokenSymbol(String(modalData?.tokenA))}`}
                 value={liquidityData.amount0}
-                onChange={e => handleInputChange(e, setLiquidityData)}
+                onChange={async e => {
+                  handleInputChange(e, setLiquidityData),
+                    getDepositAmount(modalData?.address, modalData?.tokenA, modalData?.tokenB, e.target.value);
+                }}
               />
               <button
                 className="btn btn-sm btn-primary my-2"
@@ -534,6 +689,7 @@ const HypervisorPage = () => {
               >
                 Max
               </button>
+
               <div className="mt-2">{getTokenSymbol(modalData?.tokenB)}</div>
               <input
                 type="text"
@@ -557,6 +713,41 @@ const HypervisorPage = () => {
               >
                 Add Liquidity
               </button>
+              {/* <div className="my-2">Use Custom Token</div>
+              <select
+                className="select select-bordered w-full text-lg"
+                value={customToken}
+                onChange={async e => {
+                  await handleCustomToken(e.target.value);
+                  await getMaxBalance(e.target.value, "add", true);
+                  await fetchTokenBalance(e.target.value, signer?.account.address);
+                }}
+              >
+                <option value="">Select Token</option>
+                {(tokens as { address: string; symbol: string }[]).map(token => (
+                  <option key={token.address} value={token.address} className="text-lg">
+                    {token.symbol}
+                  </option>
+                ))}
+              </select>
+              <div className="mt-2"> {tokenBalance}</div>
+              <input
+                type="text"
+                className="input input-bordered w-full my-2"
+                placeholder={`Amount To Add`}
+                value={customAmount}
+                onChange={e => {
+                  setCustomAmount(e.target.value);
+                }}
+              />
+              <button
+                className="btn btn-sm btn-primary my-2"
+                onClick={async () => {
+                  await zapIn(modalData?.address, String(customToken), String(customAmount));
+                }}
+              >
+                Zap In
+              </button> */}
             </div>
             <div className="modal-action">
               <button className="btn" onClick={closeAddLiquidityModal}>
@@ -587,11 +778,32 @@ const HypervisorPage = () => {
             >
               Max
             </button>
+
             <button
               className="btn btn-danger w-full my-2"
               onClick={() => handleWithdraw(removeLiquidityData.hypervisorAddress)}
             >
               Withdraw
+            </button>
+            <select
+              className="select select-bordered w-full text-lg"
+              value={customToken}
+              onChange={async e => await handleCustomToken(e.target.value)}
+            >
+              <option value="">Select Token</option>
+              {(tokens as { address: string; symbol: string }[]).map(token => (
+                <option key={token.address} value={token.address} className="text-lg">
+                  {token.symbol}
+                </option>
+              ))}
+            </select>
+            <button
+              className="btn btn-danger w-full my-2"
+              onClick={async () => {
+                await zapOut(removeLiquidityData.hypervisorAddress, String(customToken), removeLiquidityData.amount);
+              }}
+            >
+              Zap Out
             </button>
             <div className="modal-action">
               <button className="btn" onClick={closeRemoveLiquidityModal}>

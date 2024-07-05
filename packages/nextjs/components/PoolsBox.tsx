@@ -4,17 +4,17 @@ import type React from "react";
 import { useEffect, useState } from "react";
 import useTokenList from "../hooks/useTokenList";
 import { UnitPriceChart, ValuationChart } from "./charts/Charts";
+import poolZapAbi from "baluni-contracts/artifacts/contracts/managers/BaluniV1PoolZap.sol/BaluniV1PoolZap.json";
 import baluniPoolAbi from "baluni-contracts/artifacts/contracts/pools/BaluniV1Pool.sol/BaluniV1Pool.json";
 import poolRegistryAbi from "baluni-contracts/artifacts/contracts/registry/BaluniV1PoolRegistry.sol/BaluniV1PoolRegistry.json";
 import registryAbi from "baluni-contracts/artifacts/contracts/registry/BaluniV1Registry.sol/BaluniV1Registry.json";
 import { INFRA } from "baluni/dist/api/";
 import { Contract, ethers } from "ethers";
-import { useWalletClient } from "wagmi";
 import { erc20Abi } from "viem";
+import { useWalletClient } from "wagmi";
 import Spinner from "~~/components/Spinner";
 import { clientToSigner } from "~~/utils/ethers";
 import { notification } from "~~/utils/scaffold-eth";
-import poolZapAbi from "baluni-contracts/artifacts/contracts/managers/BaluniV1PoolZap.sol/BaluniV1PoolZap.json";
 
 interface DeviationData {
   symbol: string;
@@ -23,11 +23,6 @@ interface DeviationData {
   targetWeight: string;
   currentWeight: string;
   slippage: string;
-}
-
-interface TokenBalance {
-  fromTokenBalance: string;
-  toTokenBalance: string;
 }
 
 interface LiquidityData {
@@ -127,7 +122,6 @@ const PoolsBox = () => {
   const [poolFactory, setPoolFactory] = useState<string | undefined>();
   const [poolPeriphery, setPoolPeriphery] = useState<string | undefined>();
   const [poolZap, setPoolZap] = useState<string | undefined>();
-
   const [pools, setPools] = useState<string[]>([]);
   const [poolSymbols, setPoolSymbols] = useState<{ [key: string]: string }>({});
   const [poolData, setPoolData] = useState<any>({});
@@ -562,6 +556,26 @@ const PoolsBox = () => {
     setCustomToken(token);
   }
 
+  const handleInputChange = async (
+    e: React.ChangeEvent<HTMLSelectElement> | React.ChangeEvent<HTMLInputElement>,
+    setter: React.Dispatch<React.SetStateAction<any>>,
+  ) => {
+    if (!signer) return;
+    const { name, value } = e.target;
+    setter((prevState: any) => ({ ...prevState, [name]: value }));
+
+    if (name === "fromToken" || name === "toToken" || name === "token") {
+      // const account = signer.account.address;
+      // if ((name === "fromToken" || name === "token") && value) {
+      //   const balance = await fetchTokenBalance(value, account);
+      //   setTokenBalances(prevState => ({ ...prevState, fromTokenBalance: balance }));
+      // } else if (name === "toToken" && value) {
+      //   const balance = await fetchTokenBalance(value, account);
+      //   setTokenBalances(prevState => ({ ...prevState, toTokenBalance: balance }));
+      // }
+    }
+  };
+
   return (
     <div className="container mx-auto p-6 mb-8">
       <button className="button btn-base rounded-none" onClick={fetchData}>
@@ -586,7 +600,14 @@ const PoolsBox = () => {
           <tbody className="text-xl">
             {poolData &&
               pools.map((pool, index) => {
-                const stats = statisticsData.find(stat => stat.address === pool);
+                let stats;
+
+                if (statisticsData.length > 0) {
+                  stats = statisticsData.find(stat => stat.address === pool);
+                } else {
+                  stats = null;
+                }
+
                 return (
                   <tr
                     key={index}
@@ -622,13 +643,13 @@ const PoolsBox = () => {
                     </td>
                     <td>
                       <div>
+                        ${Number(tlvs[pool]).toFixed(4)}
                         {stats ? (
                           <div>
-                            {Number(tlvs[pool]).toFixed(4)} USD
                             {stats.valuation.daily ? (
                               <span className={stats.valuation.daily > 0 ? "text-green-500" : "text-red-500"}>
                                 {/* Aggiunta di una freccia su o giù basata sul valore */}
-                                {stats.valuation.daily > 0 ? " ↑" : " ↓"} {stats.valuation.daily.toFixed(2)}
+                                {stats.valuation.daily > 0 ? " ↑" : " ↓"} {stats.valuation.daily.toFixed(4)}
                               </span>
                             ) : (
                               " : 0"
@@ -639,12 +660,12 @@ const PoolsBox = () => {
                         )}
                       </div>
                     </td>{" "}
-                    <td>{Number(liquidityBalances[pool]) || "0"}</td>
+                    <td>{Number(liquidityBalances[pool]).toFixed(6) || "0"}</td>
                     <td>
                       <div>
+                        {Number(poolData[pool].unitPrice).toFixed(4)}
                         {stats ? (
                           <div>
-                            {Number(poolData[pool].unitPrice)}
                             {stats.unitPrice.daily ? (
                               <span className={stats.unitPrice.daily > 0 ? "text-green-500" : "text-red-500"}>
                                 {/* Aggiunta di una freccia su o giù basata sul valore */}
@@ -707,6 +728,11 @@ const PoolsBox = () => {
                         onClick={async () => {
                           handlePoolClick(pool);
                           fetchBalances(pool);
+                          // reset removeLiquidity Data
+                          setRemoveLiquidityData({
+                            poolAddress: pool,
+                            amount: "",
+                          });
                           openRemoveLiquidityModal();
                         }}
                       >
@@ -735,7 +761,7 @@ const PoolsBox = () => {
         <div className="p-4 shadow rounded">
           <input type="checkbox" id="pool-info-modal" className="modal-toggle" />
           <div className="modal modal-open bg-blend-exclusion">
-            <div className="modal-box w-11/12 max-w-5xl md:9/12 relative">
+            <div className="modal-box w-11/12 max-w-5xl md:w-9/12 bg-base-300">
               <label
                 htmlFor="pool-info-modal"
                 className="btn btn-sm btn-circle absolute right-2 top-2 text-red-500"
@@ -748,13 +774,13 @@ const PoolsBox = () => {
                 <strong className="text-base">Address:</strong> {modalData.address}
               </p>
 
-              <p className="text-xl mb-2">
-                <strong className="text-base text-xl">Total Liquidity:</strong>{" "}
-                {Number(ethers.utils.formatUnits(modalData.totalLiquidity, 6)).toFixed(4)} USD
-              </p>
-
-              <UnitPriceChart unitPriceData={unitPriceData} />
-              <ValuationChart valuationData={valuationData} />
+              <div className="stas">
+                <div className="stat-title">Total Liquidity:</div>
+                <div className="stat-value">
+                  {" "}
+                  ${Number(ethers.utils.formatUnits(modalData.totalLiquidity, 6)).toFixed(4)}
+                </div>{" "}
+              </div>
 
               {modalData.assets.map(
                 (
@@ -791,16 +817,16 @@ const PoolsBox = () => {
                 ) => {
                   const token = tokens.find((token: Token) => token.symbol === asset.symbol) as unknown as Token;
                   return (
-                    <div key={index} className="grid grid-cols-2 gap-4 mb-4">
+                    <div key={index} className="grid grid-cols-2 gap-2 mb-4 mt-4">
                       <div className="flex items-center">
                         {token && (
                           <img src={token.logoURI} alt={token.symbol} className="mask mask-circle w-10 h-10 mr-2" />
                         )}
                         <div>
-                          <strong className="text-base"> {asset.symbol}: </strong> {Number(asset.reserve).toFixed(4)}
+                          <strong className="text-base">{asset.symbol}:</strong> {Number(asset.reserve).toFixed(4)}
                         </div>
                       </div>
-                      <div>
+                      <div className="text-left">
                         <p className="mb-1">
                           <strong className="text-base">Slippage:</strong> {Number(asset.slippage) / 100}%
                         </p>
@@ -812,11 +838,11 @@ const PoolsBox = () => {
                           {(Number(asset.deviation) / 100).toFixed(2)}%
                         </p>
                         <p className="mb-1">
-                          <strong className="text-base">Target:</strong>
-                          {(Number(asset.targetWeight) / 100).toFixed(2)}%
+                          <strong className="text-base">Target:</strong> {(Number(asset.targetWeight) / 100).toFixed(2)}
+                          %
                         </p>
                         <p className="mb-1">
-                          <strong className="text-base">Actual:</strong>
+                          <strong className="text-base">Actual:</strong>{" "}
                           {(Number(asset.currentWeight) / 100).toFixed(2)}%
                         </p>
                       </div>
@@ -824,9 +850,10 @@ const PoolsBox = () => {
                   );
                 },
               )}
-              <p className="text-lg mb-4">
-                <strong className="text-base">LP Price:</strong> {Number(modalData.unitPrice).toFixed(2)} USDC
-              </p>
+
+              <UnitPriceChart unitPriceData={unitPriceData} />
+              <ValuationChart valuationData={valuationData} />
+
               <button className="btn btn-primary mt-4" onClick={() => handleRebalance(modalData.address)}>
                 Perform Rebalance
               </button>
@@ -882,7 +909,7 @@ const PoolsBox = () => {
               value={customToken}
               onChange={async e => {
                 await handleCustomToken(e.target.value);
-                await fetchTokenBalance(String(e.target.value), signer?.account.address);
+                await fetchTokenBalance(String(e.target.value), signer?.account.address as unknown as any);
               }}
             >
               <option value="">Select Token</option>
@@ -906,7 +933,7 @@ const PoolsBox = () => {
             <button
               className="btn btn-sm btn-primary my-2"
               onClick={async () => {
-                await zapIn(liquidityData.poolAddress, customToken, customAmount);
+                await zapIn(liquidityData.poolAddress, String(customToken), String(customAmount));
               }}
             >
               Zap In
@@ -957,7 +984,7 @@ const PoolsBox = () => {
             <button
               className="btn btn-danger w-full my-2"
               onClick={async () => {
-                await zapOut(removeLiquidityData.poolAddress, customToken, removeLiquidityData.amount);
+                await zapOut(removeLiquidityData.poolAddress, String(customToken), removeLiquidityData.amount);
               }}
             >
               Zap Out

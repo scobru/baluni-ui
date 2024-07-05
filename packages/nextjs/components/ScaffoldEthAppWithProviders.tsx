@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
 import { RainbowKitProvider, darkTheme, lightTheme } from "@rainbow-me/rainbowkit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useTheme } from "next-themes";
@@ -21,7 +20,7 @@ const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
     <>
       <div className="flex flex-col min-h-screen font-reddit">
         <Header />
-        <main className="relative flex flex-col flex-1 bg-gradient-to-br to-base-100 from-base-300">{children}</main>
+        <main className="relative flex flex-col flex-1 bg-base-200">{children}</main>
         <Footer />
       </div>
       <Toaster />

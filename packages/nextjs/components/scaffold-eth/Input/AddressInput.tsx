@@ -99,11 +99,7 @@ export const AddressInput = ({ value, name, placeholder, onChange, disabled }: C
               <span className="w-[35px]">
                 {
                   // eslint-disable-next-line
-									<img
-										className="w-full rounded-full"
-										src={ensAvatar}
-										alt={`${ensAddress} avatar`}
-									/>
+                  <img className="w-full rounded-full" src={ensAvatar} alt={`${ensAddress} avatar`} />
                 }
               </span>
             ) : null}

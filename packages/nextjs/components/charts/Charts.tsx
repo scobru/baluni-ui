@@ -12,7 +12,6 @@ import {
   Tooltip,
 } from "chart.js";
 import "chartjs-adapter-date-fns";
-import { ethers } from "ethers";
 import { Line } from "react-chartjs-2";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, TimeScale, Filler);
@@ -64,15 +63,25 @@ function formatUnitPrice(unitPrice: string) {
   return Number(unitPrice);
 }
 
+function getMinMax(data: number[]) {
+  return {
+    min: Math.min(...data),
+    max: Math.max(...data),
+  };
+}
+
 export const InterestChart: React.FC<InterestChartProps> = ({ interestData }) => {
   if (!interestData) return null;
   const labels = interestData.map(data => data.timestamp);
+  const interestValues = interestData.map(data => formatUnitPrice(data.interestEarned));
+  const { min, max } = getMinMax(interestValues);
+
   const data = {
     labels,
     datasets: [
       {
         label: "Interest Earned",
-        data: interestData.map(data => formatUnitPrice(data.interestEarned)),
+        data: interestValues,
         fill: true,
         backgroundColor: "rgba(75, 192, 192, 0.2)",
         borderColor: "rgba(75, 192, 192, 1)",
@@ -156,7 +165,8 @@ export const InterestChart: React.FC<InterestChartProps> = ({ interestData }) =>
         },
       },
       y: {
-        beginAtZero: true,
+        min: min,
+        max: max,
         title: {
           display: true,
           text: "Interest Earned (USDC)",
@@ -188,13 +198,15 @@ export const InterestChart: React.FC<InterestChartProps> = ({ interestData }) =>
 export const ValuationChart: React.FC<ValuationChartProps> = ({ valuationData }) => {
   if (!valuationData) return null;
   const labels = valuationData.map(data => data.timestamp);
+  const valuationValues = valuationData.map(data => formatUnitPrice(data.totalValuation));
+  const { min, max } = getMinMax(valuationValues);
 
   const data = {
     labels,
     datasets: [
       {
         label: "Total Valuation",
-        data: valuationData.map(data => formatUnitPrice(data.totalValuation)),
+        data: valuationValues,
         fill: true,
         backgroundColor: "rgba(75, 192, 192, 0.2)",
         borderColor: "rgba(75, 192, 192, 1)",
@@ -252,7 +264,9 @@ export const ValuationChart: React.FC<ValuationChartProps> = ({ valuationData })
         ticks: {},
       },
       y: {
-        beginAtZero: true,
+        min: min,
+        max: max,
+        beginAtZero: false,
         title: {
           display: true,
           text: "Total Valuation (USDC)",
@@ -274,12 +288,15 @@ export const ValuationChart: React.FC<ValuationChartProps> = ({ valuationData })
 export const UnitPriceChart: React.FC<UnitPriceChartProps> = ({ unitPriceData }) => {
   if (!unitPriceData) return null;
   const labels = unitPriceData.map(data => data.timestamp);
+  const unitPriceValues = unitPriceData.map(data => formatUnitPrice(data.unitPrice));
+  const { min, max } = getMinMax(unitPriceValues);
+
   const data = {
     labels,
     datasets: [
       {
         label: "Unit Price",
-        data: unitPriceData.map(data => formatUnitPrice(data.unitPrice)),
+        data: unitPriceValues,
         fill: true,
         backgroundColor: "rgba(75, 192, 192, 0.2)",
         borderColor: "rgba(75, 192, 192, 1)",
@@ -304,7 +321,6 @@ export const UnitPriceChart: React.FC<UnitPriceChartProps> = ({ unitPriceData })
       tooltip: {
         enabled: true,
         backgroundColor: "rgba(0, 0, 0, 0.7)",
-
         callbacks: {
           label: (context: any) => {
             let label = context.dataset.label || "";
@@ -337,7 +353,9 @@ export const UnitPriceChart: React.FC<UnitPriceChartProps> = ({ unitPriceData })
         },
       },
       y: {
-        beginAtZero: true,
+        min: min,
+        max: max,
+        beginAtZero: false,
         title: {
           display: true,
           text: "Unit Price (USDC)",
@@ -360,12 +378,29 @@ export const HyperPoolChart: React.FC<HyperPoolChartProps> = ({ hyperPoolData })
   console.log("HyperPoolData", hyperPoolData);
   if (!hyperPoolData) return null;
   const labels = hyperPoolData.map(data => data.timestamp);
+
+  const baseLowerPriceValues = hyperPoolData.map(data => formatUnitPrice(data.baseLowerPrice));
+  const baseUpperPriceValues = hyperPoolData.map(data => formatUnitPrice(data.baseUpperPrice));
+  const limitLowerPriceValues = hyperPoolData.map(data => formatUnitPrice(data.limitLowerPrice));
+  const limitUpperPriceValues = hyperPoolData.map(data => formatUnitPrice(data.limitUpperPrice));
+  const currentPriceValues = hyperPoolData.map(data => formatUnitPrice(data.currentPrice));
+
+  const allPrices = [
+    ...baseLowerPriceValues,
+    ...baseUpperPriceValues,
+    ...limitLowerPriceValues,
+    ...limitUpperPriceValues,
+    ...currentPriceValues,
+  ];
+
+  const { min, max } = getMinMax(allPrices);
+
   const data = {
     labels,
     datasets: [
       {
         label: "Base Lower Price",
-        data: hyperPoolData.map(data => formatUnitPrice(data.baseLowerPrice)),
+        data: baseLowerPriceValues,
         fill: false,
         borderColor: "rgba(255, 99, 132, 1)",
         backgroundColor: "rgba(255, 99, 132, 0.2)",
@@ -376,7 +411,7 @@ export const HyperPoolChart: React.FC<HyperPoolChartProps> = ({ hyperPoolData })
       },
       {
         label: "Base Upper Price",
-        data: hyperPoolData.map(data => formatUnitPrice(data.baseUpperPrice)),
+        data: baseUpperPriceValues,
         fill: false,
         borderColor: "rgba(54, 162, 235, 1)",
         backgroundColor: "rgba(54, 162, 235, 0.2)",
@@ -387,7 +422,7 @@ export const HyperPoolChart: React.FC<HyperPoolChartProps> = ({ hyperPoolData })
       },
       {
         label: "Limit Lower Price",
-        data: hyperPoolData.map(data => formatUnitPrice(data.limitLowerPrice)),
+        data: limitLowerPriceValues,
         fill: false,
         borderColor: "rgba(75, 192, 192, 1)",
         backgroundColor: "rgba(75, 192, 192, 0.2)",
@@ -398,7 +433,7 @@ export const HyperPoolChart: React.FC<HyperPoolChartProps> = ({ hyperPoolData })
       },
       {
         label: "Limit Upper Price",
-        data: hyperPoolData.map(data => formatUnitPrice(data.limitUpperPrice)),
+        data: limitUpperPriceValues,
         fill: false,
         borderColor: "rgba(153, 102, 255, 1)",
         backgroundColor: "rgba(153, 102, 255, 0.2)",
@@ -409,7 +444,7 @@ export const HyperPoolChart: React.FC<HyperPoolChartProps> = ({ hyperPoolData })
       },
       {
         label: "Current Price",
-        data: hyperPoolData.map(data => formatUnitPrice(data.currentPrice)),
+        data: currentPriceValues,
         fill: false,
         borderColor: "rgba(255, 206, 86, 1)",
         backgroundColor: "rgba(255, 206, 86, 0.2)",
@@ -423,13 +458,15 @@ export const HyperPoolChart: React.FC<HyperPoolChartProps> = ({ hyperPoolData })
 
   const options = {
     responsive: true,
-    maintainAspectRatio: false,
+    maintainAspectRatio: true,
     plugins: {
       legend: {
         display: true,
         labels: {
           font: {
             size: 14,
+            color: "white",
+            backgrounColor: "black",
             family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
             weight: "bold",
           },
@@ -478,6 +515,8 @@ export const HyperPoolChart: React.FC<HyperPoolChartProps> = ({ hyperPoolData })
           text: "Timestamp",
           font: {
             size: 16,
+            color: "white",
+            backgrounColor: "black",
             family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
             weight: "bold",
           },
@@ -485,17 +524,23 @@ export const HyperPoolChart: React.FC<HyperPoolChartProps> = ({ hyperPoolData })
         ticks: {
           font: {
             size: 12,
+            color: "white",
+            backgrounColor: "black",
             family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
           },
         },
       },
       y: {
-        beginAtZero: true,
+        min: min,
+        max: max,
+        beginAtZero: false,
         title: {
           display: true,
           text: "Price (USDC)",
           font: {
             size: 16,
+            color: "white",
+            backgrounColor: "black",
             family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
             weight: "bold",
           },
@@ -503,6 +548,8 @@ export const HyperPoolChart: React.FC<HyperPoolChartProps> = ({ hyperPoolData })
         ticks: {
           font: {
             size: 12,
+            color: "white",
+            backgrounColor: "black",
             family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
           },
           callback: (value: any) => "$" + value,

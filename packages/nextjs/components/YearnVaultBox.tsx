@@ -457,11 +457,11 @@ const YearnVaultBox = () => {
                 >
                   <td>
                     <div className="flex flex-wrap  items-center gap-3">
-                      <img
+                      {/* <img
                         src={vaultData[vault]?.yearnData[0]?.icon}
                         alt={`${vaultData[vault]?.symbol} icon`}
                         className="w-14 h-14 "
-                      />
+                      /> */}
                       <div className="justify-center text-3xl">
                         {vaultData[vault]?.assetsSymbol.map((symbol, index) => (
                           <img
@@ -478,9 +478,9 @@ const YearnVaultBox = () => {
                     <div className="font-bold">{vaultData[vault]?.symbol}</div>
                     <div className="text-sm opacity-50">{poolSymbols[vault]}</div>
                   </td>
-                  <td>{Number(tlvs[vault]).toFixed(4)}</td>
+                  <td>${Number(tlvs[vault]).toFixed(4)}</td>
                   <td>{Number(liquidityBalances[vault]).toFixed(5) || "0"}</td>
-                  <td>{Number(vaultData[vault]?.unitPrice).toFixed(5) || "0"}</td>
+                  <td>${Number(vaultData[vault]?.unitPrice).toFixed(5) || "0"}</td>
                   <td>{(vaultData[vault]?.yearnData[0]?.apr.netAPR * 100).toFixed(2)}%</td>
                   <td>
                     {stats ? (
@@ -543,8 +543,11 @@ const YearnVaultBox = () => {
         <div className="p-4 shadow rounded">
           <input type="checkbox" id="vault-info-modal" className="modal-toggle" />
           <div className="modal modal-open bg-blend-exclusion">
-            <div className="modal-box w-11/12 max-w-5xl md:9/12 relative">
-              <h3 className="text-xl font-bold">Vault Info</h3>
+            <div className="modal-box w-11/12 max-w-5xl md:w-9/12 bg-base-300">
+              <h3 className="font-bold text-xl">Vault Info</h3>
+              <p className="text-lg mb-2">
+                <strong className="text-base">Address:</strong> {selectedVault}
+              </p>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 text-center">
                 <div className="stat">
                   <div className="stat-title text-lg">APR</div>
@@ -602,7 +605,7 @@ const YearnVaultBox = () => {
                   </button>
                 </div>
               </div>
-              <div className="card bg-base-100 p-6 lg:p-8 w-full">
+              <div className="card  p-6 lg:p-8 w-full">
                 <h2 className="card-title text-3xl sm:text-4xl mb-6 sm:mb-10">Charts</h2>
                 <div className="w-full overflow-x-auto">
                   <ValuationChart valuationData={valuationData} />
@@ -616,9 +619,9 @@ const YearnVaultBox = () => {
               </div>
               <div className="p-6 rounded shadow mt-6">
                 <span className="text-xl font-bold mt-2">Strategy Objective</span>
-                <div className="text-lg font-semibold text-gray-700 mt-2">{getVaultDescription().objective}</div>
+                <div className="text-lg font-semibold ">{getVaultDescription().objective}</div>
                 <span className="text-xl font-bold mt-2">Strategy Description</span>
-                <div className="text-md text-gray-600 mt-2">{getVaultDescription()?.description}</div>
+                <div className="text-md opacity-70 mt-2">{getVaultDescription()?.description}</div>
               </div>
               <div className="modal-action">
                 <button className="btn text-md" onClick={closeVaultInfoModal}>
@@ -631,7 +634,7 @@ const YearnVaultBox = () => {
       )}
       {isDepositModalOpen && (
         <div className="modal modal-open">
-          <div className="modal-box">
+          <div className="modal-box bg-base-300">
             <h3 className="text-xl font-bold">Deposit</h3>
             <input
               type="text"
@@ -654,7 +657,7 @@ const YearnVaultBox = () => {
       )}
       {isWithdrawModalOpen && (
         <div className="modal modal-open">
-          <div className="modal-box">
+          <div className="modal-box bg-base-300">
             <h3 className="text-xl font-bold">Withdraw</h3>
             <input
               type="text"

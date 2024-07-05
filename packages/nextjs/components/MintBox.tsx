@@ -5,18 +5,18 @@ import registryABI from "baluni-contracts/artifacts/contracts/registry/BaluniV1R
 import { RouterABI } from "baluni/dist/api";
 import { INFRA } from "baluni/dist/api/constants";
 import { ethers } from "ethers";
-import { useWalletClient } from "wagmi";
 import { erc20Abi } from "viem";
-import { useScaffoldEventSubscriber } from "~~/hooks/scaffold-eth";
+import { useWalletClient } from "wagmi";
+import { useScaffoldEventHistory } from "~~/hooks/scaffold-eth";
 import { clientToSigner } from "~~/utils/ethers";
 import { notification } from "~~/utils/scaffold-eth";
 import { playSound } from "~~/utils/sounds";
 
 const MintBox = () => {
-  useScaffoldEventSubscriber({
+  useScaffoldEventHistory({
     contractName: "Router",
     eventName: "Mint",
-    listener: (logs: any) => {
+    filters: (logs: any) => {
       const amount = logs.args.value;
       const to = logs.args.user;
       if (to == signer?.account.address) {
@@ -24,6 +24,7 @@ const MintBox = () => {
         playSound();
       }
     },
+    fromBlock: BigInt(58923522),
   });
 
   const [amount, setAmount] = useState("");

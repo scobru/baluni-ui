@@ -9,8 +9,8 @@ import poolRegistryAbi from "baluni-contracts/artifacts/contracts/registry/Balun
 import registryAbi from "baluni-contracts/artifacts/contracts/registry/BaluniV1Registry.sol/BaluniV1Registry.json";
 import { INFRA, NATIVETOKENS } from "baluni/dist/api/";
 import { Contract, ethers } from "ethers";
-import { useWalletClient } from "wagmi";
 import { erc20Abi } from "viem";
+import { useWalletClient } from "wagmi";
 import Spinner from "~~/components/Spinner";
 import { clientToSigner } from "~~/utils/ethers";
 import { notification } from "~~/utils/scaffold-eth";
@@ -93,7 +93,7 @@ const SwapBox = () => {
     const poolPeriphery = await registry.getBaluniPoolPeriphery();
     setPoolFactory(poolFactory);
     setPoolPeriphery(poolPeriphery);
-    const chaiId = signer.chain.id;
+    const chaiId = signer?.chain.id;
     setChainID(chaiId);
   };
 
@@ -264,31 +264,33 @@ const SwapBox = () => {
       <h2 className="card-title text-3xl mb-8">Swap</h2>
       <div className="mb-4 mt-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">From Token</label>
-        <div className="relative">
-          <select
-            name="fromToken"
-            className="select select-bordered w-full mb-2"
-            value={swapData.fromToken}
-            onChange={e => handleInputChange(e, setSwapData)}
-          >
-            <option disabled value="">
-              Select From Token
-            </option>
-            <option value={NATIVETOKENS[chainID].NATIVE}>NATIVE</option>
-            {filteredTokens.map((token: Token) => (
-              <option key={token.address} value={token.address}>
-                {token.symbol}
+        {NATIVETOKENS && (
+          <div className="relative">
+            <select
+              name="fromToken"
+              className="select select-bordered w-full mb-2"
+              value={swapData.fromToken}
+              onChange={e => handleInputChange(e, setSwapData)}
+            >
+              <option disabled value="">
+                Select From Token
               </option>
-            ))}
-          </select>
-          {swapData.fromToken && (
-            <img
-              src={getTokenIcon(swapData.fromToken)}
-              alt="From Token"
-              className="absolute top-1/2 right-3 transform -translate-y-1/2 w-5 h-5"
-            />
-          )}
-        </div>
+              <option value={NATIVETOKENS[chainID].NATIVE}>NATIVE</option>
+              {filteredTokens.map((token: Token) => (
+                <option key={token.address} value={token.address}>
+                  {token.symbol}
+                </option>
+              ))}
+            </select>
+            {swapData.fromToken && (
+              <img
+                src={getTokenIcon(swapData.fromToken)}
+                alt="From Token"
+                className="absolute top-1/2 right-3 transform -translate-y-1/2 w-5 h-5"
+              />
+            )}
+          </div>
+        )}
         <p className="text-sm">Balance: {tokenBalances.fromTokenBalance}</p>
       </div>
       <div className="mb-4">

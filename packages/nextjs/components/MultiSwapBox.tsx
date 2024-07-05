@@ -8,8 +8,8 @@ import { INFRA, RouterABI, buildSwapOdos } from "baluni/dist/api/";
 import { waitForTx } from "baluni/dist/core/utils/web3/networkUtils";
 import { type BigNumber, Contract, ethers } from "ethers";
 import { v4 as uuidv4 } from "uuid";
-import { type UseClientReturnType, usePublicClient, useWalletClient } from "wagmi";
 import { erc20Abi } from "viem";
+import { type UseClientReturnType, usePublicClient, useWalletClient } from "wagmi";
 import Spinner from "~~/components/Spinner";
 import { notification } from "~~/utils/scaffold-eth";
 
