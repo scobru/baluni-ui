@@ -217,18 +217,18 @@ const SwapBox = () => {
     const deadline = Math.floor(Date.now() / 1000) + 30; // 10 minutes from now
     const periphery = new ethers.Contract(poolPeriphery, poolPeripheryAbi.abi, clientToSigner(signer));
 
-    if (fromToken == NATIVETOKENS[chainID].WRAPPED && fromToken == NATIVETOKENS[chainID].NATIVE) {
+    if (fromToken == NATIVETOKENS[137].WRAPPED && fromToken == NATIVETOKENS[137].NATIVE) {
       try {
-        const token = new ethers.Contract(NATIVETOKENS[chainID].WRAPPED, WETHAbi, clientToSigner(signer));
+        const token = new ethers.Contract(NATIVETOKENS[137].WRAPPED, WETHAbi, clientToSigner(signer));
         const tx = await token.withdraw(ethers.utils.parseUnits(fromAmount, decimals));
         await tx.wait();
         notification.success("Swap completed successfully!");
       } catch (error: any) {
         notification.error(error && error.reason ? String(error.reason) : "An error occurred while swapping tokens.");
       }
-    } else if (toToken == NATIVETOKENS[chainID].WRAPPED && toToken == NATIVETOKENS[chainID].NATIVE) {
+    } else if (toToken == NATIVETOKENS[137].WRAPPED && toToken == NATIVETOKENS[137].NATIVE) {
       try {
-        const token = new ethers.Contract(NATIVETOKENS[chainID].WRAPPED, WETHAbi, clientToSigner(signer));
+        const token = new ethers.Contract(NATIVETOKENS[137].WRAPPED, WETHAbi, clientToSigner(signer));
         const tx = await token.deposit({ value: ethers.utils.parseUnits(fromAmount, decimals) });
         await tx.wait();
         notification.success("Swap completed successfully!");
@@ -275,7 +275,7 @@ const SwapBox = () => {
               <option disabled value="">
                 Select From Token
               </option>
-              <option value={NATIVETOKENS[chainID].NATIVE}>NATIVE</option>
+              <option value={NATIVETOKENS[137].NATIVE}>NATIVE</option>
               {filteredTokens.map((token: Token) => (
                 <option key={token.address} value={token.address}>
                   {token.symbol}
@@ -305,7 +305,7 @@ const SwapBox = () => {
             <option disabled value="">
               Select To Token
             </option>
-            <option value={NATIVETOKENS[chainID].NATIVE}>NATIVE</option>
+            <option value={NATIVETOKENS[137].NATIVE}>NATIVE</option>
 
             {filteredTokens.map((token: Token) => (
               <option key={token.address} value={token.address}>

@@ -83,9 +83,9 @@ export const GET_POOL_DATA = gql`
 `;
 
 function calculateAPY(feesUSD: number, volumeUSD: number, periodInDays: number) {
-  // return (feesUSD / volumeUSD) * (365 / periodInDays) * 100;
+  return (feesUSD / volumeUSD) * (365 / periodInDays) * 100;
 
-  return (feesUSD / volumeUSD) * 24;
+  //return (feesUSD / volumeUSD) * 24;
 }
 
 const setupDatabase = async () => {

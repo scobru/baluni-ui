@@ -202,7 +202,23 @@ const YearnVaultBox = () => {
     };
 
     fetchData();
-  }, [vaultRegistry]);
+  }, [signer, vaultRegistry]);
+
+  const fetchWithRetry = async (url, options, retries = 1) => {
+    for (let i = 0; i < retries; i++) {
+      try {
+        const response = await fetch(url, options);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      } catch (error) {
+        if (i === retries - 1) {
+          throw error;
+        }
+      }
+    }
+  };
 
   const getVaults = async () => {
     if (!signer || !vaultRegistry) return;
@@ -243,17 +259,22 @@ const YearnVaultBox = () => {
       const quoteAssetContract = new ethers.Contract(quoteAsset, erc20Abi, clientToSigner(signer));
       const quoteDecimal = await quoteAssetContract.decimals();
       const balanceQuote = await quoteAssetContract.balanceOf(vaultAddress);
-      const chainId = await signer.getChainId();
+      const chainId = 137;
       const unitPrice = await vault.unitPrice();
 
       let data;
-
       try {
-        const response = await fetch(`https://ydaemon.yearn.fi/${String(chainId)}/vaults/all`);
-        data = await response.json();
+        data = await fetchWithRetry(`https://baluni-api2.scobrudot.dev/${String(chainId)}/yearn-v3/vaults`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          mode: "cors",
+        });
       } catch (error) {
         console.error("Error fetching vault data:", error);
         setLoading(false);
+        return;
       }
 
       const filteredData = data.filter((vault: any) => vault.address === yearnVault);
