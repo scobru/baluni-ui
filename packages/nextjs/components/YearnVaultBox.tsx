@@ -204,7 +204,7 @@ const YearnVaultBox = () => {
     fetchData();
   }, [signer, vaultRegistry]);
 
-  const fetchWithRetry = async (url, options, retries = 1) => {
+  const fetchWithRetry = async (url: RequestInfo | URL, options: RequestInit | undefined, retries = 1) => {
     for (let i = 0; i < retries; i++) {
       try {
         const response = await fetch(url, options);
@@ -222,6 +222,7 @@ const YearnVaultBox = () => {
 
   const getVaults = async () => {
     if (!signer || !vaultRegistry) return;
+    setLoading(true);
     const factory = new ethers.Contract(vaultRegistry, vaultRegistryAbi.abi, clientToSigner(signer));
     const vaultsAddress = await factory.getAllVaults();
     setVaults(vaultsAddress);
@@ -301,6 +302,7 @@ const YearnVaultBox = () => {
     setLiquidityBalances(balances);
     setTlvs(tlvs);
     setPoolSymbols(symbols);
+    setLoading(false);
   };
 
   const setContract = async () => {
@@ -449,6 +451,9 @@ const YearnVaultBox = () => {
 
   return (
     <div className="container mx-auto p-6 mb-8">
+      <button className="button btn-base rounded-none" onClick={() => getVaults()}>
+        <img src="https://www.svgrepo.com/download/470882/refresh.svg" alt="" className="mask mask-circle h-10 w-10" />
+      </button>
       <div className="overflow-x-auto">
         <table className="table">
           <thead>

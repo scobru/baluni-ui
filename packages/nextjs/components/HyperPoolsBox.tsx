@@ -539,12 +539,12 @@ const HypervisorPage = () => {
                       </div>
                     </td>
                     <td className="">${Number(hypervisorData[index]?.totalValuation) || "0"}</td>
-                    <td className="">{Number(hypervisorData[index]?.liquidity).toPrecision(10) || "0"}</td>
-                    <td className="">{Number(hypervisorData[index]?.apy).toFixed(4) || "0"}</td>
+                    <td className="">{String(hypervisorData[index]?.liquidity) || "0"}</td>
+                    <td className="">{Number(hypervisorData[index]?.apy).toFixed(4) || "0"}%</td>
                     <td>
                       <div>
                         {hypervisorData[index]?.totalSupply ? (
-                          <div>{Number(hypervisorData[index]?.totalSupply)}</div>
+                          <div>{String(hypervisorData[index]?.totalSupply)}</div>
                         ) : (
                           <div>0</div>
                         )}
@@ -623,7 +623,7 @@ const HypervisorPage = () => {
                   </div>
                   <div className="stat">
                     <div className="stat-title">Your Liquidity</div>
-                    <div className="stat-value"> ${Number(modalData.liquidity).toFixed(9) || "0"}</div>
+                    <div className="stat-value"> ${String(modalData.liquidity) || "0"}</div>
                   </div>
                   <div className="stat">
                     <div className="stat-title">Total Reserve</div>
@@ -646,7 +646,7 @@ const HypervisorPage = () => {
                   </div>
                   <div className="stat">
                     <div className="stat-title">Total Supply</div>
-                    <div className="stat-value"> {Number(modalData.totalSupply) || "0"}</div>
+                    <div className="stat-value"> {String(modalData.totalSupply) || "0"}</div>
                   </div>
                 </div>
 

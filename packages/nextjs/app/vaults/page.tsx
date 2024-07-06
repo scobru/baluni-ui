@@ -12,17 +12,7 @@ const YVaults: NextPage = () => {
           Yield Vaults
         </div>
       </div>{" "}
-      <div className=" w-fit my-10 mx-20">
-        <img
-          src="https://cryptologos.cc/logos/yearn-finance-yfi-logo.png"
-          alt=""
-          className="bg-black   rounded-xl mask mask-circle w-16 h-16 mr-2 "
-        />{" "}
-      </div>
       <YearnVaultBox />
-      <div className=" text-center mx-auto my-10 text-sm font-semibold ">
-        🪄 Check the console to see the magic happen{" "}
-      </div>
     </div>
   );
 };

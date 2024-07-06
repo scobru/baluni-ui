@@ -148,7 +148,7 @@ export const Header = () => {
               {" "}
               {/* Aggiungi items-center qui */}
               <span className="font-bold leading-tight text-3xl">BALUNI</span>
-              <span className="text-sm font-semibold">v1.0.0</span>
+              <span className="text-sm font-semibold"></span>
             </div>
           </div>
         </Link>
