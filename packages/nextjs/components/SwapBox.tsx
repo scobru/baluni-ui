@@ -64,7 +64,6 @@ const SwapBox = () => {
   const [poolExists, setPoolExists] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(true);
   const [toReserve, setToReserve] = useState<string>("");
-  const [chainID, setChainID] = useState<number>(0);
 
   useEffect(() => {
     if (!signer) return;
@@ -93,8 +92,6 @@ const SwapBox = () => {
     const poolPeriphery = await registry.getBaluniPoolPeriphery();
     setPoolFactory(poolFactory);
     setPoolPeriphery(poolPeriphery);
-    const chaiId = signer?.chain.id;
-    setChainID(chaiId);
   };
 
   if (loading) {

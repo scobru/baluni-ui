@@ -293,8 +293,8 @@ __metadata:
     "@ethersproject/providers": ^5.7.2
     "@heroicons/react": ^2.0.11
     "@metamask/contract-metadata": ^2.5.0
-    "@rainbow-me/rainbowkit": ^2.1.2
-    "@tanstack/react-query": ^5.49.2
+    "@rainbow-me/rainbowkit": ^2.1.3
+    "@tanstack/react-query": ^5.51.1
     "@trivago/prettier-plugin-sort-imports": ^4.3.0
     "@types/node": ^17.0.35
     "@types/nprogress": ^0
@@ -2821,9 +2821,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rainbow-me/rainbowkit@npm:^2.1.2":
-  version: 2.1.2
-  resolution: "@rainbow-me/rainbowkit@npm:2.1.2"
+"@rainbow-me/rainbowkit@npm:^2.1.3":
+  version: 2.1.3
+  resolution: "@rainbow-me/rainbowkit@npm:2.1.3"
   dependencies:
     "@vanilla-extract/css": 1.14.0
     "@vanilla-extract/dynamic": 2.1.0
@@ -2838,7 +2838,7 @@ __metadata:
     react-dom: ">=18"
     viem: 2.x
     wagmi: ^2.9.0
-  checksum: 8d127509b376715c3e22030a4df74ef061d3da86bfa481bae3ea035192fa324fb82179da284f4bdf98feb1b2672157ca9440ed0c51d9280d9da694b9e6ba6250
+  checksum: 415b9361710c4f91d0ca84f8918e3957cda9f7501707e433498a1b7c0d95132b8ef58b7a1b16ee873b8e9380a42932d73b9529b491654439bb2a4e4f849d60f1
   languageName: node
   linkType: hard
 
@@ -3354,21 +3354,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tanstack/query-core@npm:5.49.1":
-  version: 5.49.1
-  resolution: "@tanstack/query-core@npm:5.49.1"
-  checksum: 244ce65d0e47388073adaebac72feba6032b51458f35469941bddfe5cc5eb9d354a89c43e1e37c655d16c869effbd5edf05952810b64e39deede18560d4bac55
+"@tanstack/query-core@npm:5.51.1":
+  version: 5.51.1
+  resolution: "@tanstack/query-core@npm:5.51.1"
+  checksum: c75a8bf9d4e04adde01420d21e99222ad7e25912ea22ec18ce7e96a5a2111f457da06b18960469b6f79753296404657a717f4776a46c58e24652542e52e6b25f
   languageName: node
   linkType: hard
 
-"@tanstack/react-query@npm:^5.49.2":
-  version: 5.49.2
-  resolution: "@tanstack/react-query@npm:5.49.2"
+"@tanstack/react-query@npm:^5.51.1":
+  version: 5.51.1
+  resolution: "@tanstack/react-query@npm:5.51.1"
   dependencies:
-    "@tanstack/query-core": 5.49.1
+    "@tanstack/query-core": 5.51.1
   peerDependencies:
     react: ^18.0.0
-  checksum: 8f96a1292a3ec1fb249a2606acb0a7dbbeb6c4f4c9f424b69997df8b7bcf506b62ce1b93bc57ca9154534f98e538166cc8822e3eaaccac4bb2393c9f17839fdd
+  checksum: fbf5b69499ecba40ee31a354ede7c4932d43999a2184da43d5725f5f7688251f43ba131650aa2d2e44d18a1b768d37c9354e386ea7bdfeccb4ce52999ee4a5cc
   languageName: node
   linkType: hard
 
