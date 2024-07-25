@@ -11,9 +11,8 @@ import useTokenList from "../hooks/useTokenList";
 import { clientToSigner } from "../utils/ethers";
 import { USDC } from "baluni/dist/api/constants";
 import { PrettyConsole } from "baluni/dist/api/utils/prettyConsole";
-import { BigNumber, ethers } from "ethers";
+import { type BigNumber, ethers } from "ethers";
 import { usePublicClient, useWalletClient } from "wagmi";
-import { WalletClient } from "wagmi";
 import { notification } from "~~/utils/scaffold-eth";
 
 const prettyConsole = new PrettyConsole();
@@ -53,7 +52,7 @@ const RebalanceBox = () => {
 
   useEffect(() => {
     if (!signer) return;
-    const signerEthers = clientToSigner(signer as WalletClient);
+    const signerEthers = clientToSigner(signer as any);
 
     const doCheckAgent = async () => {
       const result = await checkAgent(signerEthers as any);
@@ -63,7 +62,7 @@ const RebalanceBox = () => {
   }, [signer]);
 
   const handleCreateAgent = async () => {
-    const signerEthers = clientToSigner(signer as WalletClient);
+    const signerEthers = clientToSigner(signer as any);
     const tx = await createAgent(signerEthers as any);
     if (tx) setHaveAgent(true);
   };
@@ -130,7 +129,7 @@ const RebalanceBox = () => {
       return;
     }
 
-    const signerEthers = clientToSigner(signer as WalletClient);
+    const signerEthers = clientToSigner(signer as any);
     const tokenContract = new ethers.Contract(
       tokenAddress,
       ["function balanceOf(address owner) view returns (uint256)", "function decimals() view returns (uint8)"],
@@ -197,14 +196,14 @@ const RebalanceBox = () => {
       return;
     }
     const loading_n = notification.loading("Calculate Rebalance");
-    const signerEthers = clientToSigner(signer as WalletClient);
+    const signerEthers = clientToSigner(signer as any);
 
     const dexWallet = {
       wallet: signerEthers as unknown as ethers.Wallet,
       walletAddress: signer?.account.address as string,
-      providerGasPrice: provider.getGasPrice() as unknown as BigNumber,
-      walletBalance: (await provider.getBalance({
-        address: signer?.account.address as string,
+      providerGasPrice: provider?.getGasPrice() as unknown as BigNumber,
+      walletBalance: (await provider?.getBalance({
+        address: signer?.account.address as unknown as any,
       })) as unknown as BigNumber,
       walletProvider: signerEthers.provider,
     };
@@ -221,7 +220,7 @@ const RebalanceBox = () => {
 
     const tokenPercentages = tokenSelections.reduce<TokenPercentages>((acc, selection) => {
       if (selection.token && selection.percentage) {
-        acc[selection.token] = parseFloat((selection.percentage * 100).toFixed(2));
+        acc[selection.token] = Number.parseFloat((selection.percentage * 100).toFixed(2));
       }
       return acc;
     }, {});
@@ -231,7 +230,7 @@ const RebalanceBox = () => {
         dexWallet,
         tokens,
         tokenPercentages,
-        USDC[provider.chain.id],
+        USDC[137],
         dexWallet.walletProvider,
       )) as any;
 
@@ -239,7 +238,7 @@ const RebalanceBox = () => {
         dexWallet,
         tokens,
         tokenPercentages,
-        USDC[provider.chain.id],
+        USDC[137],
         Number(slippage),
       )) as any;
 
@@ -276,14 +275,14 @@ const RebalanceBox = () => {
       return;
     }
     const loading_n = notification.loading("Execute Rebalance");
-    const signerEthers = clientToSigner(signer as WalletClient);
+    const signerEthers = clientToSigner(signer as any);
 
     const dexWallet = {
       wallet: signerEthers as unknown as ethers.Wallet,
       walletAddress: signer?.account.address as string,
-      providerGasPrice: provider.getGasPrice() as unknown as BigNumber,
-      walletBalance: (await provider.getBalance({
-        address: signer?.account.address as string,
+      providerGasPrice: provider?.getGasPrice() as unknown as BigNumber,
+      walletBalance: (await provider?.getBalance({
+        address: signer?.account.address as unknown as any,
       })) as unknown as BigNumber,
       walletProvider: signerEthers.provider,
     };
@@ -300,7 +299,7 @@ const RebalanceBox = () => {
 
     const tokenPercentages = tokenSelections.reduce<TokenPercentages>((acc, selection) => {
       if (selection.token && selection.percentage) {
-        acc[selection.token] = parseFloat((selection.percentage * 100).toFixed(2));
+        acc[selection.token] = Number.parseFloat((selection.percentage * 100).toFixed(2));
       }
       return acc;
     }, {});
@@ -310,7 +309,7 @@ const RebalanceBox = () => {
         dexWallet,
         tokens,
         tokenPercentages,
-        USDC[(provider.chain.id, slippage)],
+        USDC[(provider?.chain.id, slippage)],
         Number(slippage),
       )) as any;
       console.log("Rebalance Stats:", stats);

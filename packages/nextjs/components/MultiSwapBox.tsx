@@ -6,11 +6,11 @@ import useTokenList from "../hooks/useTokenList";
 import { clientToSigner } from "../utils/ethers";
 import { INFRA, RouterABI, buildSwapOdos } from "baluni/dist/api/";
 import { waitForTx } from "baluni/dist/core/utils/web3/networkUtils";
-import { BigNumber, Contract, ethers } from "ethers";
+import { type BigNumber, Contract, ethers } from "ethers";
 import { v4 as uuidv4 } from "uuid";
-import { WalletClient, erc20ABI, usePublicClient, useWalletClient } from "wagmi";
+import { erc20Abi } from "viem";
+import { type UseClientReturnType, usePublicClient, useWalletClient } from "wagmi";
 import Spinner from "~~/components/Spinner";
-import { useScaffoldEventSubscriber } from "~~/hooks/scaffold-eth";
 import { notification } from "~~/utils/scaffold-eth";
 
 type Token = {
@@ -61,7 +61,7 @@ const MultiSwapBox = () => {
 
   useEffect(() => {
     if (!signer) return;
-    const signerEthers = clientToSigner(signer as WalletClient);
+    const signerEthers = clientToSigner(signer as UseClientReturnType);
 
     const doCheckAgent = async () => {
       const result = await checkAgent(signerEthers as any);
@@ -71,22 +71,10 @@ const MultiSwapBox = () => {
   }, [signer]);
 
   const handleCreateAgent = async () => {
-    const signerEthers = clientToSigner(signer as WalletClient);
+    const signerEthers = clientToSigner(signer as UseClientReturnType);
     const tx = await createAgent(signerEthers as any);
     if (tx) setHaveAgent(true);
   };
-
-  useScaffoldEventSubscriber({
-    contractName: "Router",
-    eventName: "Mint",
-    listener: (logs: any) => {
-      const amount = logs?.args?.amount;
-      const to = logs.args.to;
-      if (to == signer?.account.address) {
-        notification.success(`YAAAAI! You Earned ${amount} BALUNI`);
-      }
-    },
-  });
 
   const getOdosQuote = async (quoteRequestBody: {
     chainId?: number;
@@ -168,7 +156,10 @@ const MultiSwapBox = () => {
     setOutputTokens(
       outputTokens.map((output, i) => {
         if (i === index) {
-          return { ...output, [type]: type === "proportion" ? Number(value) / 100 : value };
+          return {
+            ...output,
+            [type]: type === "proportion" ? Number(value) / 100 : value,
+          };
         }
         return output;
       }),
@@ -205,7 +196,7 @@ const MultiSwapBox = () => {
     }
     try {
       const signerEthers = clientToSigner(signer);
-      const tokenContract = new ethers.Contract(tokenAddress, erc20ABI, signerEthers);
+      const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, signerEthers);
       const decimals = await tokenContract.decimals();
       const balance = await tokenContract.balanceOf(signer.account.address);
       const formattedBalance = ethers.utils.formatUnits(balance, decimals);
@@ -213,7 +204,10 @@ const MultiSwapBox = () => {
       setSwaps(
         swaps.map((swap, selIndex) => {
           if (index === selIndex) {
-            return { ...swap, [tokenField === "token0" ? "balance0" : "balance1"]: formattedBalance };
+            return {
+              ...swap,
+              [tokenField === "token0" ? "balance0" : "balance1"]: formattedBalance,
+            };
           }
           return swap;
         }),
@@ -319,17 +313,18 @@ const MultiSwapBox = () => {
   }
 
   const executeSwap = async () => {
+    if (!provider) return;
     if (totalAllocation !== 1) {
       notification.error("Total allocation must exactly be 100% to execute the swap.");
       return;
     }
-    const signerEthers = clientToSigner(signer as WalletClient);
+    const signerEthers = clientToSigner(signer as UseClientReturnType);
     const dexWallet = {
       wallet: signerEthers as unknown as ethers.Wallet,
       walletAddress: signer?.account.address as string,
-      providerGasPrice: provider.getGasPrice() as unknown as BigNumber,
-      walletBalance: (await provider.getBalance({
-        address: signer?.account.address as string,
+      providerGasPrice: (await provider?.getGasPrice()) as unknown as BigNumber,
+      walletBalance: (await provider?.getBalance({
+        address: signer?.account.address as any,
       })) as unknown as BigNumber,
       walletProvider: signerEthers.provider,
     };
@@ -351,7 +346,7 @@ const MultiSwapBox = () => {
 
     for (let i = 0; i < swaps.length; i++) {
       const swap = swaps[i];
-      const tokenContract = new Contract(swap.token0Address, erc20ABI, signerEthers.provider);
+      const tokenContract = new Contract(swap.token0Address, erc20Abi, signerEthers.provider);
       const decimalTokenA = await tokenContract.decimals();
       const amountInWei = ethers.utils.parseUnits(String(swap.amount), decimalTokenA); // Converti l'importo in wei
 
@@ -365,7 +360,7 @@ const MultiSwapBox = () => {
 
     for (let i = 0; i < swaps.length; i++) {
       const swap = swaps[i];
-      const tokenContract = new Contract(swap.token0Address, erc20ABI, signerEthers.provider);
+      const tokenContract = new Contract(swap.token0Address, erc20Abi, signerEthers.provider);
       const decimalTokenA = await tokenContract.decimals();
       const amountInWei = ethers.utils.parseUnits(String(swap.amount), decimalTokenA); // Converti l'importo in wei
 

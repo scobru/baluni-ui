@@ -1,14 +1,16 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import type React from "react";
+import { useEffect, useState } from "react";
 import useTokenList from "../hooks/useTokenList";
 import baluniPoolAbi from "baluni-contracts/artifacts/contracts/pools/BaluniV1Pool.sol/BaluniV1Pool.json";
 import poolPeripheryAbi from "baluni-contracts/artifacts/contracts/pools/BaluniV1PoolPeriphery.sol/BaluniV1PoolPeriphery.json";
 import poolRegistryAbi from "baluni-contracts/artifacts/contracts/registry/BaluniV1PoolRegistry.sol/BaluniV1PoolRegistry.json";
 import registryAbi from "baluni-contracts/artifacts/contracts/registry/BaluniV1Registry.sol/BaluniV1Registry.json";
-import { INFRA } from "baluni/dist/api/";
+import { INFRA, NATIVETOKENS } from "baluni/dist/api/";
 import { Contract, ethers } from "ethers";
-import { erc20ABI, useWalletClient } from "wagmi";
+import { erc20Abi } from "viem";
+import { useWalletClient } from "wagmi";
 import Spinner from "~~/components/Spinner";
 import { clientToSigner } from "~~/utils/ethers";
 import { notification } from "~~/utils/scaffold-eth";
@@ -30,6 +32,15 @@ interface Token {
   logoURI: string;
   name: string;
 }
+
+const WETHAbi = [
+  "function deposit() public payable",
+  "function withdraw(uint wad) public",
+  "function balanceOf(address owner) public view returns (uint256)",
+  "function approve(address spender, uint256 amount) public returns (bool)",
+  "function transfer(address to, uint256 value) public returns (bool)",
+  "function transferFrom(address from, address to, uint256 value) public returns (bool)",
+];
 
 const SwapBox = () => {
   const { data: signer } = useWalletClient();
@@ -75,6 +86,7 @@ const SwapBox = () => {
   }, [signer, poolFactory]);
 
   const setContract = async () => {
+    if (!signer) return;
     const registry = new Contract(INFRA[137].REGISTRY, registryAbi.abi, clientToSigner(signer as any));
     const poolFactory = await registry.getBaluniPoolRegistry();
     const poolPeriphery = await registry.getBaluniPoolPeriphery();
@@ -98,7 +110,7 @@ const SwapBox = () => {
       const assets = await pool.getAssets();
 
       for (let i = 0; i < assets.length; i++) {
-        const token = new ethers.Contract(assets[i], erc20ABI, clientToSigner(signer));
+        const token = new ethers.Contract(assets[i], erc20Abi, clientToSigner(signer));
         const symbol = await token.symbol();
         symbols.push(symbol);
       }
@@ -110,7 +122,7 @@ const SwapBox = () => {
   };
 
   const fetchTokenBalance = async (tokenAddress: string, account: string) => {
-    const tokenContract = new ethers.Contract(tokenAddress, erc20ABI, clientToSigner(signer as any));
+    const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, clientToSigner(signer as any));
     const balance = await tokenContract.balanceOf(account);
     const decimals = await tokenContract.decimals();
     return ethers.utils.formatUnits(balance, decimals);
@@ -129,10 +141,16 @@ const SwapBox = () => {
       const account = signer.account.address;
       if ((name === "fromToken" || name === "token") && value) {
         const balance = await fetchTokenBalance(value, account);
-        setTokenBalances(prevState => ({ ...prevState, fromTokenBalance: balance }));
+        setTokenBalances(prevState => ({
+          ...prevState,
+          fromTokenBalance: balance,
+        }));
       } else if (name === "toToken" && value) {
         const balance = await fetchTokenBalance(value, account);
-        setTokenBalances(prevState => ({ ...prevState, toTokenBalance: balance }));
+        setTokenBalances(prevState => ({
+          ...prevState,
+          toTokenBalance: balance,
+        }));
       }
       checkPoolExists(value, name);
     }
@@ -142,6 +160,14 @@ const SwapBox = () => {
     const fromToken = name === "fromToken" ? value : swapData.fromToken;
     const toToken = name === "toToken" ? value : swapData.toToken;
     if (!signer) return;
+
+    if (
+      (fromToken == NATIVETOKENS[137].WRAPPED && toToken == NATIVETOKENS[137].NATIVE) ||
+      (fromToken == NATIVETOKENS[137].NATIVE && toToken == NATIVETOKENS[137].WRAPPED)
+    ) {
+      setPoolExists(true);
+      return;
+    }
 
     if (fromToken && toToken && poolFactory) {
       const factory = new ethers.Contract(poolFactory!, poolRegistryAbi.abi, clientToSigner(signer));
@@ -163,9 +189,17 @@ const SwapBox = () => {
   const previewSwap = async (fromToken: string, toToken: string, amount: string) => {
     if (!signer || !fromToken || !toToken || !amount || !poolPeriphery) return;
 
+    if (
+      (fromToken == NATIVETOKENS[137].WRAPPED && toToken == NATIVETOKENS[137].NATIVE) ||
+      (fromToken == NATIVETOKENS[137].NATIVE && toToken == NATIVETOKENS[137].WRAPPED)
+    ) {
+      setSwapPreview(amount);
+      return;
+    }
+
     const periphery = new ethers.Contract(poolPeriphery!, poolPeripheryAbi.abi, clientToSigner(signer));
-    const fromTokenContract = new ethers.Contract(fromToken, erc20ABI, clientToSigner(signer));
-    const toTokenContract = new ethers.Contract(toToken, erc20ABI, clientToSigner(signer));
+    const fromTokenContract = new ethers.Contract(fromToken, erc20Abi, clientToSigner(signer));
+    const toTokenContract = new ethers.Contract(toToken, erc20Abi, clientToSigner(signer));
 
     const decimalsFrom = await fromTokenContract.decimals();
     const decimalsTo = await toTokenContract.decimals();
@@ -183,9 +217,25 @@ const SwapBox = () => {
 
   const handleSwap = async () => {
     const { fromToken, toToken, fromAmount } = swapData;
+    if (!signer || !fromToken || !toToken || !fromAmount) return;
+    if (
+      (fromToken == NATIVETOKENS[137].WRAPPED && toToken == NATIVETOKENS[137].NATIVE) ||
+      (fromToken == NATIVETOKENS[137].NATIVE && toToken == NATIVETOKENS[137].WRAPPED)
+    ) {
+      try {
+        const token = new ethers.Contract(NATIVETOKENS[137].WRAPPED, WETHAbi, clientToSigner(signer));
+        const tx = await token.withdraw(ethers.utils.parseUnits(fromAmount, 18));
+        await tx.wait();
+        notification.success("Swap completed successfully!");
+        return;
+      } catch (error: any) {
+        notification.error(error && error.reason ? String(error.reason) : "An error occurred while swapping tokens.");
+      }
+    }
+
     if (!signer || !fromToken || !toToken || !fromAmount || !poolPeriphery || !toReserve) return;
 
-    const fromTokenContract = new ethers.Contract(fromToken, erc20ABI, clientToSigner(signer));
+    const fromTokenContract = new ethers.Contract(fromToken, erc20Abi, clientToSigner(signer));
     const decimals = await fromTokenContract.decimals();
     const allowance = await fromTokenContract.allowance(signer.account.address, poolPeriphery);
 
@@ -196,20 +246,32 @@ const SwapBox = () => {
 
     const deadline = Math.floor(Date.now() / 1000) + 30; // 10 minutes from now
     const periphery = new ethers.Contract(poolPeriphery, poolPeripheryAbi.abi, clientToSigner(signer));
-    try {
-      const tx = await periphery.swapTokenForToken(
-        fromToken,
-        toToken,
-        ethers.utils.parseUnits(fromAmount, decimals),
-        0,
-        signer.account.address,
-        signer.account.address,
-        deadline,
-      );
-      await tx.wait();
-      notification.success("Swap completed successfully!");
-    } catch (error: any) {
-      notification.error(error && error.reason ? String(error.reason) : "An error occurred while swapping tokens.");
+
+    if (toToken == NATIVETOKENS[137].WRAPPED && toToken == NATIVETOKENS[137].NATIVE) {
+      try {
+        const token = new ethers.Contract(NATIVETOKENS[137].WRAPPED, WETHAbi, clientToSigner(signer));
+        const tx = await token.deposit({ value: ethers.utils.parseUnits(fromAmount, decimals) });
+        await tx.wait();
+        notification.success("Swap completed successfully!");
+      } catch (error: any) {
+        notification.error(error && error.reason ? String(error.reason) : "An error occurred while swapping tokens.");
+      }
+    } else {
+      try {
+        const tx = await periphery.swapTokenForToken(
+          fromToken,
+          toToken,
+          ethers.utils.parseUnits(fromAmount, decimals),
+          0,
+          signer.account.address,
+          signer.account.address,
+          deadline,
+        );
+        await tx.wait();
+        notification.success("Swap completed successfully!");
+      } catch (error: any) {
+        notification.error(error && error.reason ? String(error.reason) : "An error occurred while swapping tokens.");
+      }
     }
   };
 
@@ -223,30 +285,33 @@ const SwapBox = () => {
       <h2 className="card-title text-3xl mb-8">Swap</h2>
       <div className="mb-4 mt-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">From Token</label>
-        <div className="relative">
-          <select
-            name="fromToken"
-            className="select select-bordered w-full mb-2"
-            value={swapData.fromToken}
-            onChange={e => handleInputChange(e, setSwapData)}
-          >
-            <option disabled value="">
-              Select From Token
-            </option>
-            {filteredTokens.map((token: Token) => (
-              <option key={token.address} value={token.address}>
-                {token.symbol}
+        {NATIVETOKENS && (
+          <div className="relative">
+            <select
+              name="fromToken"
+              className="select select-bordered w-full mb-2"
+              value={swapData.fromToken}
+              onChange={e => handleInputChange(e, setSwapData)}
+            >
+              <option disabled value="">
+                Select From Token
               </option>
-            ))}
-          </select>
-          {swapData.fromToken && (
-            <img
-              src={getTokenIcon(swapData.fromToken)}
-              alt="From Token"
-              className="absolute top-1/2 right-3 transform -translate-y-1/2 w-5 h-5"
-            />
-          )}
-        </div>
+              <option value={NATIVETOKENS[137].NATIVE}>NATIVE</option>
+              {filteredTokens.map((token: Token) => (
+                <option key={token.address} value={token.address}>
+                  {token.symbol}
+                </option>
+              ))}
+            </select>
+            {swapData.fromToken && (
+              <img
+                src={getTokenIcon(swapData.fromToken)}
+                alt="From Token"
+                className="absolute top-1/2 right-3 transform -translate-y-1/2 w-5 h-5"
+              />
+            )}
+          </div>
+        )}
         <p className="text-sm">Balance: {tokenBalances.fromTokenBalance}</p>
       </div>
       <div className="mb-4">
@@ -261,6 +326,8 @@ const SwapBox = () => {
             <option disabled value="">
               Select To Token
             </option>
+            <option value={NATIVETOKENS[137].NATIVE}>NATIVE</option>
+
             {filteredTokens.map((token: Token) => (
               <option key={token.address} value={token.address}>
                 {token.symbol}

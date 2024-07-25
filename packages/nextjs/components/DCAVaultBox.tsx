@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import type React from "react";
+import { useEffect, useState } from "react";
 import useTokenList from "../hooks/useTokenList";
 import { clientToSigner } from "../utils/ethers";
 import { notification } from "../utils/scaffold-eth";
@@ -11,7 +12,8 @@ import registryAbi from "baluni-contracts/artifacts/contracts/registry/BaluniV1R
 import baluniDCAVaultAbi from "baluni-contracts/artifacts/contracts/vaults/BaluniV1DCAVault.sol/BaluniV1DCAVault.json";
 import { INFRA } from "baluni/dist/api/";
 import { Contract, ethers } from "ethers";
-import { erc20ABI, useWalletClient } from "wagmi";
+import { erc20Abi } from "viem";
+import { useWalletClient } from "wagmi";
 
 const vaultDescription = {
   DCA: {
@@ -72,7 +74,7 @@ interface StatisticsData {
   valuation: { daily: number };
 }
 
-function getVaultDescription(vault: string) {
+function getVaultDescription() {
   return vaultDescription.DCA;
 }
 
@@ -94,7 +96,9 @@ const DCAVaultBox = () => {
 
   const [vaults, setVaults] = useState<string[]>([]);
   const [poolSymbols, setPoolSymbols] = useState<{ [key: string]: string }>({});
-  const [liquidityBalances, setLiquidityBalances] = useState<{ [key: string]: string }>({});
+  const [liquidityBalances, setLiquidityBalances] = useState<{
+    [key: string]: string;
+  }>({});
   const [tlvs, setTlvs] = useState<{ [key: string]: string }>({});
   const [addLiquidityData, setAddLiquidityData] = useState<AddLiquidityData>({
     vaultAddress: "",
@@ -104,7 +108,6 @@ const DCAVaultBox = () => {
     vaultAddress: "",
     amount: "",
   });
-  const [, /* activeForm */ setActiveForm] = useState<{ [key: string]: string }>({});
   const [vaultData, setVaultData] = useState<{ [key: string]: VaultData }>({});
   const [valuationData, setValuationData] = useState<ValuationData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -184,6 +187,7 @@ const DCAVaultBox = () => {
 
   const getVaults = async () => {
     if (!signer || !vaultRegistry) return;
+    setLoading(true);
     const factory = new ethers.Contract(vaultRegistry, dcaVaultRegistryAbi.abi, clientToSigner(signer));
     const vaultsAddress = await factory.getAllVaults();
     setVaults(vaultsAddress);
@@ -201,7 +205,7 @@ const DCAVaultBox = () => {
       const balance = await vault.balanceOf(signer.account.address);
       balances[vaultAddress] = ethers.utils.formatUnits(balance, 18);
       const baseAsset = await vault.baseAsset();
-      const baseAssetContract = new ethers.Contract(baseAsset, erc20ABI, clientToSigner(signer));
+      const baseAssetContract = new ethers.Contract(baseAsset, erc20Abi, clientToSigner(signer));
       const baseDecimal = await baseAssetContract.decimals();
       const balanceBase = await baseAssetContract.balanceOf(vaultAddress);
       tlvs[vaultAddress] = ethers.utils.formatUnits(await vault.totalValuation(), baseDecimal);
@@ -212,10 +216,10 @@ const DCAVaultBox = () => {
       assetsSymbol[0] = getTokenSymbol(poolAssets[0]);
       assetsSymbol[1] = getTokenSymbol(poolAssets[1]);
 
-      const poolERC20 = new ethers.Contract(vaultAddress, erc20ABI, clientToSigner(signer));
+      const poolERC20 = new ethers.Contract(vaultAddress, erc20Abi, clientToSigner(signer));
       const totalSupply = await poolERC20.totalSupply();
       const quoteAsset = await vault.quoteAsset();
-      const quoteAssetContract = new ethers.Contract(quoteAsset, erc20ABI, clientToSigner(signer));
+      const quoteAssetContract = new ethers.Contract(quoteAsset, erc20Abi, clientToSigner(signer));
       const quoteDecimal = await quoteAssetContract.decimals();
       const balanceQuote = await quoteAssetContract.balanceOf(vaultAddress);
 
@@ -236,6 +240,7 @@ const DCAVaultBox = () => {
     setLiquidityBalances(balances);
     setTlvs(tlvs);
     setPoolSymbols(symbols);
+    setLoading(false);
   };
 
   const setContract = async () => {
@@ -249,7 +254,7 @@ const DCAVaultBox = () => {
   }
 
   const fetchTokenBalance = async (tokenAddress: string, account: string) => {
-    const tokenContract = new ethers.Contract(tokenAddress, erc20ABI, clientToSigner(signer as any));
+    const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, clientToSigner(signer as any));
     const balance = await tokenContract.balanceOf(account);
     const decimals = await tokenContract.decimals();
     return ethers.utils.formatUnits(balance, decimals);
@@ -268,10 +273,16 @@ const DCAVaultBox = () => {
 
       if ((name === "fromToken" || name === "token") && value) {
         const balance = await fetchTokenBalance(value, account);
-        setTokenBalances(prevState => ({ ...prevState, fromTokenBalance: balance }));
+        setTokenBalances(prevState => ({
+          ...prevState,
+          fromTokenBalance: balance,
+        }));
       } else if (name === "toToken" && value) {
         const balance = await fetchTokenBalance(value, account);
-        setTokenBalances(prevState => ({ ...prevState, toTokenBalance: balance }));
+        setTokenBalances(prevState => ({
+          ...prevState,
+          toTokenBalance: balance,
+        }));
       }
     }
   };
@@ -299,7 +310,7 @@ const DCAVaultBox = () => {
     const vault = new ethers.Contract(vaultAddress, baluniDCAVaultAbi.abi, clientToSigner(signer as any));
     const baseAsset = await vault.baseAsset();
     if (!signer) return;
-    const tokenContract = new ethers.Contract(baseAsset, erc20ABI, clientToSigner(signer));
+    const tokenContract = new ethers.Contract(baseAsset, erc20Abi, clientToSigner(signer));
     const decimals = await tokenContract.decimals();
     const allowance = await tokenContract.allowance(signer.account.address, vaultAddress);
 
@@ -356,7 +367,10 @@ const DCAVaultBox = () => {
   }
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6 mb-8">
+      <button className="button btn-base rounded-none" onClick={() => getVaults()}>
+        <img src="https://www.svgrepo.com/download/470882/refresh.svg" alt="" className="mask mask-circle h-10 w-10" />
+      </button>
       <div className="overflow-x-auto">
         <table className="table">
           <thead>
@@ -372,7 +386,12 @@ const DCAVaultBox = () => {
           </thead>
           <tbody className="text-xl">
             {vaults.map((vault, index) => {
-              const stats = statisticsData.find(stat => stat.address === vault);
+              let stats;
+              if (statisticsData.length > 0) {
+                stats = statisticsData.find(stat => stat.address === vault);
+              } else {
+                stats = null;
+              }
               return (
                 <tr
                   key={index}
@@ -396,9 +415,9 @@ const DCAVaultBox = () => {
                     <div className="font-bold">{vaultData[vault]?.symbol}</div>
                     <div className="text-sm opacity-50">{poolSymbols[vault]}</div>
                   </td>
-                  <td>{Number(tlvs[vault]).toFixed(4)}</td>
-                  <td>{Number(liquidityBalances[vault]).toFixed(5) || "0"}</td>
-                  <td>{Number(vaultData[vault]?.unitPrice).toFixed(5) || "0"}</td>
+                  <td>${Number(tlvs[vault]).toFixed(4)}</td>
+                  <td>${Number(liquidityBalances[vault]).toFixed(5) || "0"}</td>
+                  <td>${Number(vaultData[vault]?.unitPrice).toFixed(5) || "0"}</td>
                   <td>
                     {stats ? (
                       <>
@@ -457,29 +476,49 @@ const DCAVaultBox = () => {
       </div>
       {isVaultInfoModalOpen && selectedVault && (
         <div className="modal modal-open">
-          <div className="modal-box w-11/12 max-w-5xl md:w-9/12">
-            <h3 className="font-bold text-lg">Vault Info</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 text-center">
+          <div className="modal-box w-11/12 max-w-5xl md:w-9/12 bg-base-300">
+            <h3 className="font-bold text-xl">Vault Info</h3>
+            <p className="text-lg mb-2">
+              <strong className="text-base">Address:</strong> {selectedVault}
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 text-center">
               <div className="stat">
                 <div className="stat-title">Unit Price</div>
-                <div className="stat-value">{Number(vaultData[selectedVault]?.unitPrice).toFixed(3)}</div>
+                <div className="stat-value">${Number(vaultData[selectedVault]?.unitPrice).toFixed(3)}</div>
               </div>
               <div className="stat">
                 <div className="stat-title">TLV</div>
-                <div className="stat-value">{Number(tlvs[selectedVault]).toFixed(4)} USDC</div>
-                <div className="text-lg">
-                  {Number(vaultData[selectedVault]?.baseBalance).toFixed(3)} {vaultData[selectedVault].assetsSymbol[0]}{" "}
-                </div>
-                <div className="text-lg">
-                  {Number(vaultData[selectedVault]?.quoteBalance).toFixed(8)} {vaultData[selectedVault].assetsSymbol[1]}{" "}
-                </div>
+                <div className="stat-value">${Number(tlvs[selectedVault]).toFixed(4)}</div>
               </div>
               <div className="stat">
                 <div className="stat-title">Your Liquidity</div>
                 <div className="stat-value">{Number(liquidityBalances[selectedVault]).toFixed(5) || "0"}</div>
               </div>
+              <div className="stat">
+                <div className="stat-title">Total Reserve</div>
+                <div className="flex flex-wrap justify-center text-base items-left">
+                  <div className="stat-value">
+                    <div className="flex items-center mb-2">
+                      <img
+                        src={getTokenIcon(vaultData[selectedVault]?.assets[0])}
+                        alt=""
+                        className="mask mask-circle h-8 w-8 mr-2"
+                      />
+                      <span>{Number(vaultData[selectedVault]?.baseBalance).toFixed(3)}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <img
+                        src={getTokenIcon(vaultData[selectedVault]?.assets[1])}
+                        alt=""
+                        className="mask mask-circle h-8 w-8 mr-2"
+                      />
+                      <span>{Number(vaultData[selectedVault]?.quoteBalance).toFixed(8)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="card bg-base-100 p-4 lg:p-6 w-full">
+            <div className="card  p-4 lg:p-6 w-full">
               <h2 className="card-title text-2xl sm:text-3xl mb-4 sm:mb-8">Charts</h2>
               <div className="w-full overflow-x-auto">
                 <ValuationChart valuationData={valuationData} />
@@ -490,13 +529,9 @@ const DCAVaultBox = () => {
             </div>
             <div className="p-4 rounded shadow mt-4">
               <span className="text-lg font-bold mt-2">Strategy Objective</span>
-              <div className="text-lg font-semibold text-gray-700">
-                {getVaultDescription(vaultData[selectedVault]?.symbol)?.objective}
-              </div>
+              <div className="text-lg font-semibold">{getVaultDescription()?.objective}</div>
               <span className="text-lg font-bold mt-2">Strategy Description</span>
-              <div className="mt-2 text-gray-600">
-                {getVaultDescription(vaultData[selectedVault]?.symbol)?.description}
-              </div>
+              <div className="mt-2 text-base">{getVaultDescription()?.description}</div>
             </div>
             <div className="modal-action">
               <button className="btn" onClick={closeVaultInfoModal}>

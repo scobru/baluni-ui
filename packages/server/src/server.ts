@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 3001;
 
 app.use(
   cors({
-    origin: "http://localhost:3001", // Replace with your frontend's domain
+    origin: "*", // Replace with your frontend's domain
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     allowedHeaders: "Content-Type,Authorization",
   }),
@@ -22,6 +22,17 @@ app.use(express.json());
 const dbPromise = open({
   filename: path.join(__dirname, "..", "baluniData.db"),
   driver: sqlite3.Database,
+});
+
+// Endpoint per ottenere tutti i dati da hyperPoolsData
+app.get("/api/hyperpools-data", async (req, res) => {
+  try {
+    const db = await dbPromise;
+    const hyperpoolsData = await db.all("SELECT * FROM hyperPoolsData");
+    res.json(hyperpoolsData);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch hyper pools data" });
+  }
 });
 
 app.get("/api/valuation-data", async (req, res) => {

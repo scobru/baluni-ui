@@ -2,29 +2,18 @@ import baluniDCAVaultRegistryAbi from "baluni-contracts/artifacts/contracts/regi
 import baluniDCAVaultAbi from "baluni-contracts/artifacts/contracts/vaults/BaluniV1DCAVault.sol/BaluniV1DCAVault.json";
 import dotenv from "dotenv";
 import { Contract, ethers } from "ethers";
-import baluniRegistryAbi from "baluni-contracts/artifacts/contracts/registry/BaluniV1Registry.sol/BaluniV1Registry.json";
-import contracts from "baluni-contracts/deployments/deployedContracts.json";
+import { setupRegistry } from "./setupRegistry";
 
 dotenv.config();
 
 const provider = new ethers.providers.JsonRpcProvider(String(process.env.RPC_URL));
 const signer = new ethers.Wallet(String(process.env.PRIVATE_KEY), provider);
 
-let registryCtx: Contract | null = null;
+let registryCtx: Contract | null | undefined = null;
 
-async function setup() {
-  const chainId = await provider.getNetwork().then(network => network.chainId);
-  if (chainId === 137) {
-    const registryAddress = contracts[137].BaluniV1Registry;
-    if (!registryAddress) {
-      console.error(`Address not found for chainId: ${chainId}`);
-      return;
-    }
-    registryCtx = new ethers.Contract(registryAddress, baluniRegistryAbi.abi, signer);
-  }
-}
+export async function dcaExecutor() {
+  registryCtx = await setupRegistry(provider, signer);
 
-async function executeDca() {
   if (!registryCtx) {
     console.error("Registry context not initialized");
     return;
@@ -40,7 +29,7 @@ async function executeDca() {
 
       try {
         const dcaTrigger = await vaultContract.canSystemDeposit();
-        console.log("DCA Trigger:", dcaTrigger);
+        console.log("DCA Trigger:", vault, dcaTrigger);
 
         if (dcaTrigger) {
           // Simulate the transaction
@@ -51,8 +40,12 @@ async function executeDca() {
           await vaultContract.callStatic.systemDeposit();
           console.log(`Simulation successful for vault: ${vault}`);
 
+          const gasPrice = await provider.getGasPrice();
+          console.log(`Gas Price: ${gasPrice.toString()}`);
+          const gasLimit = gasEstimate.mul(120).div(100); // Add 20% buffer
+
           // If simulation is successful, send the transaction
-          const tx = await vaultContract.systemDeposit();
+          const tx = await vaultContract.systemDeposit({ gasLimit, gasPrice });
           console.log(`Transaction sent for vault: ${vault}, tx hash: ${tx.hash}`);
 
           const receipt = await tx.wait();
@@ -66,12 +59,3 @@ async function executeDca() {
     console.error("Error fetching vaults or DCA vault registry:", error);
   }
 }
-
-// Initial setup and execution
-(async () => {
-  await setup();
-  if (registryCtx) {
-    setInterval(executeDca, Number(process.env.INTERVAL)); // Fetch every interval
-    executeDca(); // Initial fetch
-  }
-})();

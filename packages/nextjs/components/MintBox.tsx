@@ -5,17 +5,18 @@ import registryABI from "baluni-contracts/artifacts/contracts/registry/BaluniV1R
 import { RouterABI } from "baluni/dist/api";
 import { INFRA } from "baluni/dist/api/constants";
 import { ethers } from "ethers";
-import { erc20ABI, useWalletClient } from "wagmi";
-import { useScaffoldEventSubscriber } from "~~/hooks/scaffold-eth";
+import { erc20Abi } from "viem";
+import { useWalletClient } from "wagmi";
+import { useScaffoldEventHistory } from "~~/hooks/scaffold-eth";
 import { clientToSigner } from "~~/utils/ethers";
 import { notification } from "~~/utils/scaffold-eth";
 import { playSound } from "~~/utils/sounds";
 
 const MintBox = () => {
-  useScaffoldEventSubscriber({
+  useScaffoldEventHistory({
     contractName: "Router",
     eventName: "Mint",
-    listener: (logs: any) => {
+    filters: (logs: any) => {
       const amount = logs.args.value;
       const to = logs.args.user;
       if (to == signer?.account.address) {
@@ -23,6 +24,7 @@ const MintBox = () => {
         playSound();
       }
     },
+    fromBlock: BigInt(58923522),
   });
 
   const [amount, setAmount] = useState("");
@@ -51,7 +53,7 @@ const MintBox = () => {
     const registry = new ethers.Contract(INFRA[137].REGISTRY, registryABI.abi, signerEthers);
     const routerAddress = await registry.getBaluniRouter();
     const usdcAddress = await registry.getUSDC();
-    const erc20Contract = new ethers.Contract(usdcAddress, erc20ABI, signerEthers);
+    const erc20Contract = new ethers.Contract(usdcAddress, erc20Abi, signerEthers);
     const stakingContract = new ethers.Contract(routerAddress, RouterABI.abi, signerEthers);
     const decimals = await erc20Contract.decimals();
     const amountInWei = ethers.utils.parseUnits(amount, decimals);
@@ -63,7 +65,7 @@ const MintBox = () => {
     const signerEthers = await clientToSigner(signer as any);
     const registry = new ethers.Contract(INFRA[137].REGISTRY, registryABI.abi, signerEthers);
     const routerAddress = await registry.getBaluniRouter();
-    const erc20Contract = new ethers.Contract(routerAddress, erc20ABI, signerEthers);
+    const erc20Contract = new ethers.Contract(routerAddress, erc20Abi, signerEthers);
     const stakingContract = new ethers.Contract(routerAddress, RouterABI.abi, signerEthers);
     const unitPrice = await stakingContract.unitPrice();
     const totalSupply = await stakingContract.totalSupply();
@@ -102,7 +104,7 @@ const MintBox = () => {
 
   useEffect(() => {
     const calculateUsdAmount = () => {
-      const usdValue = parseFloat(amount) * parseFloat(formattedUnitPrice);
+      const usdValue = Number.parseFloat(amount) * Number.parseFloat(formattedUnitPrice);
       setUsdAmount(usdValue.toFixed(6)); // USDC has 6 decimals
     };
 

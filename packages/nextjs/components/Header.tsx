@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useCallback, useRef, useState } from "react";
+import type React from "react";
+import { useCallback, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -40,6 +41,10 @@ export const menuLinks: HeaderMenuLink[] = [
   {
     label: "Pools",
     href: "/pools",
+  },
+  {
+    label: "HyperPools",
+    href: "/hyperpools",
   },
   {
     label: "Yield",
@@ -143,7 +148,7 @@ export const Header = () => {
               {" "}
               {/* Aggiungi items-center qui */}
               <span className="font-bold leading-tight text-3xl">BALUNI</span>
-              <span className="text-sm font-semibold">v1.0.0</span>
+              <span className="text-sm font-semibold"></span>
             </div>
           </div>
         </Link>

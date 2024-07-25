@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import type React from "react";
+import { useEffect, useState } from "react";
 import useTokenList from "../hooks/useTokenList";
 import { clientToSigner } from "../utils/ethers";
 import { notification } from "../utils/scaffold-eth";
@@ -11,7 +12,8 @@ import vaultRegistryAbi from "baluni-contracts/artifacts/contracts/registry/Balu
 import baluniVaultAbi from "baluni-contracts/artifacts/contracts/vaults/BaluniV1YearnVault.sol/BaluniV1YearnVault.json";
 import { INFRA } from "baluni/dist/api/";
 import { Contract, ethers } from "ethers";
-import { erc20ABI, useWalletClient } from "wagmi";
+import { erc20Abi } from "viem";
+import { useWalletClient } from "wagmi";
 
 const vaultDescription = {
   Accumulator: {
@@ -86,7 +88,7 @@ function getVaultDescription() {
   return vaultDescription.Accumulator;
 }
 
-const YVaultBox = () => {
+const YearnVaultBox = () => {
   const { data: signer } = useWalletClient();
   const { tokens } = useTokenList();
 
@@ -105,7 +107,9 @@ const YVaultBox = () => {
 
   const [vaults, setVaults] = useState<string[]>([]);
   const [poolSymbols, setPoolSymbols] = useState<{ [key: string]: string }>({});
-  const [liquidityBalances, setLiquidityBalances] = useState<{ [key: string]: string }>({});
+  const [liquidityBalances, setLiquidityBalances] = useState<{
+    [key: string]: string;
+  }>({});
   const [tlvs, setTlvs] = useState<{ [key: string]: string }>({});
   const [addLiquidityData, setAddLiquidityData] = useState<AddLiquidityData>({
     vaultAddress: "",
@@ -115,7 +119,9 @@ const YVaultBox = () => {
     vaultAddress: "",
     amount: "",
   });
-  const [, /* activeForm */ setActiveForm] = useState<{ [key: string]: string }>({});
+  const [, /* activeForm */ setActiveForm] = useState<{
+    [key: string]: string;
+  }>({});
   const [vaultData, setVaultData] = useState<{ [key: string]: VaultData }>({});
   const [valuationData, setValuationData] = useState<ValuationData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -157,10 +163,10 @@ const YVaultBox = () => {
   const fetchAllData = async () => {
     try {
       const [valuationResponse, interestResponse, unitPriceResponse, statisticsResponse] = await Promise.all([
-        fetch(serverUrl + "/api/valuation-data"),
-        fetch(serverUrl + "/api/totalInterestEarned-data"),
-        fetch(serverUrl + "/api/unitPrices-data"),
-        fetch(serverUrl + "/api/statistics"),
+        await fetch(serverUrl + "/api/valuation-data"),
+        await fetch(serverUrl + "/api/totalInterestEarned-data"),
+        await fetch(serverUrl + "/api/unitPrices-data"),
+        await fetch(serverUrl + "/api/statistics"),
       ]);
 
       const [valuationData, interestData, unitPriceData, statisticsData] = await Promise.all([
@@ -173,6 +179,8 @@ const YVaultBox = () => {
       setAllValuationData(valuationData);
       setAllInterestData(interestData);
       setAllUnitPriceData(unitPriceData);
+
+      if (!statisticsData) return console.error("Error fetching statistics data");
       setStatisticsData(statisticsData);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -194,10 +202,27 @@ const YVaultBox = () => {
     };
 
     fetchData();
-  }, [vaultRegistry]);
+  }, [signer, vaultRegistry]);
+
+  const fetchWithRetry = async (url: RequestInfo | URL, options: RequestInit | undefined, retries = 1) => {
+    for (let i = 0; i < retries; i++) {
+      try {
+        const response = await fetch(url, options);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      } catch (error) {
+        if (i === retries - 1) {
+          throw error;
+        }
+      }
+    }
+  };
 
   const getVaults = async () => {
     if (!signer || !vaultRegistry) return;
+    setLoading(true);
     const factory = new ethers.Contract(vaultRegistry, vaultRegistryAbi.abi, clientToSigner(signer));
     const vaultsAddress = await factory.getAllVaults();
     setVaults(vaultsAddress);
@@ -218,7 +243,7 @@ const YVaultBox = () => {
       const yearnVault = await vault.yearnVault();
 
       //const baseAsset = await vault.baseAsset();
-      const baseAssetContract = new ethers.Contract(yearnVault, erc20ABI, clientToSigner(signer));
+      const baseAssetContract = new ethers.Contract(yearnVault, erc20Abi, clientToSigner(signer));
       const baseDecimal = await baseAssetContract.decimals();
       const balanceBase = await baseAssetContract.balanceOf(vaultAddress);
       tlvs[vaultAddress] = ethers.utils.formatUnits(await vault.totalValuation(), baseDecimal);
@@ -229,23 +254,28 @@ const YVaultBox = () => {
       assetsSymbol[0] = getTokenSymbol(poolAssets[0]);
       assetsSymbol[1] = getTokenSymbol(poolAssets[1]);
 
-      const poolERC20 = new ethers.Contract(vaultAddress, erc20ABI, clientToSigner(signer));
+      const poolERC20 = new ethers.Contract(vaultAddress, erc20Abi, clientToSigner(signer));
       const totalSupply = await poolERC20.totalSupply();
       const quoteAsset = await vault.quoteAsset();
-      const quoteAssetContract = new ethers.Contract(quoteAsset, erc20ABI, clientToSigner(signer));
+      const quoteAssetContract = new ethers.Contract(quoteAsset, erc20Abi, clientToSigner(signer));
       const quoteDecimal = await quoteAssetContract.decimals();
       const balanceQuote = await quoteAssetContract.balanceOf(vaultAddress);
-      const chainId = await signer.getChainId();
+      const chainId = 137;
       const unitPrice = await vault.unitPrice();
 
       let data;
-
       try {
-        const response = await fetch(`https://ydaemon.yearn.fi/${String(chainId)}/vaults/all`);
-        data = await response.json();
+        data = await fetchWithRetry(`https://baluni-api2.scobrudot.dev/${String(chainId)}/yearn-v3/vaults`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          mode: "cors",
+        });
       } catch (error) {
         console.error("Error fetching vault data:", error);
         setLoading(false);
+        return;
       }
 
       const filteredData = data.filter((vault: any) => vault.address === yearnVault);
@@ -272,6 +302,7 @@ const YVaultBox = () => {
     setLiquidityBalances(balances);
     setTlvs(tlvs);
     setPoolSymbols(symbols);
+    setLoading(false);
   };
 
   const setContract = async () => {
@@ -285,7 +316,7 @@ const YVaultBox = () => {
   }
 
   const fetchTokenBalance = async (tokenAddress: string, account: string) => {
-    const tokenContract = new ethers.Contract(tokenAddress, erc20ABI, clientToSigner(signer as any));
+    const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, clientToSigner(signer as any));
     const balance = await tokenContract.balanceOf(account);
     const decimals = await tokenContract.decimals();
     return ethers.utils.formatUnits(balance, decimals);
@@ -304,10 +335,16 @@ const YVaultBox = () => {
 
       if ((name === "fromToken" || name === "token") && value) {
         const balance = await fetchTokenBalance(value, account);
-        setTokenBalances(prevState => ({ ...prevState, fromTokenBalance: balance }));
+        setTokenBalances(prevState => ({
+          ...prevState,
+          fromTokenBalance: balance,
+        }));
       } else if (name === "toToken" && value) {
         const balance = await fetchTokenBalance(value, account);
-        setTokenBalances(prevState => ({ ...prevState, toTokenBalance: balance }));
+        setTokenBalances(prevState => ({
+          ...prevState,
+          toTokenBalance: balance,
+        }));
       }
     }
   };
@@ -337,7 +374,7 @@ const YVaultBox = () => {
     const vault = new ethers.Contract(vaultAddress, baluniVaultAbi.abi, clientToSigner(signer as any));
     const baseAsset = await vault.baseAsset();
     if (!signer) return;
-    const tokenContract = new ethers.Contract(baseAsset, erc20ABI, clientToSigner(signer));
+    const tokenContract = new ethers.Contract(baseAsset, erc20Abi, clientToSigner(signer));
     const decimals = await tokenContract.decimals();
     const allowance = await tokenContract.allowance(signer.account.address, vaultAddress);
 
@@ -413,7 +450,10 @@ const YVaultBox = () => {
   }
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6 mb-8">
+      <button className="button btn-base rounded-none" onClick={() => getVaults()}>
+        <img src="https://www.svgrepo.com/download/470882/refresh.svg" alt="" className="mask mask-circle h-10 w-10" />
+      </button>
       <div className="overflow-x-auto">
         <table className="table">
           <thead>
@@ -430,7 +470,12 @@ const YVaultBox = () => {
           </thead>
           <tbody className="text-xl">
             {vaults.map((vault, index) => {
-              const stats = statisticsData.find(stat => stat.address === vault);
+              let stats;
+              if (statisticsData.length > 0) {
+                stats = statisticsData.find(stat => stat.address === vault);
+              } else {
+                stats = null;
+              }
               return (
                 <tr
                   key={index}
@@ -438,11 +483,11 @@ const YVaultBox = () => {
                 >
                   <td>
                     <div className="flex flex-wrap  items-center gap-3">
-                      <img
+                      {/* <img
                         src={vaultData[vault]?.yearnData[0]?.icon}
                         alt={`${vaultData[vault]?.symbol} icon`}
                         className="w-14 h-14 "
-                      />
+                      /> */}
                       <div className="justify-center text-3xl">
                         {vaultData[vault]?.assetsSymbol.map((symbol, index) => (
                           <img
@@ -459,9 +504,9 @@ const YVaultBox = () => {
                     <div className="font-bold">{vaultData[vault]?.symbol}</div>
                     <div className="text-sm opacity-50">{poolSymbols[vault]}</div>
                   </td>
-                  <td>{Number(tlvs[vault]).toFixed(4)}</td>
+                  <td>${Number(tlvs[vault]).toFixed(4)}</td>
                   <td>{Number(liquidityBalances[vault]).toFixed(5) || "0"}</td>
-                  <td>{Number(vaultData[vault]?.unitPrice).toFixed(5) || "0"}</td>
+                  <td>${Number(vaultData[vault]?.unitPrice).toFixed(5) || "0"}</td>
                   <td>{(vaultData[vault]?.yearnData[0]?.apr.netAPR * 100).toFixed(2)}%</td>
                   <td>
                     {stats ? (
@@ -475,7 +520,7 @@ const YVaultBox = () => {
                   </td>
                   <td className="hover:text-info-content">
                     <button
-                      className="label label-text text-xl font-semibold text-slate-600"
+                      className="label label-text text-xl font-semibold "
                       onClick={() => {
                         handleVaultClick(vault);
                         openVaultInfoModal(vault);
@@ -484,7 +529,7 @@ const YVaultBox = () => {
                       Details
                     </button>
                     <button
-                      className="label label-text text-xl font-semibold text-slate-600"
+                      className="label label-text text-xl font-semibold "
                       onClick={() => {
                         handleVaultClick(vault);
                         openDepositModal();
@@ -493,7 +538,7 @@ const YVaultBox = () => {
                       Add
                     </button>
                     <button
-                      className="label label-text text-xl font-semibold text-slate-600"
+                      className="label label-text text-xl font-semibold "
                       onClick={() => {
                         handleVaultClick(vault);
                         openWithdrawModal();
@@ -520,12 +565,15 @@ const YVaultBox = () => {
           </tfoot>
         </table>
       </div>
-      {isVaultInfoModalOpen && (
+      {selectedVault && isVaultInfoModalOpen && (
         <div className="p-4 shadow rounded">
           <input type="checkbox" id="vault-info-modal" className="modal-toggle" />
           <div className="modal modal-open bg-blend-exclusion">
-            <div className="modal-box w-11/12 max-w-5xl md:9/12 relative">
-              <h3 className="text-xl font-bold">Vault Info</h3>
+            <div className="modal-box w-11/12 max-w-5xl md:w-9/12 bg-base-300">
+              <h3 className="font-bold text-xl">Vault Info</h3>
+              <p className="text-lg mb-2">
+                <strong className="text-base">Address:</strong> {selectedVault}
+              </p>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 text-center">
                 <div className="stat">
                   <div className="stat-title text-lg">APR</div>
@@ -583,7 +631,7 @@ const YVaultBox = () => {
                   </button>
                 </div>
               </div>
-              <div className="card bg-base-100 p-6 lg:p-8 w-full">
+              <div className="card  p-6 lg:p-8 w-full">
                 <h2 className="card-title text-3xl sm:text-4xl mb-6 sm:mb-10">Charts</h2>
                 <div className="w-full overflow-x-auto">
                   <ValuationChart valuationData={valuationData} />
@@ -597,9 +645,9 @@ const YVaultBox = () => {
               </div>
               <div className="p-6 rounded shadow mt-6">
                 <span className="text-xl font-bold mt-2">Strategy Objective</span>
-                <div className="text-lg font-semibold text-gray-700 mt-2">{getVaultDescription().objective}</div>
+                <div className="text-lg font-semibold ">{getVaultDescription().objective}</div>
                 <span className="text-xl font-bold mt-2">Strategy Description</span>
-                <div className="text-md text-gray-600 mt-2">{getVaultDescription()?.description}</div>
+                <div className="text-md opacity-70 mt-2">{getVaultDescription()?.description}</div>
               </div>
               <div className="modal-action">
                 <button className="btn text-md" onClick={closeVaultInfoModal}>
@@ -612,7 +660,7 @@ const YVaultBox = () => {
       )}
       {isDepositModalOpen && (
         <div className="modal modal-open">
-          <div className="modal-box">
+          <div className="modal-box bg-base-300">
             <h3 className="text-xl font-bold">Deposit</h3>
             <input
               type="text"
@@ -635,7 +683,7 @@ const YVaultBox = () => {
       )}
       {isWithdrawModalOpen && (
         <div className="modal modal-open">
-          <div className="modal-box">
+          <div className="modal-box bg-base-300">
             <h3 className="text-xl font-bold">Withdraw</h3>
             <input
               type="text"
@@ -660,4 +708,4 @@ const YVaultBox = () => {
   );
 };
 
-export default YVaultBox;
+export default YearnVaultBox;

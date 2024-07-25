@@ -1,6 +1,6 @@
 import React from "react";
 import SwapBox from "../../components/SwapBox";
-import { NextPage } from "next";
+import type { NextPage } from "next";
 
 /* eslint-disable @next/next/no-img-element */
 
@@ -12,14 +12,7 @@ const Swap: NextPage = () => {
           Swap
         </div>
       </div>{" "}
-      <div className="text-center mx-auto my-10 text-base font-semibold ">🦄 Swap your tokens</div>
-      <div className=" w-fit my-10 mx-20">
-        <img src="/favicon.png" alt="" className="w-20 h-20 rounded-xl" />{" "}
-      </div>
       <SwapBox />
-      <div className="text-center  mx-auto my-10 text-sm font-semibold ">
-        🪄 Check the console to see the magic happen{" "}
-      </div>
     </div>
   );
 };

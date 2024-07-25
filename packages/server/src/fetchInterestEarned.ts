@@ -5,28 +5,20 @@ import { Contract, ethers } from "ethers";
 import path from "path";
 import { open } from "sqlite";
 import sqlite3 from "sqlite3";
-import baluniRegistryAbi from "baluni-contracts/artifacts/contracts/registry/BaluniV1Registry.sol/BaluniV1Registry.json";
-import contracts from "baluni-contracts/deployments/deployedContracts.json";
+import { setupRegistry } from "./setupRegistry";
+import { erc20Abi } from "viem";
+import { formatUnits } from "ethers/lib/utils";
 
 dotenv.config();
 
 const provider = new ethers.providers.JsonRpcProvider(String(process.env.RPC_URL));
+const signer = new ethers.Wallet(String(process.env.PRIVATE_KEY), provider);
 
-let registryCtx: Contract;
+let registryCtx: Contract | null | undefined = null;
 
-async function setup() {
-  const chainId = await provider.getNetwork().then(network => network.chainId);
-  if (chainId === 137) {
-    const registryAddress = contracts[137].BaluniV1Registry;
-    if (!registryAddress) {
-      console.error(`Address not found for chainId: ${chainId}`);
-      return;
-    }
-    registryCtx = new ethers.Contract(registryAddress, baluniRegistryAbi.abi, provider);
-  }
-}
+export async function fetchInterestEarned() {
+  registryCtx = await setupRegistry(provider, signer);
 
-async function fetchInterestEarned() {
   if (!registryCtx) {
     console.error("Registry context not initialized");
     return;
@@ -61,11 +53,14 @@ async function fetchInterestEarned() {
         interestEarned: interestEarned.toString(),
         address: vault,
       };
+      const baseToken = await vaultContract.baseAsset();
+      const baseCtx = new ethers.Contract(String(baseToken), erc20Abi, provider);
+      const decimals = await baseCtx.decimals();
 
       await db.run(
         "INSERT INTO totalInterestEarned (timestamp, interestEarned, address) VALUES (?, ?, ?)",
         interestData.timestamp,
-        interestData.interestEarned,
+        formatUnits(interestData.interestEarned, decimals),
         interestData.address,
       );
 
@@ -77,13 +72,3 @@ async function fetchInterestEarned() {
 
   await db.close();
 }
-
-async function main() {
-  await setup();
-  if (registryCtx) {
-    fetchInterestEarned(); // Initial fetch
-    setInterval(fetchInterestEarned, Number(process.env.INTERVAL)); // Fetch every interval
-  }
-}
-
-main().catch(error => console.error("Error in main execution:", error));
