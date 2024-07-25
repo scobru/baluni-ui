@@ -22,7 +22,7 @@ jobs:
         run: |
           git config user.name "${{ github.actor }}"
           git config user.email "${{ github.actor }}@users.noreply.github.com"
-          git remote add upstream $UPSTREAM_REPO
+          
         env:
           UPSTREAM_REPO: 'https://github.com/plancia/baluni-ui.git' # Replace with your upstream repository URL
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
