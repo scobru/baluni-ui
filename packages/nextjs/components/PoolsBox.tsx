@@ -10,15 +10,12 @@ import poolRegistryAbi from "baluni-contracts/artifacts/contracts/registry/Balun
 import registryAbi from "baluni-contracts/artifacts/contracts/registry/BaluniV1Registry.sol/BaluniV1Registry.json";
 import { INFRA } from "baluni/dist/api/";
 import { Contract, ethers } from "ethers";
-import { erc20Abi, parseEther } from "viem";
-import { usePublicClient, useWalletClient, useWriteContract } from "wagmi";
+import { erc20Abi } from "viem";
+import { useWalletClient } from "wagmi";
 import Spinner from "~~/components/Spinner";
-import { useTransactor } from "~~/hooks/scaffold-eth";
 import { useNotificator } from "~~/hooks/scaffold-eth/useNoficator";
 import { clientToSigner } from "~~/utils/ethers";
 import { notification } from "~~/utils/scaffold-eth";
-
-const DEBUG = true;
 
 interface DeviationData {
   symbol: string;
@@ -66,7 +63,6 @@ interface StatisticsData {
 
 const PoolsBox = () => {
   const { data: signer } = useWalletClient();
-  const provider = usePublicClient();
   const { tokens } = useTokenList();
   const [balances, setBalances] = useState<any[]>([]);
   const [unitPriceData, setUnitPriceData] = useState<UnitPriceData[]>([]);
@@ -80,7 +76,6 @@ const PoolsBox = () => {
   const [tokenBalance, setTokenBalance] = useState<string>("");
 
   const writeTx = useNotificator(signer);
-  const { writeContractAsync } = useWriteContract();
 
   const openModalDataModal = () => setIsModalDataModalOpen(true);
   const closeModalDataModal = () => setIsModalDataModalOpen(false);
@@ -183,7 +178,7 @@ const PoolsBox = () => {
     if (tokenAddress == ethers.constants.AddressZero || tokenAddress == "0x0000000000000000000000000000000000001010") {
       decimals = 18;
 
-      const tx = await zapCtx.zapIn(
+      await writeTx(zapCtx, "zapIn", [
         poolAddress,
         ethers.constants.AddressZero,
         ethers.utils.parseUnits(amount, decimals),
@@ -192,9 +187,7 @@ const PoolsBox = () => {
         {
           value: ethers.utils.parseUnits(amount, decimals),
         },
-      );
-
-      await writeTx(tx);
+      ]);
     } else {
       token = new Contract(tokenAddress, erc20Abi, clientToSigner(signer as any));
       decimals = await token.decimals();
@@ -243,17 +236,15 @@ const PoolsBox = () => {
     if (allowance.lt(parsedAmount)) {
       console.log("APPROVE & ZAP OUT");
 
-      const txApprove = await token.approve(poolZap, parsedAmount);
-      await txApprove.wait();
+      await writeTx(token, "approve", [poolZap, parsedAmount]);
 
       const receiver = await signer?.account?.address;
-      const tx = await zapCtx.zapOut(poolAddress, parsedAmount, tokenAddress, 0, receiver);
-      await writeTx(tx);
+
+      await writeTx(zapCtx, "zapOut", [poolAddress, parsedAmount, tokenAddress, 0, receiver]);
     } else {
       console.log("ZAP OUT");
       const receiver = await signer?.account?.address;
-      const tx = await zapCtx.zapOut(poolAddress, parsedAmount, tokenAddress, 0, receiver);
-      await writeTx(tx);
+      await writeTx(zapCtx, "zapOut", [poolAddress, parsedAmount, tokenAddress, 0, receiver]);
 
       /* 
       notification.remove(load);
@@ -497,9 +488,7 @@ const PoolsBox = () => {
     const shares = ethers.utils.parseUnits(amount, 18);
 
     try {
-      writeTx(await pool.withdraw(shares, signer.account.address, deadline));
-      const tx = await pool.withdraw(shares, signer.account.address, deadline);
-      await tx.wait();
+      writeTx(pool, "withdraw", [shares, signer.account.address, deadline]);
       notification.success("Liquidity removed successfully!");
     } catch (error) {
       console.error("Remove liquidity failed:", error);
