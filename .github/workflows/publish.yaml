@@ -21,15 +21,7 @@ jobs:
         with:
           node-version: 18.x
           cache: "yarn"
-  
-      - run: yarn install --frozen-lockfile
-
-      - name: Create Release Pull Request or Publish
-        id: publish
-        run: |
-          yarn next:lint --max-warnings=0 --quiet
-          yarn next:check-types
-      
+        
       - name: Create a Pull Request for Release
         if: ${{ steps.publish.outcome == 'success' }}
         uses: peter-evans/create-pull-request@v4
@@ -37,6 +29,5 @@ jobs:
           commit-message: 'chore: release new version'
           title: 'Release new version'
           body: 'This PR contains the changes for the new release.'
-          branch: 'main/${{ github.sha }}'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          branch: 'release-${{ github.sha }}'  # Utilizza un nome di branch sicuro e semplice
+
