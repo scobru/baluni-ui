@@ -1,0 +1,31 @@
+name: Push to Upstream
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  push-upstream:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v3
+        with:
+          ref: main
+
+      - name: Set up Git
+        run: |
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          
+      - name: Push to upstream
+        env:
+          UPSTREAM_REPO: 'git@github.com:plancia/baluni-ui.git' # Replace with your upstream repository URL
+        run: |
+          git remote add upstream $UPSTREAM_REPO
+          git push upstream main
