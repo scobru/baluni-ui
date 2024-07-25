@@ -25,8 +25,9 @@ jobs:
           yarn next:lint --max-warnings=0 --quiet
           yarn next:check-types
          
+
+
       - name: Create a Pull Request for Release
-        if: ${{ steps.publish.outcome == 'success' }}
         uses: peter-evans/create-pull-request@v4
         with:
           commit-message: 'chore: release new version'
