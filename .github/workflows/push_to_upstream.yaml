@@ -22,14 +22,16 @@ jobs:
         run: |
           git config user.name "${{ github.actor }}"
           git config user.email "${{ github.actor }}@users.noreply.github.com"
-          
+
         env:
           UPSTREAM_REPO: 'https://github.com/plancia/baluni-ui.git' # Replace with your upstream repository URL
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Push to upstream
         run: |
-          git push upstream main
+          git remote add upstream $UPSTREAM_REPO
+          git push upstream main --force
+
         env:
           UPSTREAM_REPO: 'https://github.com/plancia/baluni-ui.git' # Replace with your upstream repository URL
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
