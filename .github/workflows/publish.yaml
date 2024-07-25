@@ -4,6 +4,10 @@ on:
     workflows: [Lint]
     branches: [dev]
     types: [completed]
+  
+  push:
+    branches:
+      - "dev"
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
