@@ -74,6 +74,7 @@ const PoolsBox = () => {
   const [customToken, setCustomToken] = useState<string | undefined>();
   const [customAmount, setCustomAmount] = useState<string | undefined>();
   const [tokenBalance, setTokenBalance] = useState<string>("");
+  const [isProcessed, setIsProcessed] = useState<boolean>(false);
 
   const writeTx = useNotificator(signer);
 
@@ -122,6 +123,11 @@ const PoolsBox = () => {
     }
   };
 
+  useEffect(() => {
+    clearLiquidityDataAndZaps();
+    setIsProcessed(false);
+  }, [isProcessed]);
+
   const [poolFactory, setPoolFactory] = useState<string | undefined>();
   const [poolPeriphery, setPoolPeriphery] = useState<string | undefined>();
   const [poolZap, setPoolZap] = useState<string | undefined>();
@@ -147,6 +153,24 @@ const PoolsBox = () => {
   const [modalData, setModalData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
+  const clearLiquidityDataAndZaps = () => {
+    setLiquidityData({
+      amounts: [],
+      tokens: [],
+      poolAddress: "",
+    });
+    setRemoveLiquidityData({
+      poolAddress: "",
+      amount: "",
+    });
+    setCustomToken("");
+    setCustomAmount("");
+    closeAddLiquidityModal();
+    closeRemoveLiquidityModal();
+    setIsAddLiquidityModalOpen(false);
+    setIsRemoveLiquidityModalOpen(false);
+  };
+
   useEffect(() => {
     if (!signer) return;
     setContract();
@@ -171,14 +195,13 @@ const PoolsBox = () => {
   const zapIn = async (poolAddress: string, tokenAddress: string, amount: string) => {
     if (!signer || !poolZap) return;
     const zapCtx = new Contract(poolZap, poolZapAbi.abi, clientToSigner(signer as any));
-
     let token: any;
     let decimals: any;
 
     if (tokenAddress == ethers.constants.AddressZero || tokenAddress == "0x0000000000000000000000000000000000001010") {
       decimals = 18;
 
-      await writeTx(zapCtx, "zapIn", [
+      const tx = (await writeTx(zapCtx, "zapIn", [
         poolAddress,
         ethers.constants.AddressZero,
         ethers.utils.parseUnits(amount, decimals),
@@ -187,7 +210,10 @@ const PoolsBox = () => {
         {
           value: ethers.utils.parseUnits(amount, decimals),
         },
-      ]);
+      ])) as boolean;
+      if (tx) {
+        setIsProcessed(true);
+      }
     } else {
       token = new Contract(tokenAddress, erc20Abi, clientToSigner(signer as any));
       decimals = await token.decimals();
@@ -197,29 +223,28 @@ const PoolsBox = () => {
       if (allowance.lt(ethers.utils.parseUnits(amount, decimals))) {
         await writeTx(token, "approve", [poolZap, ethers.utils.parseUnits(amount, decimals)]);
 
-        await writeTx(zapCtx, "zapIn", [
+        const tx = (await writeTx(zapCtx, "zapIn", [
           poolAddress,
           tokenAddress,
           ethers.utils.parseUnits(amount, decimals),
           0,
           signer.account.address,
-        ]);
+        ])) as boolean;
+        if (tx) {
+          setIsProcessed(true);
+        }
       } else {
-        /* const tx = await zapCtx.zapIn(
+        const tx = (await writeTx(zapCtx, "zapIn", [
           poolAddress,
           tokenAddress,
           ethers.utils.parseUnits(amount, decimals),
           0,
           signer.account.address,
-        ); */
+        ])) as boolean;
 
-        await writeTx(zapCtx, "zapIn", [
-          poolAddress,
-          tokenAddress,
-          ethers.utils.parseUnits(amount, decimals),
-          0,
-          signer.account.address,
-        ]);
+        if (tx) {
+          setIsProcessed(true);
+        }
       }
     }
   };
@@ -235,38 +260,19 @@ const PoolsBox = () => {
 
     if (allowance.lt(parsedAmount)) {
       console.log("APPROVE & ZAP OUT");
-
       await writeTx(token, "approve", [poolZap, parsedAmount]);
-
       const receiver = await signer?.account?.address;
-
-      await writeTx(zapCtx, "zapOut", [poolAddress, parsedAmount, tokenAddress, 0, receiver]);
+      const tx = (await writeTx(zapCtx, "zapOut", [poolAddress, parsedAmount, tokenAddress, 0, receiver])) as boolean;
+      if (tx) {
+        setIsProcessed(true);
+      }
     } else {
       console.log("ZAP OUT");
       const receiver = await signer?.account?.address;
-      await writeTx(zapCtx, "zapOut", [poolAddress, parsedAmount, tokenAddress, 0, receiver]);
-
-      /* 
-      notification.remove(load);
-      notification.loading("Transaction sent. Awaiting confirmation...");
-
-      try {
-        await tx.wait();
-
-        if (tx.status === 0) {
-          notification.remove(load);
-
-          notification.error("Transaction failed");
-        } else {
-          notification.remove(load);
-
-          notification.success("Transaction successful");
-        }
-      } catch (error) {
-        notification.remove(load);
-        notification.error("Transaction failed");
+      const tx = (await writeTx(zapCtx, "zapOut", [poolAddress, parsedAmount, tokenAddress, 0, receiver])) as boolean;
+      if (tx) {
+        setIsProcessed(true);
       }
- */
     }
 
     notification.success("Zap out successful!");
@@ -424,11 +430,10 @@ const PoolsBox = () => {
       const allowance = await tokenContract.allowance(signer.account.address, poolAddress);
 
       if (allowance.lt(ethers.utils.parseUnits(amounts[tokens.indexOf(token)], await tokenContract.decimals()))) {
-        const approveTx = await tokenContract.approve(
+        await writeTx(tokenContract, "approve", [
           poolAddress,
           ethers.utils.parseUnits(amounts[tokens.indexOf(token)], await tokenContract.decimals()),
-        );
-        await approveTx.wait();
+        ]);
       }
     }
 
@@ -438,8 +443,11 @@ const PoolsBox = () => {
       const parsedAmounts = amounts.map((amount, index) => ethers.utils.parseUnits(amount, decimals[index]));
       const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
       const deadline = currentTime + 600; // 10 minutes from now
-      const tx = await pool.deposit(signer.account.address, parsedAmounts, deadline);
-      await tx.wait();
+
+      const tx = (await writeTx(pool, "deposit", [signer.account.address, parsedAmounts, deadline])) as boolean;
+      if (tx) {
+        setIsProcessed(true);
+      }
       notification.success("Liquidity added successfully!");
     } catch (error) {
       console.error("Add liquidity failed:", error);
@@ -456,13 +464,14 @@ const PoolsBox = () => {
         const allowance = await tokenContract.allowance(signer.account.address, poolAddress);
 
         if (allowance.lt(ethers.constants.MaxUint256)) {
-          const approveTx = await tokenContract.approve(poolAddress, ethers.constants.MaxUint256);
-          await approveTx.wait();
+          await writeTx(tokenContract, "approve", [poolAddress, ethers.constants.MaxUint256]);
         }
       }
       const pool = new ethers.Contract(poolAddress!, baluniPoolAbi.abi, clientToSigner(signer));
-      const tx = await pool.rebalanceAndDeposit(signer.account.address);
-      await tx.wait();
+      const tx = (await writeTx(pool, "rebalanceAndDeposit", [signer.account.address])) as boolean;
+      if (tx) {
+        setIsProcessed(true);
+      }
       notification.success("Rebalanced weights successfully!");
     } catch (error: any) {
       notification.error(String(error?.reason));
@@ -479,8 +488,7 @@ const PoolsBox = () => {
     const pool = new ethers.Contract(poolAddress!, baluniPoolAbi.abi, clientToSigner(signer));
 
     if (allowance.lt(ethers.utils.parseUnits(amount, 18))) {
-      const approveTx = await tokenContract.approve(poolAddress, ethers.utils.parseUnits(amount, 18));
-      await approveTx.wait();
+      await writeTx(tokenContract, "approve", [poolAddress, ethers.utils.parseUnits(amount, 18)]);
     }
 
     const currentTime = Math.floor(Date.now() / 1000);
@@ -488,7 +496,10 @@ const PoolsBox = () => {
     const shares = ethers.utils.parseUnits(amount, 18);
 
     try {
-      writeTx(pool, "withdraw", [shares, signer.account.address, deadline]);
+      const tx = (await writeTx(pool, "withdraw", [shares, signer.account.address, deadline])) as boolean;
+      if (tx) {
+        setIsProcessed(true);
+      }
       notification.success("Liquidity removed successfully!");
     } catch (error) {
       console.error("Remove liquidity failed:", error);
@@ -502,8 +513,10 @@ const PoolsBox = () => {
     const pool = new ethers.Contract(poolAddress, baluniPoolAbi.abi, clientToSigner(signer));
 
     try {
-      const tx = await pool.rebalance();
-      await tx.wait();
+      const tx = (await writeTx(pool, "rebalance", [])) as boolean;
+      if (tx) {
+        setIsProcessed(true);
+      }
       notification.success("Rebalance performed successfully!");
     } catch (error) {
       console.error("Rebalance failed:", error);

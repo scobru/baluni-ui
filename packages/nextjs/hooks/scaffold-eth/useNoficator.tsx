@@ -78,6 +78,7 @@ export async function waitForTx(provider: ethers.providers.Provider, tx: any): P
 
   notification.remove(load);
   notification.error("Transaction receipt not found after 10 attempts");
+
   return false;
 }
 
@@ -90,6 +91,7 @@ export const useNotificator = (_walletClient?: WalletClient) => {
   const walletClient = _walletClient;
   const provider = usePublicClient();
   selectedProvider = provider as ethers.providers.Provider | undefined;
+  let isProcessed = false;
 
   const result = async (ctx: Contract, functionName: string, args: any[]) => {
     load = notification.loading("Awaiting transaction confirmation...");
@@ -98,18 +100,21 @@ export const useNotificator = (_walletClient?: WalletClient) => {
       notification.remove(load);
       notification.error("Cannot access account");
       console.error("⚡️ ~ file: useTransactor.tsx ~ error");
-      return;
+      throw new Error("Cannot access account");
     }
 
     if (!provider) {
       notification.remove(load);
       notification.error("Provider not available");
-      return;
+      console.error("⚡️ ~ file: useTransactor.tsx ~ error");
+      throw new Error("Provider not available");
     }
 
     try {
       const gasPrice: bigint = (await provider.getGasPrice()) || BigInt(0);
       await callContractMethod(ctx, functionName, args, gasPrice);
+      isProcessed = true;
+      return isProcessed;
     } catch (error) {
       notification.remove(load);
       notification.error(getParsedError(error));
