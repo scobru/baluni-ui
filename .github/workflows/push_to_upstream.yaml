@@ -26,6 +26,7 @@ jobs:
       - name: Push to upstream
         env:
           UPSTREAM_REPO: 'git@github.com:plancia/baluni-ui.git' # Replace with your upstream repository URL
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git remote add upstream $UPSTREAM_REPO
           git push upstream main
