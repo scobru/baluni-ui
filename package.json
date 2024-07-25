@@ -17,6 +17,7 @@
     "precommit": "lint-staged",
     "vercel": "yarn workspace @baluni-ui/nextjs vercel",
     "vercel:yolo": "yarn workspace @baluni-ui/nextjs vercel:yolo"
+    "build": 
   },
   "packageManager": "yarn@3.8.2",
   "devDependencies": {
