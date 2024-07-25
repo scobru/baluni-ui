@@ -1,0 +1,40 @@
+name: Publish
+on:
+  workflow_run:
+    workflows: [Lint]
+    branches: [main]
+    types: [completed]
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  publish:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "yarn"
+  
+      - run: yarn install --frozen-lockfile
+
+      - name: Create Release Pull Request or Publish
+        id: publish
+        run: |
+          yarn next:lint --max-warnings=0 --quiet
+          yarn next:check-types
+      
+      - name: Create a Pull Request for Release
+        if: ${{ steps.publish.outcome == 'success' }}
+        uses: peter-evans/create-pull-request@v4
+        with:
+          commit-message: 'chore: release new version'
+          title: 'Release new version'
+          body: 'This PR contains the changes for the new release.'
+          branch: 'release/${{ github.sha }}'
