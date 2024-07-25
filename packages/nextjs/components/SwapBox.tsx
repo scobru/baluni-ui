@@ -161,6 +161,14 @@ const SwapBox = () => {
     const toToken = name === "toToken" ? value : swapData.toToken;
     if (!signer) return;
 
+    if (
+      (fromToken == NATIVETOKENS[137].WRAPPED && toToken == NATIVETOKENS[137].NATIVE) ||
+      (fromToken == NATIVETOKENS[137].NATIVE && toToken == NATIVETOKENS[137].WRAPPED)
+    ) {
+      setPoolExists(true);
+      return;
+    }
+
     if (fromToken && toToken && poolFactory) {
       const factory = new ethers.Contract(poolFactory!, poolRegistryAbi.abi, clientToSigner(signer));
       const poolAddress = await factory.getPool(fromToken, toToken);
@@ -180,6 +188,14 @@ const SwapBox = () => {
 
   const previewSwap = async (fromToken: string, toToken: string, amount: string) => {
     if (!signer || !fromToken || !toToken || !amount || !poolPeriphery) return;
+
+    if (
+      (fromToken == NATIVETOKENS[137].WRAPPED && toToken == NATIVETOKENS[137].NATIVE) ||
+      (fromToken == NATIVETOKENS[137].NATIVE && toToken == NATIVETOKENS[137].WRAPPED)
+    ) {
+      setSwapPreview(amount);
+      return;
+    }
 
     const periphery = new ethers.Contract(poolPeriphery!, poolPeripheryAbi.abi, clientToSigner(signer));
     const fromTokenContract = new ethers.Contract(fromToken, erc20Abi, clientToSigner(signer));
@@ -201,7 +217,24 @@ const SwapBox = () => {
 
   const handleSwap = async () => {
     const { fromToken, toToken, fromAmount } = swapData;
+    if (!signer || !fromToken || !toToken || !fromAmount) return;
+    if (
+      (fromToken == NATIVETOKENS[137].WRAPPED && toToken == NATIVETOKENS[137].NATIVE) ||
+      (fromToken == NATIVETOKENS[137].NATIVE && toToken == NATIVETOKENS[137].WRAPPED)
+    ) {
+      try {
+        const token = new ethers.Contract(NATIVETOKENS[137].WRAPPED, WETHAbi, clientToSigner(signer));
+        const tx = await token.withdraw(ethers.utils.parseUnits(fromAmount, 18));
+        await tx.wait();
+        notification.success("Swap completed successfully!");
+        return;
+      } catch (error: any) {
+        notification.error(error && error.reason ? String(error.reason) : "An error occurred while swapping tokens.");
+      }
+    }
+
     if (!signer || !fromToken || !toToken || !fromAmount || !poolPeriphery || !toReserve) return;
+
     const fromTokenContract = new ethers.Contract(fromToken, erc20Abi, clientToSigner(signer));
     const decimals = await fromTokenContract.decimals();
     const allowance = await fromTokenContract.allowance(signer.account.address, poolPeriphery);
@@ -214,16 +247,7 @@ const SwapBox = () => {
     const deadline = Math.floor(Date.now() / 1000) + 30; // 10 minutes from now
     const periphery = new ethers.Contract(poolPeriphery, poolPeripheryAbi.abi, clientToSigner(signer));
 
-    if (fromToken == NATIVETOKENS[137].WRAPPED && fromToken == NATIVETOKENS[137].NATIVE) {
-      try {
-        const token = new ethers.Contract(NATIVETOKENS[137].WRAPPED, WETHAbi, clientToSigner(signer));
-        const tx = await token.withdraw(ethers.utils.parseUnits(fromAmount, decimals));
-        await tx.wait();
-        notification.success("Swap completed successfully!");
-      } catch (error: any) {
-        notification.error(error && error.reason ? String(error.reason) : "An error occurred while swapping tokens.");
-      }
-    } else if (toToken == NATIVETOKENS[137].WRAPPED && toToken == NATIVETOKENS[137].NATIVE) {
+    if (toToken == NATIVETOKENS[137].WRAPPED && toToken == NATIVETOKENS[137].NATIVE) {
       try {
         const token = new ethers.Contract(NATIVETOKENS[137].WRAPPED, WETHAbi, clientToSigner(signer));
         const tx = await token.deposit({ value: ethers.utils.parseUnits(fromAmount, decimals) });
