@@ -2,7 +2,7 @@ name: Publish
 on:
   workflow_run:
     workflows: [Lint]
-    branches: [main]
+    branches: [dev]
     types: [completed]
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
@@ -37,4 +37,4 @@ jobs:
           commit-message: 'chore: release new version'
           title: 'Release new version'
           body: 'This PR contains the changes for the new release.'
-          branch: 'release/${{ github.sha }}'
+          branch: 'main/${{ github.sha }}'
