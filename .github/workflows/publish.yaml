@@ -21,12 +21,13 @@ jobs:
         with:
           node-version: 18.x
           cache: "yarn"
-        
+  
+      - run: yarn install --frozen-lockfile
+
       - name: Create a Pull Request for Release
         uses: peter-evans/create-pull-request@v4
         with:
           commit-message: 'chore: release new version'
           title: 'Release new version'
           body: 'This PR contains the changes for the new release.'
-          branch: 'main-${{ github.sha }}'  # Utilizza un nome di branch sicuro e semplice
-
+          branch: 'release-${{ github.sha }}'  # Utilizza un nome di branch sicuro e semplice
