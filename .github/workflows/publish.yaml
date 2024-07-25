@@ -23,11 +23,10 @@ jobs:
           cache: "yarn"
         
       - name: Create a Pull Request for Release
-        if: ${{ steps.publish.outcome == 'success' }}
         uses: peter-evans/create-pull-request@v4
         with:
           commit-message: 'chore: release new version'
           title: 'Release new version'
           body: 'This PR contains the changes for the new release.'
-          branch: 'release-${{ github.sha }}'  # Utilizza un nome di branch sicuro e semplice
+          branch: 'main-${{ github.sha }}'  # Utilizza un nome di branch sicuro e semplice
 
