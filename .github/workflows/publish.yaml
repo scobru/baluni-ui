@@ -4,6 +4,10 @@ on:
     workflows: [Lint]
     branches: [dev]
     types: [completed]
+  
+  push:
+    branches:
+      - "dev"
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
@@ -18,15 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
-
-      - name: Create Release Pull Request or Publish
-        id: publish
-        run: |
-          yarn next:lint --max-warnings=0 --quiet
-          yarn next:check-types
          
-
-
       - name: Create a Pull Request for Release
         uses: peter-evans/create-pull-request@v4
         with:
