@@ -75,16 +75,11 @@ const RebalanceBox = () => {
     }
 
     // Log dell'indirizzo passato
-    console.log("Searching for address:", address);
 
     // Cerca il token corrispondente
     const token = tokens.find((t: any) => {
-      console.log("Checking token address:", t.address);
       return t.address.toLowerCase() === address.toLowerCase();
     });
-
-    // Log del token trovato
-    console.log("Token found:", token);
 
     // Restituisce il simbolo del token o undefined se non trovato
     return token ? token : undefined;
@@ -100,6 +95,8 @@ const RebalanceBox = () => {
     disableRFQs?: boolean;
     compact?: boolean;
   }) => {
+    console.log(quoteRequestBody);
+
     const odosQuoteReq = await fetch("https://api.odos.xyz/sor/quote/v2", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

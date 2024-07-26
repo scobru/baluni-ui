@@ -25,7 +25,7 @@
     "@uniswap/v2-sdk": "^3.0.1",
     "@web3auth/modal": "^8.7.0",
     "axios": "^1.7.2",
-    "baluni": "^2.7.0",
+    "baluni": "^2.7.1-git",
     "baluni-contracts": "^2.9.7",
     "baluni-hypervisor-contracts": "^1.1.0",
     "blo": "^1.0.1",
@@ -77,5 +77,8 @@
     "type-fest": "^4.6.0",
     "typescript": "5.1.6",
     "vercel": "^32.4.1"
+  },
+  "resolutions": {
+    "@coinbase/wallet-sdk": "npm:@coinbase/wallet-sdk@4.0.0-beta.0"
   }
 }
