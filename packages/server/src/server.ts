@@ -90,6 +90,11 @@ app.get('/:chainId/yearn-v3/vaults', async (req, res) => {
   }
 })
 
+// write hello world
+app.get('/', (req, res) => {
+  res.send('Hello World')
+})
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
