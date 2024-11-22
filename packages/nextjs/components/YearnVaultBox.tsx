@@ -265,7 +265,7 @@ const YearnVaultBox = () => {
 
       let data;
       try {
-        data = await fetchWithRetry(`https://baluni-api2.scobrudot.dev/${String(chainId)}/yearn-v3/vaults`, {
+        data = await fetchWithRetry(`http://localhost:3001/${String(chainId)}/yearn-v3/vaults`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",

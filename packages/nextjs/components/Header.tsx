@@ -44,7 +44,7 @@ export const menuLinks: HeaderMenuLink[] = [
   },
   {
     label: "HyperPools",
-    href: "/hyperpools",
+    href: "/hyperPools",
   },
   {
     label: "Yield",

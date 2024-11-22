@@ -153,6 +153,79 @@ const PoolsBox = () => {
   const [modalData, setModalData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
+  const getPools = async () => {
+    if (!signer || !poolFactory || !poolPeriphery) return;
+    const factory = new ethers.Contract(poolFactory, poolRegistryAbi.abi, clientToSigner(signer));
+    const poolAddresses = await factory.getAllPools();
+    setPools(poolAddresses);
+
+    const balances: { [key: string]: string } = {};
+    const symbols: { [key: string]: string } = {};
+    const deviationsData: { [key: string]: DeviationData[] } = {};
+    const tlvs: { [key: string]: string } = {};
+
+    for (const poolAddress of poolAddresses) {
+      const pool = new ethers.Contract(poolAddress, baluniPoolAbi.abi, clientToSigner(signer));
+      const balance = await pool.balanceOf(signer.account.address);
+      balances[poolAddress] = ethers.utils.formatUnits(balance, 18);
+      tlvs[poolAddress] = ethers.utils.formatUnits(await pool.liquidity(), 6);
+      const poolAssets = await pool.getAssets();
+      const poolSymbol = await pool.symbol();
+      const poolName = await pool.name();
+      const poolUnitPrice = (await pool.unitPrice()) / 1e18;
+
+      setPoolData((prevState: any) => ({
+        ...prevState,
+        [poolAddress]: {
+          name: poolName,
+          symbol: poolSymbol,
+          assets: poolAssets,
+          unitPrice: Number(poolUnitPrice),
+        },
+      }));
+
+      const assetContracts = poolAssets.map(
+        (asset: string) => new ethers.Contract(asset, erc20Abi, clientToSigner(signer)),
+      );
+
+      const assetSymbols = await Promise.all(
+        assetContracts.map((contract: { symbol: () => any }) => contract.symbol()),
+      );
+
+      symbols[poolAddress] = assetSymbols.join(" / ");
+
+      const poolERC20 = new ethers.Contract(poolAddress, erc20Abi, clientToSigner(signer));
+      const totalSupply = await poolERC20.totalSupply();
+
+      let deviationsArray: string[] = [];
+      let directionsArray: boolean[] = [];
+      let slippagesArray: number[] = [];
+
+      if (totalSupply.toString() !== "0") {
+        [directionsArray, deviationsArray] = await pool.getDeviations();
+        slippagesArray = await pool.getSlippageParams();
+      }
+      const weights = await pool.getWeights();
+      deviationsData[poolAddress] = assetSymbols.map((symbol, index) => ({
+        symbol,
+        direction: directionsArray[index],
+        deviation: deviationsArray[index],
+        targetWeight: weights[index],
+        currentWeight: directionsArray[index]
+          ? (Number(weights[index]) + Number(deviationsArray[index])).toString()
+          : (Number(weights[index]) - Number(deviationsArray[index])).toString(),
+        slippage: String(slippagesArray[index]),
+      }));
+    }
+
+    setLiquidityBalances(balances);
+    setTlvs(tlvs);
+
+    // sostituisci WMATIC con WPOL in symbols
+    setPoolSymbols(symbols);
+    setDeviations(deviationsData);
+  };
+
   const clearLiquidityDataAndZaps = () => {
     setLiquidityData({
       amounts: [],
@@ -304,76 +377,7 @@ const PoolsBox = () => {
     return <Spinner />;
   }
 
-  const getPools = async () => {
-    if (!signer || !poolFactory || !poolPeriphery) return;
-    const factory = new ethers.Contract(poolFactory, poolRegistryAbi.abi, clientToSigner(signer));
-    const poolAddresses = await factory.getAllPools();
-    setPools(poolAddresses);
-
-    const balances: { [key: string]: string } = {};
-    const symbols: { [key: string]: string } = {};
-    const deviationsData: { [key: string]: DeviationData[] } = {};
-    const tlvs: { [key: string]: string } = {};
-
-    for (const poolAddress of poolAddresses) {
-      const pool = new ethers.Contract(poolAddress, baluniPoolAbi.abi, clientToSigner(signer));
-      const balance = await pool.balanceOf(signer.account.address);
-      balances[poolAddress] = ethers.utils.formatUnits(balance, 18);
-      tlvs[poolAddress] = ethers.utils.formatUnits(await pool.liquidity(), 6);
-      const poolAssets = await pool.getAssets();
-      const poolSymbol = await pool.symbol();
-      const poolName = await pool.name();
-      const poolUnitPrice = (await pool.unitPrice()) / 1e18;
-
-      setPoolData((prevState: any) => ({
-        ...prevState,
-        [poolAddress]: {
-          name: poolName,
-          symbol: poolSymbol,
-          assets: poolAssets,
-          unitPrice: Number(poolUnitPrice),
-        },
-      }));
-
-      const assetContracts = poolAssets.map(
-        (asset: string) => new ethers.Contract(asset, erc20Abi, clientToSigner(signer)),
-      );
-
-      const assetSymbols = await Promise.all(
-        assetContracts.map((contract: { symbol: () => any }) => contract.symbol()),
-      );
-
-      symbols[poolAddress] = assetSymbols.join(" / ");
-
-      const poolERC20 = new ethers.Contract(poolAddress, erc20Abi, clientToSigner(signer));
-      const totalSupply = await poolERC20.totalSupply();
-
-      let deviationsArray: string[] = [];
-      let directionsArray: boolean[] = [];
-      let slippagesArray: number[] = [];
-
-      if (totalSupply.toString() !== "0") {
-        [directionsArray, deviationsArray] = await pool.getDeviations();
-        slippagesArray = await pool.getSlippageParams();
-      }
-      const weights = await pool.getWeights();
-      deviationsData[poolAddress] = assetSymbols.map((symbol, index) => ({
-        symbol,
-        direction: directionsArray[index],
-        deviation: deviationsArray[index],
-        targetWeight: weights[index],
-        currentWeight: directionsArray[index]
-          ? (Number(weights[index]) + Number(deviationsArray[index])).toString()
-          : (Number(weights[index]) - Number(deviationsArray[index])).toString(),
-        slippage: String(slippagesArray[index]),
-      }));
-    }
-
-    setLiquidityBalances(balances);
-    setTlvs(tlvs);
-    setPoolSymbols(symbols);
-    setDeviations(deviationsData);
-  };
+  
 
   const fetchTokenBalance = async (tokenAddress: string, account: string) => {
     const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, clientToSigner(signer as any));
@@ -653,7 +657,9 @@ const PoolsBox = () => {
                       <div className="flex items-center gap-3">
                         <div className="flex flex-wrap justify-center text-3xl">
                           {poolSymbols[pool]?.split(" / ").map(symbol => {
-                            const token = tokens.find((token: Token) => token.symbol === symbol) as unknown as Token;
+                            let token = tokens.find((token: Token) => token.symbol === symbol) as unknown as Token;
+                            const newSymbol = symbol === "WPOL" ? "WMATIC" : symbol;
+                            token = tokens.find((token: Token) => token.symbol === newSymbol) as unknown as Token;
                             return token ? (
                               <img
                                 key={symbol}
@@ -851,7 +857,10 @@ const PoolsBox = () => {
                   },
                   index: React.Key | null | undefined,
                 ) => {
-                  const token = tokens.find((token: Token) => token.symbol === asset.symbol) as unknown as Token;
+                  let token = tokens.find((token: Token) => token.symbol === asset.symbol) as unknown as Token;
+                  // se come symbol c'è WPOL sostituisci con WMATIC
+                  const newSymbol = asset.symbol === "WPOL" ? "WMATIC" : asset.symbol;
+                  token = tokens.find((token: Token) => token.symbol === newSymbol) as unknown as Token;
                   return (
                     <div key={index} className="grid grid-cols-2 gap-2 mb-4 mt-4">
                       <div className="flex items-center">

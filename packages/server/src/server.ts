@@ -5,7 +5,6 @@ import sqlite3 from "sqlite3";
 import { calculateStatistics } from "./calculateStatistics";
 
 const cors = require("cors");
-
 const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -73,6 +72,23 @@ app.get("/api/statistics", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch statistics data" });
   }
 });
+
+app.get('/:chainId/yearn-v3/vaults', async (req, res) => {
+  const { chainId } = req.params
+  const apiURL = `https://ydaemon.yearn.fi/${chainId}/vaults/all`
+
+  try {
+    const response = await fetch(apiURL)
+    const data = await response.json()
+
+    return res.json(data)
+  } catch (error) {
+    console.error('Failed to fetch Yearn Finance vaults:', error)
+    return res
+      .status(500)
+      .json({ error: 'Failed to fetch Yearn Finance vaults.' })
+  }
+})
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
