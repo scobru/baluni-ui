@@ -8,6 +8,9 @@ const cors = require("cors");
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+
+export const TOKENS_URL = 'https://gateway.ipfs.io/ipns/tokens.uniswap.org'
+
 app.use(
   cors({
     origin: "*", // Replace with your frontend's domain
@@ -87,6 +90,49 @@ app.get('/:chainId/yearn-v3/vaults', async (req, res) => {
     return res
       .status(500)
       .json({ error: 'Failed to fetch Yearn Finance vaults.' })
+  }
+})
+
+app.get('/:chainId/uni-v3/tokens', async (req, res) => {
+  try {
+    const response = await fetch(TOKENS_URL)
+    const data = await response.json()
+    const { chainId } = req.params
+    const filteredTokens = data.tokens.filter(
+      (token: { chainId: number }) => token.chainId === Number(chainId)
+    )
+
+    res.json(filteredTokens)
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch tokens', error: error })
+  }
+})
+
+app.get('/:chainId/uni-v3/tokens/:tokenSymbol', async (req, res) => {
+  const { chainId, tokenSymbol } = req.params
+
+  if (!chainId || !tokenSymbol) {
+    return res
+      .status(400)
+      .json({ error: 'Missing chainId or tokenName query parameter' })
+  }
+
+  try {
+    const response = await fetch(TOKENS_URL)
+    const data = await response.json()
+    const matchingTokens = data.tokens.filter(
+      (token: { chainId: number; symbol: string }) =>
+        token.chainId === Number(chainId) &&
+        token.symbol.toLowerCase() === tokenSymbol.toString().toLowerCase()
+    )
+
+    if (matchingTokens.length === 0) {
+      return res.status(404).json({ error: 'Token not found' })
+    }
+
+    res.json(matchingTokens[0]) // Returns the first matching token, assuming names are unique per chainId
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch tokens', error: error })
   }
 })
 

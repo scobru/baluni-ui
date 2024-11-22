@@ -24,6 +24,7 @@
     "lint-staged": "^13.0.3"
   },
   "dependencies": {
+    "baluni-contracts": "^2.9.8",
     "baluni-hypervisor-contracts": "^1.1.0"
   }
 }
