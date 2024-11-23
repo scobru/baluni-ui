@@ -318,8 +318,8 @@ __metadata:
     abitype: 1.0.2
     autoprefixer: ^10.4.12
     axios: ^1.7.2
-    baluni: ^2.7.0
-    baluni-contracts: ^2.9.9
+    baluni: latest
+    baluni-contracts: ^2.9.10
     baluni-hypervisor-contracts: ^1.1.0
     blo: ^1.0.1
     brotli: ^1.3.3
@@ -6601,6 +6601,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"baluni-contracts@npm:^2.9.10":
+  version: 2.9.10
+  resolution: "baluni-contracts@npm:2.9.10"
+  dependencies:
+    "@chainlink/contracts": ^0.8.0
+    "@openzeppelin/contracts": ^5.0.2
+    "@openzeppelin/contracts-upgradeable": ^5.0.2
+    "@openzeppelin/hardhat-upgrades": ^3.1.0
+    "@typechain/ethers-v6": ^0.5.1
+    "@uniswap/v3-periphery": ^1.4.4
+    dotenv: ^16.0.3
+    envfile: ^6.18.0
+    hardhat-docgen: ^1.3.0
+    qrcode: ^1.5.1
+  checksum: 0f0432bcb5af4c2bed474462e6208fa5061478b79f8229111c4abdbdbb224ea75638c111bb094f0eb914f93434a756bf32862b69aa908e4b231f2b07bd6c13f7
+  languageName: node
+  linkType: hard
+
 "baluni-contracts@npm:^2.9.2":
   version: 2.9.2
   resolution: "baluni-contracts@npm:2.9.2"
@@ -6635,24 +6653,6 @@ __metadata:
     hardhat-docgen: ^1.3.0
     qrcode: ^1.5.1
   checksum: 73cda61201f05b94942c7ccc2e22092e8e3ad40bbbfdf3f8f5d071363ee9c1e2a3c8bb58386fd395e42ec9a172c77c334d373f6539e85ceafc82c0926eca2e0b
-  languageName: node
-  linkType: hard
-
-"baluni-contracts@npm:^2.9.9":
-  version: 2.9.9
-  resolution: "baluni-contracts@npm:2.9.9"
-  dependencies:
-    "@chainlink/contracts": ^0.8.0
-    "@openzeppelin/contracts": ^5.0.2
-    "@openzeppelin/contracts-upgradeable": ^5.0.2
-    "@openzeppelin/hardhat-upgrades": ^3.1.0
-    "@typechain/ethers-v6": ^0.5.1
-    "@uniswap/v3-periphery": ^1.4.4
-    dotenv: ^16.0.3
-    envfile: ^6.18.0
-    hardhat-docgen: ^1.3.0
-    qrcode: ^1.5.1
-  checksum: ab108bf366c43ab954bbea6529ce11e3298706f8cb64cf40fb30204beb0327ec97d76491fde6fabed6786869263d9116ff8720e542fdd30be393e285a8361419
   languageName: node
   linkType: hard
 
@@ -6701,9 +6701,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"baluni@npm:^2.7.0":
-  version: 2.7.0
-  resolution: "baluni@npm:2.7.0"
+"baluni@npm:latest":
+  version: 2.7.1
+  resolution: "baluni@npm:2.7.1"
   dependencies:
     "@tensorflow/tfjs": ^4.15.0
     "@types/node": ^20.10.5
@@ -6728,7 +6728,7 @@ __metadata:
     jsbi: 3.2.5
     prettier: ^2.8.4
     trading-indicator: ^2.0.4
-  checksum: 135c5d2f959624f3d660b199af47aefd5ac0b2d2dcbde2c9d63813b5e5dc3dc012005ee53b056ba0e738394bf3bb15b186bb8157ba33286823ec47fc6f77ec37
+  checksum: 2e40b22288522e344efad1405caf49d0656759d064c996f65304f17a54d7e8e9b561c8162ca6e7d590ffd8798dd35ecf648db8c6d301b2d8651e89ef74ba93a5
   languageName: node
   linkType: hard
 

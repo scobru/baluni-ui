@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { checkAgent, createAgent } from "../hooks/baluni/createAgent";
 import useTokenList from "../hooks/useTokenList";
 import { clientToSigner } from "../utils/ethers";
-import { INFRA, RouterABI, buildSwapOdos } from "baluni/dist/api/";
+import { INFRA, RouterABI, buildSwapOdos } from "baluni/dist/api";
 import { waitForTx } from "baluni/dist/core/utils/web3/networkUtils";
 import { type BigNumber, Contract, ethers } from "ethers";
 import { v4 as uuidv4 } from "uuid";
