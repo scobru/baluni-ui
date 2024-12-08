@@ -45,7 +45,7 @@ export async function dcaExecutor() {
           const gasLimit = gasEstimate.mul(120).div(100); // Add 20% buffer
 
           // If simulation is successful, send the transaction
-          const tx = await vaultContract.systemDeposit({ gasLimit, gasPrice });
+          const tx = await vaultContract.systemDeposit(/* { gasLimit, gasPrice } */);
           console.log(`Transaction sent for vault: ${vault}, tx hash: ${tx.hash}`);
 
           const receipt = await tx.wait();
