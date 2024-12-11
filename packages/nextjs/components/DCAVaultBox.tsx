@@ -366,6 +366,34 @@ const DCAVaultBox = () => {
     return token ? token.logoURI : "Unknown Token";
   }
 
+  const getMaxBalance = async (vaultAddress: string, action: string) => {
+    if (!signer) return;
+    
+    if (action === "deposit") {
+      const vault = new ethers.Contract(vaultAddress, baluniDCAVaultAbi.abi, clientToSigner(signer));
+      const baseAsset = await vault.baseAsset();
+      const tokenContract = new ethers.Contract(baseAsset, erc20Abi, clientToSigner(signer));
+      const balance = await tokenContract.balanceOf(signer.account.address);
+      const decimals = await tokenContract.decimals();
+      const formattedBalance = ethers.utils.formatUnits(balance, decimals);
+      
+      setAddLiquidityData(prevState => ({
+        ...prevState,
+        amount: formattedBalance
+      }));
+    } else if (action === "withdraw") {
+      const vault = new ethers.Contract(vaultAddress, baluniDCAVaultAbi.abi, clientToSigner(signer));
+      const balance = await vault.balanceOf(signer.account.address);
+      const decimals = await vault.decimals();
+      const formattedBalance = ethers.utils.formatUnits(balance, decimals);
+      
+      setRemoveLiquidityData(prevState => ({
+        ...prevState,
+        amount: formattedBalance
+      }));
+    }
+  };
+
   return (
     <div className="container mx-auto p-6 mb-8">
       <button className="button btn-base rounded-none" onClick={() => getVaults()}>
@@ -545,14 +573,22 @@ const DCAVaultBox = () => {
         <div className="modal modal-open">
           <div className="modal-box">
             <h3 className="font-bold text-lg">Deposit</h3>
-            <input
-              type="text"
-              name="amount"
-              className="input input-bordered w-full mb-4"
-              placeholder="Amount"
-              value={addLiquidityData.amount}
-              onChange={e => handleInputChange(e, setAddLiquidityData)}
-            />
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                name="amount"
+                className="input input-bordered w-full mb-4"
+                placeholder="Amount"
+                value={addLiquidityData.amount}
+                onChange={e => handleInputChange(e, setAddLiquidityData)}
+              />
+              <button 
+                className="btn btn-sm btn-primary mb-4"
+                onClick={() => getMaxBalance(addLiquidityData.vaultAddress, "deposit")}
+              >
+                Max
+              </button>
+            </div>
             <button className="btn btn-primary w-full" onClick={handleAddLiquidity}>
               Deposit
             </button>
@@ -568,14 +604,22 @@ const DCAVaultBox = () => {
         <div className="modal modal-open">
           <div className="modal-box">
             <h3 className="font-bold text-lg">Withdraw</h3>
-            <input
-              type="text"
-              name="amount"
-              className="input input-bordered w-full mb-4"
-              placeholder="Amount"
-              value={removeLiquidityData.amount}
-              onChange={e => handleInputChange(e, setRemoveLiquidityData)}
-            />
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                name="amount"
+                className="input input-bordered w-full mb-4"
+                placeholder="Amount"
+                value={removeLiquidityData.amount}
+                onChange={e => handleInputChange(e, setRemoveLiquidityData)}
+              />
+              <button 
+                className="btn btn-sm btn-primary mb-4"
+                onClick={() => getMaxBalance(removeLiquidityData.vaultAddress, "withdraw")}
+              >
+                Max
+              </button>
+            </div>
             <button className="btn btn-danger w-full" onClick={handleRemoveLiquidity}>
               Withdraw
             </button>

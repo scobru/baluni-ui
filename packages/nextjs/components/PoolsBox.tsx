@@ -1002,14 +1002,27 @@ const PoolsBox = () => {
         <div className="modal modal-open">
           <div className="modal-box">
             <h3 className="font-bold text-lg">Remove Liquidity</h3>
-            <input
-              type="text"
-              name="amount"
-              className="input input-bordered w-full mb-4"
-              placeholder={liquidityBalances[removeLiquidityData.poolAddress]}
-              value={removeLiquidityData.amount}
-              onChange={e => handleInputChange(e, setRemoveLiquidityData)}
-            />
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                name="amount"
+                className="input input-bordered w-full mb-4"
+                placeholder={liquidityBalances[removeLiquidityData.poolAddress]}
+                value={removeLiquidityData.amount}
+                onChange={e => handleInputChange(e, setRemoveLiquidityData)}
+              />
+              <button 
+                className="btn btn-sm btn-primary mb-4"
+                onClick={() => {
+                  setRemoveLiquidityData(prevState => ({
+                    ...prevState,
+                    amount: liquidityBalances[removeLiquidityData.poolAddress]
+                  }));
+                }}
+              >
+                Max
+              </button>
+            </div>
             <select
               className="select select-bordered w-full text-lg"
               value={customToken}

@@ -318,7 +318,7 @@ __metadata:
     abitype: 1.0.2
     autoprefixer: ^10.4.12
     axios: ^1.7.2
-    baluni: latest
+    baluni: ^2.7.2
     baluni-contracts: ^2.9.10
     baluni-hypervisor-contracts: ^1.1.0
     blo: ^1.0.1
@@ -6701,9 +6701,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"baluni@npm:latest":
-  version: 2.7.1
-  resolution: "baluni@npm:2.7.1"
+"baluni@npm:^2.7.2":
+  version: 2.7.2
+  resolution: "baluni@npm:2.7.2"
   dependencies:
     "@tensorflow/tfjs": ^4.15.0
     "@types/node": ^20.10.5
@@ -6728,7 +6728,7 @@ __metadata:
     jsbi: 3.2.5
     prettier: ^2.8.4
     trading-indicator: ^2.0.4
-  checksum: 2e40b22288522e344efad1405caf49d0656759d064c996f65304f17a54d7e8e9b561c8162ca6e7d590ffd8798dd35ecf648db8c6d301b2d8651e89ef74ba93a5
+  checksum: 7c21bdbd7ac45b556f066eb10e197cf88ed4c9e8b7445e6b8d9091365dc70fc0894466c3000a789ea478a27996396e05f56668adb7b3d9c9a218b7126d8d81bc
   languageName: node
   linkType: hard
 
